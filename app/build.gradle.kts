@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -11,8 +12,12 @@ android {
         applicationId = "akihz.anlaki.dev"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+
+    buildFeatures {
+        compose = true
     }
 
     buildTypes {
@@ -67,8 +72,14 @@ android {
 }
 
 dependencies {
-implementation("dev.rikka.shizuku:api:13.1.5")
-implementation("dev.rikka.shizuku:provider:13.1.5")
-implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-implementation("androidx.core:core:1.12.0")
+    implementation(platform(libs.compose.bom))
+    implementation("androidx.compose.material3:material3:1.4.0-alpha14")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.activity.compose)
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.core:core:1.12.0")
 }

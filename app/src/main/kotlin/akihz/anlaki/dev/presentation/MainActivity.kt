@@ -1,14 +1,25 @@
 package akihz.anlaki.dev.presentation
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import androidx.core.view.WindowCompat
 import android.widget.Toast
-import akihz.anlaki.dev.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,17 +28,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    
+
     companion object {
         private const val REQUEST_CODE_SHIZUKU = 1001
     }
 
     private var isServiceBound = false
     private var currentRate: Float? = null
-    private lateinit var ui: RefreshRateUI
+    private var selectedRate by mutableStateOf<Float?>(null)
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
@@ -48,24 +59,40 @@ class MainActivity : Activity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ui = RefreshRateUI(this) { hz -> onRateSelected(hz) }
-        setContentView(ui.createUI())
+        setContent {
+            AnlakiTheme {
+                val darkTheme = isSystemInDarkTheme()
+                val backgroundColor = MaterialTheme.colorScheme.background
+                SideEffect {
+                    window.statusBarColor = backgroundColor.toArgb()
+                    window.navigationBarColor = backgroundColor.toArgb()
+                    WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
+                }
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    RefreshRateScreen(
+                        currentRate = currentRate,
+                        selectedRate = selectedRate,
+                        onRateSelected = { hz -> onRateSelected(hz) }
+                    )
+                }
+            }
+        }
     }
 
     private fun onRateSelected(hz: Float) {
         if (!isServiceBound || !ShizukuHelper.hasPermission()) return
-        
+
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 ShizukuHelper.setRefreshRate(hz)
             }
-            
+
             if (result.isSuccess) {
                 currentRate = hz
-                ui.updateCurrentRate(hz)
-                ui.highlightButton(hz)
+                selectedRate = hz
                 Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
             } else {
                 showError("Failed to set refresh rate.")
@@ -118,29 +145,26 @@ class MainActivity : Activity() {
         ShizukuHelper.bindUserService(
             onConnected = {
                 isServiceBound = true
-                Handler(Looper.getMainLooper()).post { loadCurrentRate() }
+                loadCurrentRate()
             },
             onFailed = { _, message ->
-                Handler(Looper.getMainLooper()).post { showError(message) }
+                showError(message)
             }
         )
     }
 
     private fun loadCurrentRate() {
         if (!isServiceBound) return
-        
+
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 ShizukuHelper.getCurrentRefreshRate()
             }
-            
+
             if (result.isSuccess) {
                 val rate = result.getOrNull()!!
                 currentRate = rate
-                ui.updateCurrentRate(rate)
-                ui.highlightButton(rate)
-            } else {
-                ui.currentRateText.text = "Current: -- Hz"
+                selectedRate = rate
             }
         }
     }

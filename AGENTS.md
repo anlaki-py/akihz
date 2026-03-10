@@ -23,7 +23,7 @@
 ## Send status notifications to Discord
 
 ```bash
-WEBHOOK_URL
+WEBHOOK_URL="https://discord.com/api/webhooks/1261812264214990970/kICq8Jb87Mi7m6EM4x2pOfxOsqDcy-AVlh5Zzf6sC3PmtpzIrZpohKhc5PJykBK_PBJY"
 ```
 
 ```bash
