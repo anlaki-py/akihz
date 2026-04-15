@@ -19,19 +19,3 @@
 ## Mandatory
 1. Never run `./gradlew build` to ensure it compiles or any similar commands, i will do that manually and hand you the logs and errors.
 2. Send completion notification
-
-## Send status notifications to Discord
-
-```bash
-WEBHOOK_URL="https://discord.com/api/webhooks/1261812264214990970/kICq8Jb87Mi7m6EM4x2pOfxOsqDcy-AVlh5Zzf6sC3PmtpzIrZpohKhc5PJykBK_PBJY"
-```
-
-```bash
-curl -X POST "$WEBHOOK_URL" \
-  -H "Content-Type: application/json" \
-  -d "{\"embeds\": [{\"title\": \"<title here>\", \"description\": \"[Summary of results]\", \"color\": 5763719, \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)\"}]}"
-```
-
-1. Keep descriptions concise (1-2 sentences)
-2. Include key details: task name, files generated, duration if relevant
-3. Use proper timestamps with `$(date -u +%Y-%m-%dT%H:%M:%S.000Z)`
