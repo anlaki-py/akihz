@@ -93,13 +93,13 @@ class MainActivity : ComponentActivity() {
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setAndVerifyRate(hz)
+                refreshRateRepository.setRate(hz)
             }
 
-            result.onSuccess { verifiedRate ->
-                currentRate = verifiedRate
-                selectedRate = verifiedRate
-                Toast.makeText(this@MainActivity, "${verifiedRate.toInt()} Hz", Toast.LENGTH_SHORT).show()
+            result.onSuccess {
+                currentRate = hz
+                selectedRate = hz
+                Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
             }.onError { _, message ->
                 showError(message)
             }
