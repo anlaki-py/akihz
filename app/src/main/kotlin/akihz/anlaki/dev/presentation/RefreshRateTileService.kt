@@ -6,8 +6,9 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.widget.Toast
 import akihz.anlaki.dev.R
+import akihz.anlaki.dev.data.DisplayManagerDataSource
+import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
-import akihz.anlaki.dev.utils.Constants
 import akihz.anlaki.dev.utils.PreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,14 +20,34 @@ import kotlinx.coroutines.withContext
 class RefreshRateTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private lateinit var refreshRateRepository: RefreshRateRepository
+    private var supportedRates: List<Float> = emptyList()
     private var currentIndex = 0
     private var isConnecting = false
 
     override fun onStartListening() {
         super.onStartListening()
         PreferencesHelper.init(applicationContext)
-        currentIndex = PreferencesHelper.currentIndex
-        updateTile()
+        refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(applicationContext))
+        loadSupportedRatesAndRestore()
+    }
+
+    private fun loadSupportedRatesAndRestore() {
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                refreshRateRepository.getSupportedRates()
+            }
+
+            result.onSuccess { rates ->
+                supportedRates = rates
+                val savedRate = PreferencesHelper.lastRate
+                currentIndex = rates.indexOfFirst { kotlin.math.abs(it - savedRate) < 1f }
+                    .takeIf { it >= 0 } ?: 0
+                updateTile()
+            }.onError { _, _ ->
+                updateTileUnavailable()
+            }
+        }
     }
 
     override fun onStopListening() {
@@ -86,33 +107,35 @@ class RefreshRateTileService : TileService() {
     }
 
     private fun cycleRate() {
-        currentIndex = (currentIndex + 1) % Constants.REFRESH_RATES.size
-        val newRate = Constants.REFRESH_RATES[currentIndex]
+        if (supportedRates.isEmpty()) {
+            showToast("No supported refresh rates detected")
+            return
+        }
+
+        currentIndex = (currentIndex + 1) % supportedRates.size
+        val newRate = supportedRates[currentIndex]
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                ShizukuHelper.setRefreshRate(newRate)
+                refreshRateRepository.setAndVerifyRate(newRate)
             }
 
-            if (result.isSuccess) {
-                PreferencesHelper.saveState(currentIndex, newRate)
-                updateTileWithRate(newRate)
-            } else {
-                showToast("Failed to change rate")
+            result.onSuccess { verifiedRate ->
+                PreferencesHelper.saveState(currentIndex, verifiedRate)
+                updateTileWithRate(verifiedRate)
+            }.onError { _, msg ->
+                showToast(msg)
             }
         }
     }
 
     private fun updateTile() {
-        val tile = qsTile ?: return
-        val currentRate = Constants.REFRESH_RATES[currentIndex]
-        val iconRes = getIconRes(currentRate)
-
-        tile.state = Tile.STATE_ACTIVE
-        tile.label = "akihz"
-        tile.subtitle = "${currentRate.toInt()} Hz"
-        tile.icon = Icon.createWithResource(this, iconRes)
-        tile.updateTile()
+        val rate = supportedRates.getOrNull(currentIndex)
+        if (rate != null) {
+            updateTileWithRate(rate)
+        } else {
+            updateTileUnavailable()
+        }
     }
 
     private fun updateTileWithRate(rate: Float) {

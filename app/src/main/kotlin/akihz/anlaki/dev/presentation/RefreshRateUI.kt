@@ -17,11 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
-import akihz.anlaki.dev.utils.Constants
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RefreshRateScreen(
+    supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
     onRateSelected: (Float) -> Unit
@@ -43,17 +43,26 @@ fun RefreshRateScreen(
                 .padding(bottom = 16.dp)
         )
 
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Constants.REFRESH_RATES.forEach { hz ->
-                RefreshRateButton(
-                    hz = hz,
-                    isSelected = selectedRate != null && kotlin.math.abs(hz - selectedRate) < 1f,
-                    onClick = { onRateSelected(hz) },
-                    modifier = Modifier.weight(1f)
-                )
+        if (supportedRates.isEmpty()) {
+            Text(
+                text = "No supported refresh rates detected.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                supportedRates.forEach { hz ->
+                    RefreshRateButton(
+                        hz = hz,
+                        isSelected = selectedRate != null && kotlin.math.abs(hz - selectedRate) < 1f,
+                        onClick = { onRateSelected(hz) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

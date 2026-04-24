@@ -18,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import akihz.anlaki.dev.data.DisplayManagerDataSource
+import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import kotlinx.coroutines.CoroutineScope
@@ -36,9 +38,11 @@ class MainActivity : ComponentActivity() {
         private const val REQUEST_CODE_SHIZUKU = 1001
     }
 
+    private lateinit var refreshRateRepository: RefreshRateRepository
     private var isServiceBound = false
     private var currentRate: Float? = null
     private var selectedRate by mutableStateOf<Float?>(null)
+    private var supportedRates by mutableStateOf<List<Float>>(emptyList())
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
@@ -62,6 +66,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(this))
         setContent {
             AnlakiTheme {
                 val darkTheme = isSystemInDarkTheme()
@@ -73,6 +78,7 @@ class MainActivity : ComponentActivity() {
                 }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     RefreshRateScreen(
+                        supportedRates = supportedRates,
                         currentRate = currentRate,
                         selectedRate = selectedRate,
                         onRateSelected = { hz -> onRateSelected(hz) }
@@ -87,15 +93,15 @@ class MainActivity : ComponentActivity() {
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                ShizukuHelper.setRefreshRate(hz)
+                refreshRateRepository.setAndVerifyRate(hz)
             }
 
-            if (result.isSuccess) {
-                currentRate = hz
-                selectedRate = hz
-                Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
-            } else {
-                showError("Failed to set refresh rate.")
+            result.onSuccess { verifiedRate ->
+                currentRate = verifiedRate
+                selectedRate = verifiedRate
+                Toast.makeText(this@MainActivity, "${verifiedRate.toInt()} Hz", Toast.LENGTH_SHORT).show()
+            }.onError { _, message ->
+                showError(message)
             }
         }
     }
@@ -138,6 +144,7 @@ class MainActivity : ComponentActivity() {
 
     private fun bindUserServiceAndLoad() {
         if (isServiceBound) {
+            loadSupportedRates()
             loadCurrentRate()
             return
         }
@@ -145,6 +152,7 @@ class MainActivity : ComponentActivity() {
         ShizukuHelper.bindUserService(
             onConnected = {
                 isServiceBound = true
+                loadSupportedRates()
                 loadCurrentRate()
             },
             onFailed = { _, message ->
@@ -153,16 +161,28 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun loadSupportedRates() {
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                refreshRateRepository.getSupportedRates()
+            }
+            result.onSuccess { rates ->
+                supportedRates = rates
+            }.onError { _, message ->
+                showError("Failed to detect supported rates: $message")
+            }
+        }
+    }
+
     private fun loadCurrentRate() {
         if (!isServiceBound) return
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                ShizukuHelper.getCurrentRefreshRate()
+                refreshRateRepository.getCurrentRate()
             }
 
-            if (result.isSuccess) {
-                val rate = result.getOrNull()!!
+            result.onSuccess { rate ->
                 currentRate = rate
                 selectedRate = rate
             }

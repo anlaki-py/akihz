@@ -18,4 +18,3 @@
 
 ## Mandatory
 1. Never run `./gradlew build` to ensure it compiles or any similar commands, i will do that manually and hand you the logs and errors.
-2. Send completion notification

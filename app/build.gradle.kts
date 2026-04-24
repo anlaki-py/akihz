@@ -1,3 +1,5 @@
+val baseVersion = "0.0"
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,8 +14,20 @@ android {
         applicationId = "akihz.anlaki.dev"
         minSdk = 30
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
+        versionName = (findProperty("versionName") as? String) ?: baseVersion
+    }
+
+    signingConfigs {
+        val keystorePath = System.getenv("KEYSTORE_FILE")
+        if (keystorePath != null && file(keystorePath).exists()) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildFeatures {
@@ -33,6 +47,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
@@ -53,19 +70,22 @@ android {
         }
     }
 
+    val isCiBuild = project.hasProperty("ciBuild")
     applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             val versionName = versionName
             val versionCode = versionCode
             val buildType = buildType.name
-            
-            val newName = if (buildType == "debug") {
+
+            val newName = if (isCiBuild) {
+                "app-release.apk"
+            } else if (buildType == "debug") {
                 "app-v${versionName}(${versionCode})-debug.apk"
             } else {
                 "app-v${versionName}(${versionCode}).apk"
             }
-            
+
             output.outputFileName = newName
         }
     }
@@ -82,4 +102,8 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.core:core:1.12.0")
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.coroutines.test)
 }

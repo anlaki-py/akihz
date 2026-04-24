@@ -6,7 +6,10 @@ enum class ErrorType {
     SERVICE_BINDING_FAILED,
     COMMAND_EXECUTION_FAILED,
     CONNECTION_LOST,
-    TIMEOUT;
+    TIMEOUT,
+    DISPLAY_NOT_FOUND,
+    NO_REFRESH_RATES,
+    UNSUPPORTED_API;
 
     fun getUserMessage(): String = when (this) {
         SHIZUKU_NOT_RUNNING -> "Shizuku is not running"
@@ -15,5 +18,8 @@ enum class ErrorType {
         COMMAND_EXECUTION_FAILED -> "Command execution failed"
         CONNECTION_LOST -> "Connection lost"
         TIMEOUT -> "Operation timed out"
+        DISPLAY_NOT_FOUND -> "Display not found"
+        NO_REFRESH_RATES -> "No supported refresh rates detected"
+        UNSUPPORTED_API -> "Unsupported Android version"
     }
 }

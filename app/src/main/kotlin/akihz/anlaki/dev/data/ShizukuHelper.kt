@@ -133,38 +133,38 @@ object ShizukuHelper {
     }
 
     fun getCurrentRefreshRate(): Result<Float> {
-        val userRateResult = exec("settings get secure user_refresh_rate")
-        if (userRateResult.isSuccess) {
-            val userRate = userRateResult.getOrNull()
-            if (userRate != null && userRate != "null" && userRate.isNotBlank()) {
-                userRate.trim().toFloatOrNull()?.let {
-                    return Result.success(it)
+        val keys = OemSettingsStrategy.resolve().readKeys
+        for (key in keys) {
+            val result = exec("settings get secure $key")
+            if (result.isSuccess) {
+                result.getOrNull()?.let { raw ->
+                    if (raw.isNotBlank() && raw != "null") {
+                        raw.trim().toFloatOrNull()?.let { rate ->
+                            return Result.success(rate)
+                        }
+                    }
                 }
             }
         }
-
-        val miuiRateResult = exec("settings get secure miui_refresh_rate")
-        if (miuiRateResult.isSuccess) {
-            val miuiRate = miuiRateResult.getOrNull()
-            if (miuiRate != null && miuiRate != "null" && miuiRate.isNotBlank()) {
-                miuiRate.trim().toFloatOrNull()?.let {
-                    return Result.success(it)
-                }
-            }
-        }
-
         return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Could not retrieve refresh rate")
     }
 
     fun setRefreshRate(hz: Float): Result<Unit> {
         val hzInt = hz.toInt()
+        val keys = OemSettingsStrategy.resolve().writeKeys
+        var anySuccess = false
 
-        val result1 = exec("settings put secure user_refresh_rate $hzInt")
-        val result2 = exec("settings put secure miui_refresh_rate $hzInt")
+        keys.forEach { key ->
+            val result = exec("settings put secure $key $hzInt")
+            if (result.isSuccess) {
+                anySuccess = true
+            }
+        }
 
-        return when {
-            result1.isSuccess || result2.isSuccess -> Result.success(Unit)
-            else -> Result.error(
+        return if (anySuccess) {
+            Result.success(Unit)
+        } else {
+            Result.error(
                 ErrorType.COMMAND_EXECUTION_FAILED,
                 "Failed to set refresh rate"
             )
