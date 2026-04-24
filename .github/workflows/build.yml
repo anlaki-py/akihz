@@ -1,0 +1,315 @@
+name: Build & Release
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle/**'
+      - 'gradle.properties'
+      - '.github/workflows/**'
+    tags: ['v*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx3g -Dfile.encoding=UTF-8 -XX:+UseG1GC"
+
+jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      create_tag: ${{ steps.version.outputs.create_tag }}
+      is_beta: ${{ steps.version.outputs.is_beta }}
+      apk_name: ${{ steps.version.outputs.apk_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          BASE_VERSION=$(grep 'val baseVersion' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+
+          # Sanitize branch name for use in filenames/tags (replace / and other special chars with -)
+          BRANCH_SAFE="${GITHUB_REF_NAME//\//-}"
+          BRANCH_SAFE="${BRANCH_SAFE//[^a-zA-Z0-9._-]/-}"
+
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${{ github.ref_name }}"
+            IS_BETA=false
+            CREATE_TAG=false
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            PATCH=$(git tag -l "v${BASE_VERSION}.*" | { grep -v beta || true; } | sed "s/v${BASE_VERSION}\.//" | sort -n | tail -1)
+            if [ -z "$PATCH" ]; then
+              NEXT=1
+            else
+              NEXT=$((${PATCH} + 1))
+            fi
+            TAG="v${BASE_VERSION}.${NEXT}"
+            IS_BETA=false
+            CREATE_TAG=true
+          else
+            # Any non-master branch → beta release
+            PATCH=$(git tag -l "v${BASE_VERSION}.*-beta.${BRANCH_SAFE}.*" | sed "s/v${BASE_VERSION}\.\(.*\)-beta.${BRANCH_SAFE}\..*/\1/" | sort -n | tail -1)
+            BUILD=$(git tag -l "v${BASE_VERSION}.${PATCH:--}-beta.${BRANCH_SAFE}.*" | sed "s/.*-beta.${BRANCH_SAFE}\.//" | sort -n | tail -1)
+            NEXT_PATCH=$((${PATCH:--1} + 1))
+            # Reuse same patch number, increment build counter per branch
+            NEXT_BUILD=$((${BUILD:--1} + 1))
+            TAG="v${BASE_VERSION}.${NEXT_PATCH}-beta.${BRANCH_SAFE}.${NEXT_BUILD}"
+            IS_BETA=true
+            CREATE_TAG=true
+          fi
+
+          VERSION_NAME="${TAG#v}"
+          VERSION_CODE=$(( ($(date -u +%s) - 1704067200) / 60 ))
+          APK_NAME="akihz-${TAG}"
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "create_tag=$CREATE_TAG" >> "$GITHUB_OUTPUT"
+          echo "is_beta=$IS_BETA" >> "$GITHUB_OUTPUT"
+          echo "apk_name=$APK_NAME" >> "$GITHUB_OUTPUT"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          gradle-home-cache-cleanup: true
+
+      - name: Run lint
+        id: lint
+        shell: bash
+        run: |
+          result=1
+          for i in 1 2 3; do
+            ./gradlew lint --parallel --build-cache --no-daemon --configuration-cache-problems=warn && { result=0; break; }
+            echo "::warning::Lint attempt $i failed, retrying..."
+            sleep 10
+          done
+          exit $result
+
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results-*.html
+          retention-days: 14
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          gradle-home-cache-cleanup: true
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          result=1
+          for i in 1 2 3; do
+            ./gradlew test --parallel --build-cache --no-daemon --configuration-cache-problems=warn && { result=0; break; }
+            echo "::warning::Test attempt $i failed, retrying..."
+            sleep 10
+          done
+          exit $result
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: test-results
+          path: app/build/reports/tests/
+          retention-days: 14
+
+  build:
+    name: Build Signed APK
+    needs: [version, lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          gradle-home-cache-cleanup: true
+
+      - name: Decode signing keystore
+        shell: bash
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/release.keystore
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build Release APK
+        shell: bash
+        run: |
+          result=1
+          for i in 1 2 3; do
+            ./gradlew assembleRelease --parallel --build-cache --no-daemon --configuration-cache-problems=warn --stacktrace \
+              -PversionCode=${{ needs.version.outputs.version_code }} \
+              -PversionName=${{ needs.version.outputs.version_name }} \
+              -PciBuild && { result=0; break; }
+            echo "::warning::Build attempt $i failed, retrying..."
+            sleep 15
+          done
+          exit $result
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ env.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ env.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+
+      - name: Cleanup keystore
+        if: always()
+        shell: bash
+        run: rm -f ${{ github.workspace }}/release.keystore
+
+      - name: Verify APK and log size
+        shell: bash
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "::error::APK not found at $APK_PATH"
+            exit 1
+          fi
+          SIZE=$(stat -c%s "$APK_PATH")
+          SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE / 1048576}")
+          echo "## APK Size: ${SIZE_MB}MB ($SIZE bytes)" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::APK size: ${SIZE_MB}MB ($SIZE bytes)"
+          if [ "$SIZE" -lt 100000 ]; then
+            echo "::error::APK suspiciously small ($SIZE bytes)"
+            exit 1
+          fi
+
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
+          ${BUILD_TOOLS}apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+
+      - name: Rename APK
+        shell: bash
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/${{ needs.version.outputs.apk_name }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ${{ needs.version.outputs.apk_name }}
+          path: app/build/outputs/apk/release/${{ needs.version.outputs.apk_name }}.apk
+          retention-days: 90
+
+  release:
+    name: Release
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download APK
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.version.outputs.apk_name }}
+          path: artifacts/
+
+      - name: Create tag
+        if: needs.version.outputs.create_tag == 'true'
+        shell: bash
+        run: |
+          git tag "${{ needs.version.outputs.tag }}"
+          git push origin "${{ needs.version.outputs.tag }}"
+
+      - name: Release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          files: artifacts/${{ needs.version.outputs.apk_name }}.apk
+          name: >-
+            akihz ${{ needs.version.outputs.tag }}${{ needs.version.outputs.is_beta == 'true' && ' [BETA]' || '' }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ needs.version.outputs.is_beta == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-failure:
+    name: Notify on Failure
+    needs: [version, lint, test, build, release]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Create failure issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "CI failure on ${GITHUB_REF_NAME} ($(date +%Y-%m-%d))" \
+            --body "Pipeline failed for commit [\`${GITHUB_SHA::7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}).
+
+          **Run:** [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})
+          **Branch:** \`${GITHUB_REF_NAME}\`" \
+            --label "bug"
