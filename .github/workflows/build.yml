@@ -55,7 +55,7 @@ jobs:
             TAG="${{ github.ref_name }}"
             IS_BETA=false
             CREATE_TAG=false
-          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             PATCH=$(git tag -l "v${BASE_VERSION}.*" | { grep -v beta || true; } | sed "s/v${BASE_VERSION}\.//" | sort -n | tail -1)
             if [ -z "$PATCH" ]; then
               NEXT=1
@@ -66,7 +66,7 @@ jobs:
             IS_BETA=false
             CREATE_TAG=true
           else
-            # Any non-master branch → beta release
+            # Any non-main branch → beta release
             PATCH=$(git tag -l "v${BASE_VERSION}.*-beta.${BRANCH_SAFE}.*" | sed "s/v${BASE_VERSION}\.\(.*\)-beta.${BRANCH_SAFE}\..*/\1/" | sort -n | tail -1)
             BUILD=$(git tag -l "v${BASE_VERSION}.${PATCH:--}-beta.${BRANCH_SAFE}.*" | sed "s/.*-beta.${BRANCH_SAFE}\.//" | sort -n | tail -1)
             NEXT_PATCH=$((${PATCH:--1} + 1))
