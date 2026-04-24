@@ -18,7 +18,7 @@ open class DisplayManagerDataSource(private val context: Context) {
      *
      * @return [Result.Success] with distinct sorted rates, or [Result.Error] on failure.
      */
-    fun getSupportedRefreshRates(): Result<List<Float>> {
+    open fun getSupportedRefreshRates(): Result<List<Float>> {
         return try {
             val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
             val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
@@ -46,7 +46,7 @@ open class DisplayManagerDataSource(private val context: Context) {
      *
      * @return [Result.Success] with the active refresh rate in Hz.
      */
-    fun getCurrentRefreshRate(): Result<Float> {
+    open fun getCurrentRefreshRate(): Result<Float> {
         return try {
             val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
             val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY)

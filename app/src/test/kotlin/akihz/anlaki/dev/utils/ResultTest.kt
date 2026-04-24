@@ -45,9 +45,10 @@ class ResultTest {
 
     @Test
     fun `map preserves Error`() {
-        val result = Result.error<Int>(ErrorType.CONNECTION_LOST).map { it * 2 }
-        assertTrue(result.isError)
-        assertEquals(ErrorType.CONNECTION_LOST, result.getErrorOrNull()?.errorType)
+        val result: Result<Int> = Result.error(ErrorType.CONNECTION_LOST)
+        val mapped = result.map { it * 2 }
+        assertTrue(mapped.isError)
+        assertEquals(ErrorType.CONNECTION_LOST, mapped.getErrorOrNull()?.errorType)
     }
 
     @Test
@@ -60,14 +61,16 @@ class ResultTest {
     @Test
     fun `onSuccess does not execute for Error`() {
         var called = false
-        Result.error<Int>(ErrorType.SERVICE_BINDING_FAILED).onSuccess { called = true }
+        val result: Result<Int> = Result.error(ErrorType.SERVICE_BINDING_FAILED)
+        result.onSuccess { called = true }
         assertFalse(called)
     }
 
     @Test
     fun `onError executes action for Error`() {
         var called = false
-        Result.error<Int>(ErrorType.SHIZUKU_NOT_RUNNING).onError { _, _ -> called = true }
+        val result: Result<Int> = Result.error(ErrorType.SHIZUKU_NOT_RUNNING)
+        result.onError { _, _ -> called = true }
         assertTrue(called)
     }
 
