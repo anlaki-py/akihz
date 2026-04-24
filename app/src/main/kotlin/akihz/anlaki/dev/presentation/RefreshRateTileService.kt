@@ -117,12 +117,12 @@ class RefreshRateTileService : TileService() {
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setAndVerifyRate(newRate)
+                refreshRateRepository.setRate(newRate)
             }
 
-            result.onSuccess { verifiedRate ->
-                PreferencesHelper.saveState(currentIndex, verifiedRate)
-                updateTileWithRate(verifiedRate)
+            result.onSuccess {
+                PreferencesHelper.saveState(currentIndex, newRate)
+                updateTileWithRate(newRate)
             }.onError { _, msg ->
                 showToast(msg)
             }

@@ -55,42 +55,37 @@ class RefreshRateRepositoryTest {
     }
 
     @Test
-    fun `setAndVerifyRate succeeds when set and verify match`() = runTest {
-        val fakeSource = object : DisplayManagerDataSource(context) {
-            override fun getCurrentRefreshRate(): Result<Float> {
-                return Result.success(90f)
-            }
-        }
+    fun `setRate succeeds when command succeeds`() = runTest {
+        val fakeSource = DisplayManagerDataSource(context)
         val fakeSetRate: suspend (Float) -> Result<Unit> = { _ ->
             Result.success(Unit)
         }
         val repo = RefreshRateRepository(fakeSource, fakeSetRate)
 
-        val result = repo.setAndVerifyRate(90f)
+        val result = repo.setRate(120f)
 
         assertTrue(result.isSuccess)
-        assertEquals(90f, result.getOrNull())
     }
 
     @Test
-    fun `setAndVerifyRate fails when set operation fails`() = runTest {
+    fun `setRate fails when command fails`() = runTest {
         val fakeSource = DisplayManagerDataSource(context)
         val fakeSetRate: suspend (Float) -> Result<Unit> = { _ ->
             Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "shell error")
         }
         val repo = RefreshRateRepository(fakeSource, fakeSetRate)
 
-        val result = repo.setAndVerifyRate(120f)
+        val result = repo.setRate(120f)
 
         assertTrue(result.isError)
         assertEquals(ErrorType.COMMAND_EXECUTION_FAILED, result.getErrorOrNull()?.errorType)
     }
 
     @Test
-    fun `setAndVerifyRate fails when verification mismatches`() = runTest {
+    fun `setRate returns immediately without verification`() = runTest {
         val fakeSource = object : DisplayManagerDataSource(context) {
             override fun getCurrentRefreshRate(): Result<Float> {
-                return Result.success(60f)
+                return Result.success(60f) // different from requested
             }
         }
         val fakeSetRate: suspend (Float) -> Result<Unit> = { _ ->
@@ -98,27 +93,8 @@ class RefreshRateRepositoryTest {
         }
         val repo = RefreshRateRepository(fakeSource, fakeSetRate)
 
-        val result = repo.setAndVerifyRate(120f)
-
-        assertTrue(result.isError)
-        assertEquals(ErrorType.COMMAND_EXECUTION_FAILED, result.getErrorOrNull()?.errorType)
-    }
-
-    @Test
-    fun `setAndVerifyRate succeeds within tolerance`() = runTest {
-        val fakeSource = object : DisplayManagerDataSource(context) {
-            override fun getCurrentRefreshRate(): Result<Float> {
-                return Result.success(119.8f)
-            }
-        }
-        val fakeSetRate: suspend (Float) -> Result<Unit> = { _ ->
-            Result.success(Unit)
-        }
-        val repo = RefreshRateRepository(fakeSource, fakeSetRate)
-
-        val result = repo.setAndVerifyRate(120f)
-
+        // Should succeed even though display reports 60f
+        val result = repo.setRate(120f)
         assertTrue(result.isSuccess)
-        assertEquals(119.8f, result.getOrNull())
     }
 }
