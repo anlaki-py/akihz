@@ -18,6 +18,34 @@ class OemSettingsStrategyTest {
     }
 
     @Test
+    fun `realme brand returns realme keyset with system write keys`() {
+        ReflectionHelpers.setStaticField(Build::class.java, "MANUFACTURER", "realme")
+        ReflectionHelpers.setStaticField(Build::class.java, "BRAND", "realme")
+
+        val keySet = OemSettingsStrategy.resolve()
+
+        assertEquals(
+            listOf("user_refresh_rate", "peak_refresh_rate", "min_refresh_rate"),
+            keySet.readKeys
+        )
+        assertEquals(
+            listOf("user_refresh_rate", "peak_refresh_rate", "min_refresh_rate"),
+            keySet.writeKeys
+        )
+        assertEquals(listOf("peak_refresh_rate"), keySet.systemWriteKeys)
+    }
+
+    @Test
+    fun `realme manufacturer with different brand still returns realme keyset`() {
+        ReflectionHelpers.setStaticField(Build::class.java, "MANUFACTURER", "realme")
+        ReflectionHelpers.setStaticField(Build::class.java, "BRAND", "")
+
+        val keySet = OemSettingsStrategy.resolve()
+
+        assertEquals(listOf("peak_refresh_rate"), keySet.systemWriteKeys)
+    }
+
+    @Test
     fun `xiaomi manufacturer returns xiaomi keyset`() {
         ReflectionHelpers.setStaticField(Build::class.java, "MANUFACTURER", "Xiaomi")
         ReflectionHelpers.setStaticField(Build::class.java, "BRAND", "Xiaomi")

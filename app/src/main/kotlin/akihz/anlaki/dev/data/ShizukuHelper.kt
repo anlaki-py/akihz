@@ -151,11 +151,18 @@ object ShizukuHelper {
 
     fun setRefreshRate(hz: Float): Result<Unit> {
         val hzInt = hz.toInt()
-        val keys = OemSettingsStrategy.resolve().writeKeys
+        val strategy = OemSettingsStrategy.resolve()
         var anySuccess = false
 
-        keys.forEach { key ->
+        strategy.writeKeys.forEach { key ->
             val result = exec("settings put secure $key $hzInt")
+            if (result.isSuccess) {
+                anySuccess = true
+            }
+        }
+
+        strategy.systemWriteKeys.forEach { key ->
+            val result = exec("settings put system $key $hzInt")
             if (result.isSuccess) {
                 anySuccess = true
             }
