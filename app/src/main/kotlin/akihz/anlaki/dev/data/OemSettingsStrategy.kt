@@ -6,6 +6,8 @@ import android.os.Build
  * Maps OEM-specific Secure Settings keys used to control refresh rate.
  *
  * Different manufacturers write to different keys:
+ * - realme (ColorOS/realme UI): writes `peak_refresh_rate` to System settings in addition
+ *   to the standard Secure keys.
  * - Xiaomi (MIUI/HyperOS): `miui_refresh_rate`, falls back to `user_refresh_rate`
  * - Samsung: `min_refresh_rate` + `peak_refresh_rate` pair
  * - Stock Android / Others: `user_refresh_rate`, then `peak_refresh_rate` pair
@@ -16,11 +18,18 @@ object OemSettingsStrategy {
         /** Keys to query when reading the current rate. Ordered by priority. */
         val readKeys: List<String>,
         /** Keys to write when applying a new rate. All are written. */
-        val writeKeys: List<String>
+        val writeKeys: List<String>,
+        /** Keys that must be written to the System (not Secure) settings namespace. */
+        val systemWriteKeys: List<String> = emptyList()
     )
 
     fun resolve(): KeySet {
         return when {
+            isRealme() -> KeySet(
+                readKeys = listOf("user_refresh_rate", "peak_refresh_rate", "min_refresh_rate"),
+                writeKeys = listOf("user_refresh_rate", "peak_refresh_rate", "min_refresh_rate"),
+                systemWriteKeys = listOf("peak_refresh_rate")
+            )
             isXiaomi() -> KeySet(
                 readKeys = listOf("miui_refresh_rate", "user_refresh_rate"),
                 writeKeys = listOf("miui_refresh_rate", "user_refresh_rate")
@@ -45,5 +54,10 @@ object OemSettingsStrategy {
 
     private fun isSamsung(): Boolean {
         return Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+    }
+
+    private fun isRealme(): Boolean {
+        return Build.MANUFACTURER.equals("realme", ignoreCase = true) ||
+                Build.BRAND.equals("realme", ignoreCase = true)
     }
 }
