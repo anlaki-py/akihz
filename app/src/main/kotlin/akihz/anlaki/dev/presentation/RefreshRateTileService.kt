@@ -9,6 +9,7 @@ import akihz.anlaki.dev.R
 import akihz.anlaki.dev.data.DisplayManagerDataSource
 import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ class RefreshRateTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
+        KeepAliveService.start(applicationContext)
         PreferencesHelper.init(applicationContext)
         refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(applicationContext))
         loadSupportedRatesAndRestore()

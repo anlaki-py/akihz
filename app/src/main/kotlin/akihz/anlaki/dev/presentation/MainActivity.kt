@@ -18,6 +18,7 @@ import akihz.anlaki.dev.data.DisplayManagerDataSource
 import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
+import akihz.anlaki.dev.utils.KeepAliveService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        KeepAliveService.start(this)
         refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(this))
         setContent {
             AnlakiTheme {

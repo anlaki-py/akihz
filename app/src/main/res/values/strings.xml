@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">akihz</string>
+    <string name="keep_alive_channel_name">akihz background service</string>
+    <string name="keep_alive_notification_title">akihz is running</string>
+    <string name="keep_alive_notification_text">Keeping refresh rate controls available in the background.</string>
 </resources>
