@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 class RefreshRateTileService : TileService() {
 
@@ -169,10 +170,14 @@ class RefreshRateTileService : TileService() {
         Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun getIconRes(rate: Float): Int = when (rate.toInt()) {
+    private fun getIconRes(rate: Float): Int = when (rate.roundToInt()) {
+        45 -> R.drawable.ic_rate_45
         60 -> R.drawable.ic_rate_60
         90 -> R.drawable.ic_rate_90
         120 -> R.drawable.ic_rate_120
+        144 -> R.drawable.ic_rate_144
+        165 -> R.drawable.ic_rate_165
+        240 -> R.drawable.ic_rate_240
         else -> R.drawable.ic_refresh_rate
     }
 }
