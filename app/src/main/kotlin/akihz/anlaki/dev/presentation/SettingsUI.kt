@@ -14,11 +14,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.BuildConfig
+import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 
 private const val WEBSITE_URL = "https://anlaki.dev"
 private const val SOURCE_CODE_URL = "https://github.com/anlaki-py/akihz"
@@ -32,6 +34,7 @@ private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/relea
  */
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 
     Box(
@@ -69,6 +72,13 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Donate on Ko-fi")
+            }
+
+            OutlinedButton(
+                onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Allow background activity")
             }
         }
 

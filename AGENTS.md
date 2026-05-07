@@ -1,7 +1,7 @@
 # Android App Development - Agent Guidelines
 
 ## Code Structure Rules
-1. **File Limit**: Maximum 200 lines per Kotlin/Java file
+1. **File Limit**: Maximum 200 lines per Kotlin/Java file. (Note: It is acceptable if the file is slightly longer than 200 lines, or even if it is necessary to have many lines. Only split the file if having a large number of lines does not make sense.)
 2. **Package Structure**:
    - `data/` - models, repositories, data sources
    - `domain/` - use cases, business logic
