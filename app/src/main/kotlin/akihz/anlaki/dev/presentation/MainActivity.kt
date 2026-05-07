@@ -7,16 +7,12 @@ import androidx.core.view.WindowCompat
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import akihz.anlaki.dev.data.DisplayManagerDataSource
 import akihz.anlaki.dev.data.RefreshRateRepository
@@ -54,16 +50,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private val permissionResultListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
-        if (requestCode == REQUEST_CODE_SHIZUKU) {
-            if (grantResult == PackageManager.PERMISSION_GRANTED) {
-                bindUserServiceAndLoad()
-            } else {
-                showError("Shizuku permission denied.")
-            }
+        if (requestCode == REQUEST_CODE_SHIZUKU && grantResult == PackageManager.PERMISSION_GRANTED) {
+            bindUserServiceAndLoad()
+        } else if (requestCode == REQUEST_CODE_SHIZUKU) {
+            showError("Shizuku permission denied.")
         }
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(this))
@@ -76,14 +69,12 @@ class MainActivity : ComponentActivity() {
                     window.navigationBarColor = backgroundColor.toArgb()
                     WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
                 }
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    RefreshRateScreen(
-                        supportedRates = supportedRates,
-                        currentRate = currentRate,
-                        selectedRate = selectedRate,
-                        onRateSelected = { hz -> onRateSelected(hz) }
-                    )
-                }
+                AkihzApp(
+                    supportedRates = supportedRates,
+                    currentRate = currentRate,
+                    selectedRate = selectedRate,
+                    onRateSelected = { hz -> onRateSelected(hz) }
+                )
             }
         }
     }
@@ -190,19 +181,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showShizukuNotInstalledDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Shizuku Required")
-            .setMessage("This app requires Shizuku to function.\n\n1. Install Shizuku\n2. Open Shizuku and follow setup\n3. Return to this app")
-            .setPositiveButton("OK", null)
-            .setCancelable(false)
-            .show()
+        showDialog("Shizuku Required", "This app requires Shizuku to function.\n\n1. Install Shizuku\n2. Open Shizuku and follow setup\n3. Return to this app", false)
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String) = showDialog("Error", message)
+
+    private fun showDialog(title: String, message: String, cancelable: Boolean = true) {
         AlertDialog.Builder(this)
-            .setTitle("Error")
+            .setTitle(title)
             .setMessage(message)
             .setPositiveButton("OK", null)
+            .setCancelable(cancelable)
             .show()
     }
 }
