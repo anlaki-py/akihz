@@ -2,6 +2,10 @@ package akihz.anlaki.dev.presentation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -12,10 +16,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 
-private enum class AppPage(val label: String) {
-    Home("Home"),
-    Settings("Settings")
+private enum class AppPage(
+    val label: String,
+    val icon: ImageVector
+) {
+    Home("Home", Icons.Default.Home),
+    Settings("Settings", Icons.Default.Settings)
 }
 
 /**
@@ -86,7 +94,12 @@ private fun AkihzBottomBar(
                 selected = currentPage == page,
                 onClick = { onPageSelected(page) },
                 label = { Text(page.label) },
-                icon = { Text(page.label.take(1)) }
+                icon = {
+                    Icon(
+                        imageVector = page.icon,
+                        contentDescription = page.label
+                    )
+                }
             )
         }
     }
