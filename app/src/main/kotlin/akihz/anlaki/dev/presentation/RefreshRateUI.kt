@@ -18,16 +18,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 
+/**
+ * Shows detected refresh rates and lets the user select one.
+ *
+ * @param supportedRates refresh rates supported by the current display
+ * @param currentRate currently active refresh rate
+ * @param selectedRate refresh rate selected in the UI
+ * @param onRateSelected called when the user picks a refresh rate
+ * @param modifier layout modifier supplied by the parent screen
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RefreshRateScreen(
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
-    onRateSelected: (Float) -> Unit
+    onRateSelected: (Float) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
