@@ -34,9 +34,11 @@ class AppMonitorService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var refreshRateRepository: RefreshRateRepository
 
+    /** The last package we saw from an accessibility event. */
     private var currentPackage: String? = null
+    /** The package that currently has an active profile applied. */
+    private var activeProfilePackage: String? = null
     private var isApplying = false
-    private var lastProfiledPackage: String? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -55,9 +57,17 @@ class AppMonitorService : AccessibilityService() {
 
         val packageName = event.packageName?.toString() ?: return
         if (packageName == currentPackage) return
-        if (shouldIgnorePackage(packageName)) return
 
         currentPackage = packageName
+
+        if (shouldIgnorePackage(packageName)) {
+            // This is an overlay (notification shade, launcher, etc).
+            // Don't change anything, but remember we're in an overlay
+            // so that when we return to the real app we re-apply its profile.
+            Log.d(TAG, "Ignored overlay: $packageName")
+            return
+        }
+
         handleAppSwitch(packageName)
     }
 
@@ -103,34 +113,21 @@ class AppMonitorService : AccessibilityService() {
         val profileRate = PreferencesHelper.getAppProfile(packageName)
 
         if (profileRate != null) {
-            // Switching TO an app with a profile — apply its rate and register override
-            lastProfiledPackage = packageName
-            registerOverride(profileRate, packageName)
-            applyRate(profileRate, packageName)
-        } else if (lastProfiledPackage != null && !isSameAppFamily(packageName, lastProfiledPackage!!)) {
-            // Switching AWAY from a profiled app to a different app — restore global rate
-            lastProfiledPackage = null
-            clearOverride()
-            restoreGlobalRate()
+            // Switching TO an app with a profile
+            if (activeProfilePackage != packageName) {
+                activeProfilePackage = packageName
+                registerOverride(profileRate, packageName)
+                applyRate(profileRate, packageName)
+            }
+        } else {
+            // Switching TO an app without a profile
+            if (activeProfilePackage != null) {
+                // We were in a profiled app, now we're in a non-profiled app
+                activeProfilePackage = null
+                clearOverride()
+                restoreGlobalRate()
+            }
         }
-    }
-
-    /**
-     * Checks if two packages belong to the same app family.
-     * Used to avoid restoring global rate when switching between
-     * activities of the same app (e.g., Instagram camera vs feed).
-     */
-    private fun isSameAppFamily(a: String, b: String): Boolean {
-        // Exact match
-        if (a == b) return true
-
-        // Same app but different process (e.g., com.instagram.android vs com.instagram.android:x)
-        val baseA = a.split(":").first()
-        val baseB = b.split(":").first()
-        if (baseA == baseB) return true
-
-        // Known split-screen / multi-window pairs
-        return false
     }
 
     /**
