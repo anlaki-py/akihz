@@ -40,7 +40,7 @@ class AppListRepository(private val context: Context) {
                     packageName = app.packageName,
                     appName = app.loadLabel(pm).toString(),
                     icon = app.loadIcon(pm),
-                    isSystemApp = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    isSystemApp = isSystemApp(app)
                 )
             }
             .filter { app ->
@@ -58,5 +58,16 @@ class AppListRepository(private val context: Context) {
             .sortedBy { it.appName.lowercase() }
 
         return apps
+    }
+
+    /**
+     * Determines if an app is a system app.
+     *
+     * A system app has FLAG_SYSTEM set AND does NOT have FLAG_UPDATED_SYSTEM_APP.
+     * Updated system apps (like updated Google apps) are treated as user apps.
+     */
+    private fun isSystemApp(app: ApplicationInfo): Boolean {
+        return (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0 &&
+                (app.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
     }
 }
