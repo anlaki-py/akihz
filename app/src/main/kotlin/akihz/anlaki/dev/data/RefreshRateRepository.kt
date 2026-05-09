@@ -12,15 +12,12 @@ import kotlinx.coroutines.withContext
  * - **Read paths** always prefer [DisplayManagerDataSource] (hardware API, no permissions).
  * - **Write paths** delegate to [ShizukuHelper] which writes to an OEM-specific
  *   fallback chain of Secure/System/Global Settings keys.
- * - **Lock mode** sets min == peak to constrain SurfaceFlinger.
+ * - Writes to OEM-specific settings keys.
  */
 class RefreshRateRepository(
     private val displayManagerDataSource: DisplayManagerDataSource,
     private val setRateCommand: suspend (Float) -> Result<Unit> = { hz ->
         ShizukuHelper.setRefreshRate(hz)
-    },
-    private val setRateLockedCommand: suspend (Float) -> Result<Unit> = { hz ->
-        ShizukuHelper.setRefreshRateLocked(hz)
     }
 ) {
 
@@ -41,18 +38,12 @@ class RefreshRateRepository(
 
     /**
      * Applies the requested rate and returns immediately.
-     * Respects lock mode setting from preferences.
      *
      * @param hz target refresh rate in Hz
      * @return [Result.Success] if the write succeeded, or [Result.Error].
      */
     suspend fun setRate(hz: Float): Result<Unit> = withContext(Dispatchers.IO) {
-        val useLockMode = PreferencesHelper.lockModeEnabled
-        val result = if (useLockMode) {
-            setRateLockedCommand(hz)
-        } else {
-            setRateCommand(hz)
-        }
+        val result = setRateCommand(hz)
 
         if (result.isSuccess) {
             PreferencesHelper.lastRate = hz

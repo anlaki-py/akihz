@@ -40,8 +40,6 @@ fun RefreshRateScreen(
     onRateSelected: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lockMode = PreferencesHelper.lockModeEnabled
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -68,27 +66,7 @@ fun RefreshRateScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Lock mode indicator
-        if (lockMode) {
-            Text(
-                text = "Lock mode ON",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = "min = peak rate enforced",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Rate selection buttons
         if (supportedRates.isEmpty()) {

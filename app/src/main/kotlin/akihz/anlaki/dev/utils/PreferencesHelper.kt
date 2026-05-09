@@ -21,7 +21,6 @@ object PreferencesHelper {
     private const val KEY_WATCHDOG_ENABLED = "watchdog_enabled"
     private const val KEY_WATCHDOG_INTERVAL_MS = "watchdog_interval_ms"
     private const val KEY_WATCHDOG_AGGRESSIVE = "watchdog_aggressive"
-    private const val KEY_LOCK_MODE_ENABLED = "lock_mode_enabled"
     private const val KEY_OEM_OVERRIDE = "oem_override"
     private const val KEY_DESIRED_RATE = "desired_rate"
 
@@ -60,11 +59,6 @@ object PreferencesHelper {
     var watchdogAggressive: Boolean
         get() = prefs.getBoolean(KEY_WATCHDOG_AGGRESSIVE, false)
         set(value) = prefs.edit { putBoolean(KEY_WATCHDOG_AGGRESSIVE, value) }
-
-    // Lock mode
-    var lockModeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_LOCK_MODE_ENABLED, false)
-        set(value) = prefs.edit { putBoolean(KEY_LOCK_MODE_ENABLED, value) }
 
     // OEM override
     var oemOverride: String
