@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -36,6 +38,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +56,8 @@ import akihz.anlaki.dev.data.AppListRepository
 import akihz.anlaki.dev.utils.AppMonitorService
 import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Dedicated page for managing per-app refresh rate profiles.
@@ -62,6 +67,7 @@ import akihz.anlaki.dev.utils.PreferencesHelper
  * - Filter: All / User apps / System apps
  * - Tap an app to set its refresh rate from supported rates
  * - Shows current profile rate inline
+ * - Async loading with progress indicator
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,13 +81,30 @@ fun AppMonitorPage(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(AppListRepository.Filter.ALL) }
     var selectedApp by remember { mutableStateOf<AppListRepository.AppInfo?>(null) }
-
-    val apps = remember(searchQuery, selectedFilter) {
-        repository.getApps(filter = selectedFilter, query = searchQuery)
-    }
+    var apps by remember { mutableStateOf<List<AppListRepository.AppInfo>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
     val isAccessibilityEnabled = remember { AppMonitorService.isEnabled(context) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Load apps asynchronously on IO dispatcher
+    LaunchedEffect(selectedFilter) {
+        isLoading = true
+        val loaded = withContext(Dispatchers.IO) {
+            repository.getApps(filter = selectedFilter, query = "")
+        }
+        apps = loaded
+        isLoading = false
+    }
+
+    // Filter locally on main thread for search (fast enough for in-memory list)
+    val filteredApps = remember(searchQuery, apps) {
+        if (searchQuery.isBlank()) apps
+        else apps.filter {
+            it.appName.contains(searchQuery, ignoreCase = true) ||
+                    it.packageName.contains(searchQuery, ignoreCase = true)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -112,29 +135,63 @@ fun AppMonitorPage(
 
             FilterRow(
                 selected = selectedFilter,
-                onSelect = { selectedFilter = it },
+                onSelect = {
+                    selectedFilter = it
+                    // Clear search when switching filters for cleaner UX
+                    searchQuery = ""
+                },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
             Text(
-                text = "${apps.size} apps",
+                text = "${filteredApps.size} apps",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                items(apps, key = { it.packageName }) { app ->
-                    val profileRate = PreferencesHelper.getAppProfile(app.packageName)
-                    AppListItem(
-                        app = app,
-                        profileRate = profileRate,
-                        onClick = { selectedApp = app }
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Loading apps...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+            } else if (filteredApps.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No apps found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.outline
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(filteredApps, key = { it.packageName }) { app ->
+                        val profileRate = PreferencesHelper.getAppProfile(app.packageName)
+                        AppListItem(
+                            app = app,
+                            profileRate = profileRate,
+                            onClick = { selectedApp = app }
+                        )
+                    }
                 }
             }
         }
