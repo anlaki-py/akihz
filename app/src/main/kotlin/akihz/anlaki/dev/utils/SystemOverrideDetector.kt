@@ -32,8 +32,6 @@ class SystemOverrideDetector(private val context: Context) {
                 Intent.ACTION_BATTERY_CHANGED -> {
                     val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
                     val temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
-                    val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                            status == BatteryManager.BATTERY_STATUS_FULL
 
                     // Thermal throttling heuristic: battery temp > 420 (42.0C)
                     if (temperature > 420) {
@@ -80,31 +78,29 @@ class SystemOverrideDetector(private val context: Context) {
         try {
             context.unregisterReceiver(batteryReceiver)
         } catch (_: Exception) {
+            // Receiver may not be registered
         }
         try {
             context.unregisterReceiver(screenReceiver)
         } catch (_: Exception) {
+            // Receiver may not be registered
         }
     }
 
     /**
      * Checks if battery saver / power save mode is currently active.
      */
-    fun isPowerSaveMode(): Boolean {
-        return powerManager.isPowerSaveMode
-    }
+    fun isPowerSaveMode(): Boolean = powerManager.isPowerSaveMode
 
     /**
      * Checks if the device is currently in an interactive state (screen on and user present).
      */
-    fun isInteractive(): Boolean {
-        return powerManager.isInteractive
-    }
+    fun isInteractive(): Boolean = powerManager.isInteractive
 
     sealed class SystemEvent {
         data class PowerSaveChanged(val enabled: Boolean) : SystemEvent()
         data class ThermalThrottling(val temperatureCelsius: Float) : SystemEvent()
-        object ScreenOn : SystemEvent()
-        object ScreenOff : SystemEvent()
+        data object ScreenOn : SystemEvent()
+        data object ScreenOff : SystemEvent()
     }
 }

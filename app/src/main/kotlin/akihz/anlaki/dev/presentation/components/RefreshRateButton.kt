@@ -15,6 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
+/**
+ * A large toggle button for selecting a refresh rate.
+ * Provides haptic feedback on selection.
+ *
+ * @param hz the refresh rate value in Hz
+ * @param isSelected whether this rate is currently active
+ * @param onClick called when the user selects this rate
+ * @param modifier layout modifier
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RefreshRateButton(

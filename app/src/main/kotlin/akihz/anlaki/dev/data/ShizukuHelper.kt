@@ -26,7 +26,7 @@ object ShizukuHelper {
     fun isBinderReady(): Boolean {
         return try {
             Shizuku.pingBinder()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -35,7 +35,7 @@ object ShizukuHelper {
         if (!isBinderReady()) return false
         return try {
             Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -44,7 +44,7 @@ object ShizukuHelper {
         if (isBinderReady() && !hasPermission()) {
             try {
                 Shizuku.requestPermission(requestCode)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // ignored
             }
         }
@@ -53,7 +53,7 @@ object ShizukuHelper {
     fun getUid(): Int {
         return try {
             Shizuku.getUid()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             -1
         }
     }
@@ -114,7 +114,7 @@ object ShizukuHelper {
         if (args != null && conn != null) {
             try {
                 Shizuku.unbindUserService(args, conn, true)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // ignored
             }
         }

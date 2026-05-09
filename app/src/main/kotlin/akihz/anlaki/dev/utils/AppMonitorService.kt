@@ -90,7 +90,7 @@ class AppMonitorService : AccessibilityService() {
                 Log.w(TAG, "Failed to apply rate for $packageName: $message")
             }
 
-            handler.postDelayed({ isApplying = false }, 500)
+            handler.postDelayed({ isApplying = false }, DEBOUNCE_MS)
         }
     }
 
@@ -101,6 +101,7 @@ class AppMonitorService : AccessibilityService() {
 
     companion object {
         private const val TAG = "AppMonitorService"
+        private const val DEBOUNCE_MS = 500L
 
         /**
          * Checks if the accessibility service is enabled.

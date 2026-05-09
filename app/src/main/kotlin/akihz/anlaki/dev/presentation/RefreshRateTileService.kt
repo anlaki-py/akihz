@@ -19,6 +19,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
+/**
+ * Quick Settings tile that cycles through supported refresh rates.
+ */
 class RefreshRateTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -86,27 +89,20 @@ class RefreshRateTileService : TileService() {
 
     private fun bindAndCycleRate() {
         isConnecting = true
-        
-        scope.launch {
-            var bindSuccess = false
-            
-            ShizukuHelper.bindUserService(
-                onConnected = {
-                    bindSuccess = true
-                    scope.launch {
-                        if (bindSuccess) {
-                            cycleRate()
-                        }
-                        isConnecting = false
-                    }
-                },
-                onFailed = { _, message ->
+
+        ShizukuHelper.bindUserService(
+            onConnected = {
+                scope.launch {
+                    cycleRate()
                     isConnecting = false
-                    showToast(message)
-                    updateTileUnavailable()
                 }
-            )
-        }
+            },
+            onFailed = { _, message ->
+                isConnecting = false
+                showToast(message)
+                updateTileUnavailable()
+            }
+        )
     }
 
     private fun cycleRate() {

@@ -47,8 +47,8 @@ fun RefreshRateScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = if (currentRate != null) "Current: ${currentRate.toInt()} Hz" else "RefreshRate Manager",
-            style = MaterialTheme.typography.headlineMedium,
+            text = if (currentRate != null) "${currentRate.toInt()} Hz" else "akihz",
+            style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
@@ -60,7 +60,7 @@ fun RefreshRateScreen(
         if (lockMode) {
             Text(
                 text = "Lock mode ON",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -77,12 +77,25 @@ fun RefreshRateScreen(
         }
 
         if (supportedRates.isEmpty()) {
-            Text(
-                text = "No supported refresh rates detected.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f)
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "No supported refresh rates detected.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Make sure Shizuku is running and granted.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    textAlign = TextAlign.Center
+                )
+            }
         } else {
             Column(
                 modifier = Modifier.weight(1f),

@@ -1,5 +1,8 @@
 package akihz.anlaki.dev.utils
 
+/**
+ * Categorized error types with user-friendly messages.
+ */
 enum class ErrorType {
     SHIZUKU_NOT_RUNNING,
     PERMISSION_DENIED,
@@ -11,6 +14,9 @@ enum class ErrorType {
     NO_REFRESH_RATES,
     UNSUPPORTED_API;
 
+    /**
+     * Returns a human-readable error message.
+     */
     fun getUserMessage(): String = when (this) {
         SHIZUKU_NOT_RUNNING -> "Shizuku is not running"
         PERMISSION_DENIED -> "Shizuku permission denied"

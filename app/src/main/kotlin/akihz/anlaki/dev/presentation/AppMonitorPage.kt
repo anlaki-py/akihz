@@ -1,6 +1,10 @@
 package akihz.anlaki.dev.presentation
 
+import android.content.Context
 import android.graphics.drawable.Drawable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,17 +15,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -35,7 +43,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,6 +78,7 @@ import kotlinx.coroutines.withContext
  * - Tap an app to set its refresh rate from supported rates
  * - Shows current profile rate inline
  * - Async loading with progress indicator
+ * - Launcher apps shown first, sorted alphabetically
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +125,11 @@ fun AppMonitorPage(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { padding ->
@@ -123,7 +138,11 @@ fun AppMonitorPage(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (!isAccessibilityEnabled) {
+            AnimatedVisibility(
+                visible = !isAccessibilityEnabled,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 AccessibilityWarningCard()
             }
 
@@ -137,7 +156,6 @@ fun AppMonitorPage(
                 selected = selectedFilter,
                 onSelect = {
                     selectedFilter = it
-                    // Clear search when switching filters for cleaner UX
                     searchQuery = ""
                 },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -151,33 +169,9 @@ fun AppMonitorPage(
             )
 
             if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text(
-                            text = "Loading apps...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
-                }
+                LoadingState()
             } else if (filteredApps.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No apps found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
+                EmptyState()
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -219,36 +213,79 @@ fun AppMonitorPage(
 }
 
 @Composable
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            CircularProgressIndicator()
+            Text(
+                text = "Loading apps...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "No apps found",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.outline
+        )
+    }
+}
+
+@Composable
 private fun AccessibilityWarningCard() {
     val context = LocalContext.current
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Text(
-            text = "Accessibility service required",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Enable akihz in Accessibility settings for per-app profiles to work.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline
-        )
-        Button(
-            onClick = { AppMonitorService.openSettings(context) },
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Open Accessibility Settings")
-        }
-        OutlinedButton(
-            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Allow background activity")
+            Text(
+                text = "Accessibility service required",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Enable akihz in Accessibility settings for per-app profiles to work.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Button(
+                onClick = { AppMonitorService.openSettings(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open Accessibility Settings")
+            }
+            OutlinedButton(
+                onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Allow background activity")
+            }
         }
     }
 }
@@ -272,6 +309,12 @@ private fun SearchBar(
             }
         },
         singleLine = true,
+        shape = RoundedCornerShape(24.dp),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+        ),
         modifier = modifier.fillMaxWidth()
     )
 }
@@ -310,6 +353,11 @@ private fun AppListItem(
     profileRate: Float?,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val icon = remember(app.packageName) {
+        loadAppIcon(context, app.packageName)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -317,7 +365,7 @@ private fun AppListItem(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AppIcon(icon = app.icon, modifier = Modifier.size(40.dp))
+        AppIcon(icon = icon, modifier = Modifier.size(44.dp))
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -338,12 +386,20 @@ private fun AppListItem(
         }
 
         if (profileRate != null) {
-            Text(
-                text = "${profileRate.toInt()} Hz",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "${profileRate.toInt()} Hz",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 
@@ -359,7 +415,26 @@ private fun AppIcon(icon: Drawable?, modifier: Modifier = Modifier) {
             modifier = modifier.clip(CircleShape)
         )
     } else {
-        Spacer(modifier = modifier)
+        Box(
+            modifier = modifier
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+private fun loadAppIcon(context: Context, packageName: String): Drawable? {
+    return try {
+        context.packageManager.getApplicationIcon(packageName)
+    } catch (_: Exception) {
+        null
     }
 }
 
@@ -370,7 +445,11 @@ private fun RatePickerSheet(
     onRateSelected: (Float) -> Unit,
     onClear: () -> Unit
 ) {
+    val context = LocalContext.current
     val currentRate = PreferencesHelper.getAppProfile(app.packageName)
+    val icon = remember(app.packageName) {
+        loadAppIcon(context, app.packageName)
+    }
 
     Column(
         modifier = Modifier
@@ -382,7 +461,7 @@ private fun RatePickerSheet(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AppIcon(icon = app.icon, modifier = Modifier.size(48.dp))
+            AppIcon(icon = icon, modifier = Modifier.size(48.dp))
             Column {
                 Text(
                     text = app.appName,
