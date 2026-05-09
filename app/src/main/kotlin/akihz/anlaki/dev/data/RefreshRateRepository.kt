@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
  * - **Write paths** delegate to [ShizukuHelper] which writes to an OEM-specific
  *   fallback chain of Secure/System/Global Settings keys.
  * - **Lock mode** sets min == peak to constrain SurfaceFlinger.
- * - **Per-app profiles** allow different rates for different apps.
  */
 class RefreshRateRepository(
     private val displayManagerDataSource: DisplayManagerDataSource,
@@ -68,44 +67,6 @@ class RefreshRateRepository(
         }
 
         Result.success(Unit)
-    }
-
-    /**
-     * Applies the requested rate for a specific app package.
-     * Stores the per-app profile and applies immediately.
-     *
-     * @param packageName the app package name
-     * @param hz target refresh rate in Hz
-     */
-    suspend fun setRateForApp(packageName: String, hz: Float): Result<Unit> = withContext(Dispatchers.IO) {
-        PreferencesHelper.setAppProfile(packageName, hz)
-        setRate(hz)
-    }
-
-    /**
-     * Gets the refresh rate profile for a specific app.
-     *
-     * @param packageName the app package name
-     * @return the preferred rate, or null if no profile exists
-     */
-    fun getAppProfile(packageName: String): Float? {
-        return PreferencesHelper.getAppProfile(packageName)
-    }
-
-    /**
-     * Removes the per-app profile for a package.
-     *
-     * @param packageName the app package name
-     */
-    fun removeAppProfile(packageName: String) {
-        PreferencesHelper.removeAppProfile(packageName)
-    }
-
-    /**
-     * Returns all stored per-app profiles.
-     */
-    fun getAllAppProfiles(): Map<String, Float> {
-        return PreferencesHelper.getAllAppProfiles()
     }
 
     /**

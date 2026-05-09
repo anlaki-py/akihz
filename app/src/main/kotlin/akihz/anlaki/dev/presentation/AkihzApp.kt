@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -30,9 +29,6 @@ private enum class BottomNavPage(
 /**
  * Displays the main app shell with bottom navigation and page routing.
  *
- * Supports navigating to the AppMonitorPage from Settings.
- * Intercepts system back button to handle nested navigation properly.
- *
  * @param supportedRates refresh rates supported by the current display
  * @param currentRate currently active refresh rate
  * @param selectedRate refresh rate selected in the UI
@@ -46,40 +42,23 @@ fun AkihzApp(
     onRateSelected: (Float) -> Unit
 ) {
     var bottomNavPage by rememberSaveable { mutableStateOf(BottomNavPage.Home) }
-    var showAppMonitor by rememberSaveable { mutableStateOf(false) }
-
-    // Handle system back button: if on AppMonitorPage, go back to Settings
-    BackHandler(enabled = showAppMonitor) {
-        showAppMonitor = false
-    }
 
     Scaffold(
         bottomBar = {
-            // Hide bottom bar when on AppMonitorPage
-            if (!showAppMonitor) {
-                AkihzBottomBar(
-                    currentPage = bottomNavPage,
-                    onPageSelected = { bottomNavPage = it }
-                )
-            }
+            AkihzBottomBar(
+                currentPage = bottomNavPage,
+                onPageSelected = { bottomNavPage = it }
+            )
         }
     ) { padding ->
-        if (showAppMonitor) {
-            AppMonitorPage(
-                supportedRates = supportedRates,
-                onBack = { showAppMonitor = false }
-            )
-        } else {
-            MainPageContent(
-                bottomNavPage = bottomNavPage,
-                padding = padding,
-                supportedRates = supportedRates,
-                currentRate = currentRate,
-                selectedRate = selectedRate,
-                onRateSelected = onRateSelected,
-                onNavigateToAppMonitor = { showAppMonitor = true }
-            )
-        }
+        MainPageContent(
+            bottomNavPage = bottomNavPage,
+            padding = padding,
+            supportedRates = supportedRates,
+            currentRate = currentRate,
+            selectedRate = selectedRate,
+            onRateSelected = onRateSelected
+        )
     }
 }
 
@@ -90,8 +69,7 @@ private fun MainPageContent(
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
-    onRateSelected: (Float) -> Unit,
-    onNavigateToAppMonitor: () -> Unit
+    onRateSelected: (Float) -> Unit
 ) {
     when (bottomNavPage) {
         BottomNavPage.Home -> RefreshRateScreen(
@@ -102,7 +80,6 @@ private fun MainPageContent(
             modifier = Modifier.padding(padding)
         )
         BottomNavPage.Settings -> SettingsScreen(
-            onNavigateToAppMonitor = onNavigateToAppMonitor,
             modifier = Modifier.padding(padding)
         )
     }
