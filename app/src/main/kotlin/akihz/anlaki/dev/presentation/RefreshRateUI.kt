@@ -46,25 +46,15 @@ fun RefreshRateScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Current rate display
+        // App title
         Text(
-            text = if (currentRate != null) "${currentRate.toInt()} Hz" else "akihz",
+            text = "akihz",
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
-
-        if (currentRate != null) {
-            Text(
-                text = "Current refresh rate",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.outline,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
