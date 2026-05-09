@@ -1,34 +1,20 @@
 package akihz.anlaki.dev.presentation
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SettingsApplications
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,7 +23,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -57,19 +42,11 @@ private const val DONATION_URL = "https://ko-fi.com/unluky"
 private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/releases/latest"
 
 /**
- * Settings screen with all configuration options using preference-style layout.
- *
- * @param onBackClick Called when the back arrow is pressed
+ * Settings screen with clean, simple layout.
  */
 @Composable
-fun SettingsScreen(
-    onBackClick: () -> Unit = {}
-) {
-    PreferenceLayout(
-        label = "Settings",
-        backArrowVisible = true,
-        onBackClick = onBackClick
-    ) {
+fun SettingsScreen() {
+    PreferenceLayout(label = "Settings") {
         GeneralSection()
         WatchdogSection()
         AdvancedSection()
@@ -84,68 +61,22 @@ private fun GeneralSection() {
 
     PreferenceGroup(heading = "General") {
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Lock mode",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            description = {
-                Text(
-                    text = "Set min = peak refresh rate to prevent system switching",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Switch(
-                    checked = lockMode,
-                    onCheckedChange = {
-                        lockMode = it
-                        PreferencesHelper.lockModeEnabled = it
-                    }
-                )
+            title = "Lock mode",
+            description = "Set min = peak refresh rate to prevent system switching",
+            checked = lockMode,
+            onCheckedChange = {
+                lockMode = it
+                PreferencesHelper.lockModeEnabled = it
             }
         )
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Override battery saver",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            description = {
-                Text(
-                    text = "Re-apply rate even when battery saver is active",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Switch(
-                    checked = batterySaverOverride,
-                    onCheckedChange = {
-                        batterySaverOverride = it
-                        PreferencesHelper.batterySaverOverride = it
-                    }
-                )
+            title = "Override battery saver",
+            description = "Re-apply rate even when battery saver is active",
+            checked = batterySaverOverride,
+            onCheckedChange = {
+                batterySaverOverride = it
+                PreferencesHelper.batterySaverOverride = it
             }
         )
     }
@@ -161,96 +92,45 @@ private fun WatchdogSection() {
 
     PreferenceGroup(heading = "Watchdog") {
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Enable watchdog",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            description = {
-                Text(
-                    text = "Monitor and re-apply refresh rate automatically",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Switch(
-                    checked = watchdogEnabled,
-                    onCheckedChange = {
-                        watchdogEnabled = it
-                        PreferencesHelper.watchdogEnabled = it
-                        RefreshRateWatchdogService.restart(context)
-                    }
-                )
+            title = "Enable watchdog",
+            description = "Monitor and re-apply refresh rate automatically",
+            checked = watchdogEnabled,
+            onCheckedChange = {
+                watchdogEnabled = it
+                PreferencesHelper.watchdogEnabled = it
+                RefreshRateWatchdogService.restart(context)
             }
         )
 
         if (watchdogEnabled) {
             PreferenceTemplate(
-                title = {
-                    Text(
-                        text = "Aggressive mode",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                description = {
-                    Text(
-                        text = "Check every 500ms (uses more battery)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                },
-                startWidget = {
-                    Icon(
-                        imageVector = Icons.Default.Speed,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                endWidget = {
-                    Switch(
-                        checked = aggressive,
-                        onCheckedChange = {
-                            aggressive = it
-                            PreferencesHelper.watchdogAggressive = it
-                            RefreshRateWatchdogService.restart(context)
-                        }
-                    )
+                title = "Aggressive mode",
+                description = "Check every 500ms (uses more battery)",
+                checked = aggressive,
+                onCheckedChange = {
+                    aggressive = it
+                    PreferencesHelper.watchdogAggressive = it
+                    RefreshRateWatchdogService.restart(context)
                 }
             )
 
             if (!aggressive) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Check interval: ${(intervalMs / 1000).toInt()}s",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Slider(
-                        value = intervalMs,
-                        onValueChange = { intervalMs = it },
-                        onValueChangeFinished = {
-                            PreferencesHelper.watchdogIntervalMs = intervalMs.toLong()
-                            RefreshRateWatchdogService.restart(context)
-                        },
-                        valueRange = 1000f..30000f,
-                        steps = 28,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Check interval: ${(intervalMs / 1000).toInt()}s",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Slider(
+                    value = intervalMs,
+                    onValueChange = { intervalMs = it },
+                    onValueChangeFinished = {
+                        PreferencesHelper.watchdogIntervalMs = intervalMs.toLong()
+                        RefreshRateWatchdogService.restart(context)
+                    },
+                    valueRange = 1000f..30000f,
+                    steps = 28,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -262,8 +142,7 @@ private fun WatchdogSection() {
             text = {
                 Text(
                     "The watchdog service monitors your current refresh rate and re-applies " +
-                    "your desired rate when the system overrides it. " +
-                    "Keep this enabled if your refresh rate keeps changing automatically."
+                    "your desired rate when the system overrides it."
                 )
             },
             confirmButton = {
@@ -284,14 +163,10 @@ private fun AdvancedSection() {
     var expanded by remember { mutableStateOf(false) }
 
     PreferenceGroup(heading = "Advanced") {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Text(
                 text = "OEM Override",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.bodyLarge
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -328,20 +203,7 @@ private fun AdvancedSection() {
         }
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = if (showDebug) "Hide debug info" else "Show debug info",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Outlined.BugReport,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
+            title = if (showDebug) "Hide debug info" else "Show debug info",
             onClick = { showDebug = !showDebug }
         )
 
@@ -358,7 +220,7 @@ private fun DebugInfoSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(vertical = 8.dp)
     ) {
         Text(
             "Detected OEM: ${android.os.Build.MANUFACTURER}",
@@ -372,7 +234,7 @@ private fun DebugInfoSection() {
             "Model: ${android.os.Build.MODEL}",
             style = MaterialTheme.typography.bodySmall
         )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Text(
             "Read keys:",
             style = MaterialTheme.typography.bodySmall,
@@ -424,140 +286,39 @@ private fun AboutSection() {
     val versionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
 
     PreferenceGroup(heading = "About") {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = "akihz",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = versionName.uppercase(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        Text(
+            text = "akihz",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        Text(
+            text = "Version $versionName",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Made by anlaki",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            },
+            title = "Website",
+            description = "anlaki.dev",
             onClick = { uriHandler.openUri(WEBSITE_URL) }
         )
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Source code",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            description = {
-                Text(
-                    text = "View on GitHub",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.SettingsApplications,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            },
+            title = "Source code",
+            description = "github.com/anlaki-py/akihz",
             onClick = { uriHandler.openUri(SOURCE_CODE_URL) }
         )
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Donate",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            description = {
-                Text(
-                    text = "Support on Ko-fi",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            },
+            title = "Donate",
+            description = "ko-fi.com/unluky",
             onClick = { uriHandler.openUri(DONATION_URL) }
         )
 
         PreferenceTemplate(
-            title = {
-                Text(
-                    text = "Check for updates",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            endWidget = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-            },
+            title = "Check for updates",
             onClick = { uriHandler.openUri(LATEST_RELEASE_URL) }
         )
     }
