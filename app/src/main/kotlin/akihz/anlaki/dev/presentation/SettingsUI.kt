@@ -47,29 +47,13 @@ private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/relea
 @Composable
 fun SettingsScreen() {
     PreferenceLayout(label = "Settings") {
-        GeneralSection()
         WatchdogSection()
         AdvancedSection()
         AboutSection()
     }
 }
 
-@Composable
-private fun GeneralSection() {
-    var lockMode by remember { mutableStateOf(PreferencesHelper.lockModeEnabled) }
 
-    PreferenceGroup(heading = "General") {
-        PreferenceTemplate(
-            title = "Lock mode",
-            description = "Set min = peak refresh rate to prevent system switching",
-            checked = lockMode,
-            onCheckedChange = {
-                lockMode = it
-                PreferencesHelper.lockModeEnabled = it
-            }
-        )
-    }
-}
 
 @Composable
 private fun WatchdogSection() {
@@ -246,17 +230,7 @@ private fun DebugInfoSection() {
                 style = MaterialTheme.typography.bodySmall
             )
         }
-        Text(
-            "Lock keys:",
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold
-        )
-        strategy.lockKeys.forEach {
-            Text(
-                "  ${it.namespace.name.lowercase()}/${it.key}",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+
     }
 }
 

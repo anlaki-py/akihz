@@ -189,36 +189,6 @@ object ShizukuHelper {
     }
 
     /**
-     * Sets refresh rate in lock mode: writes both min and peak to the same value.
-     * This constrains SurfaceFlinger's selection range to a single rate.
-     */
-    fun setRefreshRateLocked(hz: Float): Result<Unit> {
-        val hzInt = hz.toInt()
-        val strategy = getActiveStrategy()
-        var anySuccess = false
-
-        strategy.lockKeys.forEach { settingsKey ->
-            val ns = namespaceToString(settingsKey.namespace)
-            val result = exec("settings put $ns ${settingsKey.key} $hzInt")
-            if (result.isSuccess) {
-                anySuccess = true
-            }
-        }
-
-        // Also set mode to "high" (3) if supported, to prevent adaptive switching
-        if (strategy.supportsMode && strategy.modeKey != null) {
-            val ns = namespaceToString(strategy.modeKey.namespace)
-            exec("settings put $ns ${strategy.modeKey.key} 3")
-        }
-
-        return if (anySuccess) {
-            Result.success(Unit)
-        } else {
-            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Failed to set locked refresh rate")
-        }
-    }
-
-    /**
      * Resets refresh rate settings to defaults (adaptive mode).
      */
     fun resetRefreshRate(): Result<Unit> {
