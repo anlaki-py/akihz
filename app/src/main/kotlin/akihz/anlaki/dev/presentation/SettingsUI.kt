@@ -217,7 +217,11 @@ private fun AppMonitorSection() {
     val context = LocalContext.current
     var monitorEnabled by remember { mutableStateOf(PreferencesHelper.appMonitorEnabled) }
     var showProfiles by remember { mutableStateOf(false) }
-    val isAccessibilityEnabled = remember { AppMonitorService.isEnabled(context) }
+
+    // Re-check accessibility status reactively
+    val isAccessibilityEnabled by remember(monitorEnabled) {
+        mutableStateOf(AppMonitorService.isEnabled(context))
+    }
 
     SettingsCard(title = "App Monitor") {
         Text(
@@ -233,7 +237,7 @@ private fun AppMonitorSection() {
             onCheckedChange = {
                 monitorEnabled = it
                 PreferencesHelper.appMonitorEnabled = it
-                if (it && !isAccessibilityEnabled) {
+                if (it && !AppMonitorService.isEnabled(context)) {
                     AppMonitorService.openSettings(context)
                 }
             }
@@ -252,6 +256,13 @@ private fun AppMonitorSection() {
             ) {
                 Text("Open Accessibility Settings")
             }
+        }
+
+        OutlinedButton(
+            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Allow background activity")
         }
 
         if (monitorEnabled && isAccessibilityEnabled) {
@@ -453,13 +464,6 @@ private fun AboutSection() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Donate on Ko-fi")
-        }
-
-        OutlinedButton(
-            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Allow background activity")
         }
 
         Text(
