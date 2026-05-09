@@ -100,6 +100,7 @@ class MainActivity : ComponentActivity() {
             result.onSuccess {
                 currentRate = hz
                 selectedRate = hz
+                PreferencesHelper.globalRate = hz
                 Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
             }.onError { _, message ->
                 showError(message)
