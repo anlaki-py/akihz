@@ -109,12 +109,7 @@ class RefreshRateWatchdogService : Service() {
                         handler.removeCallbacks(periodicCheckRunnable)
                     }
                     is SystemOverrideDetector.SystemEvent.PowerSaveChanged -> {
-                        if (event.enabled && !PreferencesHelper.batterySaverOverride) {
-                            // Battery saver is on and user hasn't enabled override
-                            // Skip re-applying to avoid fighting the system
-                        } else {
-                            checkAndReapply()
-                        }
+                        // Skip re-applying during power save to avoid fighting the system
                     }
                     is SystemOverrideDetector.SystemEvent.ThermalThrottling -> {
                         // Skip re-applying during thermal throttling
@@ -199,11 +194,6 @@ class RefreshRateWatchdogService : Service() {
     private fun checkAndReapply() {
         if (!isRunning || !isScreenOn) return
         if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) return
-
-        // Skip if battery saver is on and override is disabled
-        if (systemOverrideDetector.isPowerSaveMode() && !PreferencesHelper.batterySaverOverride) {
-            return
-        }
 
         scope.launch {
             val currentResult = withContext(Dispatchers.IO) {
