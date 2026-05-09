@@ -55,8 +55,7 @@ class AppMonitorService : AccessibilityService() {
 
         val packageName = event.packageName?.toString() ?: return
         if (packageName == currentPackage) return
-        if (packageName == "akihz.anlaki.dev") return // Skip self
-        if (packageName.startsWith("android")) return // Skip system UI transitions
+        if (shouldIgnorePackage(packageName)) return
 
         currentPackage = packageName
         handleAppSwitch(packageName)
@@ -64,6 +63,40 @@ class AppMonitorService : AccessibilityService() {
 
     override fun onInterrupt() {
         // No-op
+    }
+
+    /**
+     * Packages to ignore — system UI, launchers, and our own app.
+     * These should never trigger rate changes or restore logic.
+     */
+    private fun shouldIgnorePackage(packageName: String): Boolean {
+        return when {
+            packageName == "akihz.anlaki.dev" -> true
+            packageName == "com.android.systemui" -> true
+            packageName == "com.google.android.apps.nexuslauncher" -> true
+            packageName == "com.google.android.launcher" -> true
+            packageName.startsWith("com.android.launcher") -> true
+            packageName.startsWith("com.miui.home") -> true
+            packageName.startsWith("com.samsung.android.launcher") -> true
+            packageName.startsWith("com.oppo.launcher") -> true
+            packageName.startsWith("com.coloros.launcher") -> true
+            packageName.startsWith("com.oneplus.launcher") -> true
+            packageName.startsWith("com.huawei.android.launcher") -> true
+            packageName.startsWith("com.hihonor.android.launcher") -> true
+            packageName.startsWith("com.asus.launcher") -> true
+            packageName.startsWith("com.sonyericsson.home") -> true
+            packageName.startsWith("com.htc.launcher") -> true
+            packageName.startsWith("com.lge.launcher") -> true
+            packageName.startsWith("com.motorola.launcher") -> true
+            packageName.startsWith("com.nokia.z.launcher") -> true
+            packageName.startsWith("com.microsoft.launcher") -> true
+            packageName.startsWith("com.teslacoilsw.launcher") -> true
+            packageName.startsWith("com.actiondash.playstore") -> true
+            packageName.startsWith("com.google.android.apps.wallpaper") -> true
+            packageName.startsWith("com.android.settings") -> true
+            packageName.startsWith("com.google.android.apps.wellbeing") -> true
+            else -> false
+        }
     }
 
     private fun handleAppSwitch(packageName: String) {
@@ -74,12 +107,30 @@ class AppMonitorService : AccessibilityService() {
             lastProfiledPackage = packageName
             registerOverride(profileRate, packageName)
             applyRate(profileRate, packageName)
-        } else if (lastProfiledPackage != null) {
-            // Switching AWAY from a profiled app — restore global rate and clear override
+        } else if (lastProfiledPackage != null && !isSameAppFamily(packageName, lastProfiledPackage!!)) {
+            // Switching AWAY from a profiled app to a different app — restore global rate
             lastProfiledPackage = null
             clearOverride()
             restoreGlobalRate()
         }
+    }
+
+    /**
+     * Checks if two packages belong to the same app family.
+     * Used to avoid restoring global rate when switching between
+     * activities of the same app (e.g., Instagram camera vs feed).
+     */
+    private fun isSameAppFamily(a: String, b: String): Boolean {
+        // Exact match
+        if (a == b) return true
+
+        // Same app but different process (e.g., com.instagram.android vs com.instagram.android:x)
+        val baseA = a.split(":").first()
+        val baseB = b.split(":").first()
+        if (baseA == baseB) return true
+
+        // Known split-screen / multi-window pairs
+        return false
     }
 
     /**
