@@ -1,5 +1,10 @@
 package akihz.anlaki.dev.utils
 
+/**
+ * A sealed class representing the result of an operation that can either succeed or fail.
+ *
+ * @param T the type of the success value
+ */
 sealed class Result<out T> {
     data class Success<T>(val data: T) : Result<T>()
     data class Error(val errorType: ErrorType, val message: String = errorType.getUserMessage()) : Result<Nothing>()

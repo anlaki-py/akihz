@@ -108,4 +108,6 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.core:core:1.12.0")
+    implementation(libs.appiconloader.coil)
+    implementation(libs.coil.compose)
 }

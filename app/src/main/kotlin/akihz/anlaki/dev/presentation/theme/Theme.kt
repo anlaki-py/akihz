@@ -32,6 +32,13 @@ private val LightColorScheme = lightColorScheme(
     onSurface = androidx.compose.ui.graphics.Color.Black
 )
 
+/**
+ * App theme with dynamic color support on Android 12+.
+ *
+ * @param darkTheme whether to use dark theme
+ * @param dynamicColor whether to use Material You dynamic colors (Android 12+)
+ * @param content root composable content
+ */
 @Composable
 fun AnlakiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

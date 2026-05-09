@@ -7,6 +7,8 @@ material = "1.13.0"
 constraintlayout = "2.2.1"
 composeBom = "2024.06.00"
 activityCompose = "1.8.0"
+appiconloader = "1.5.0"
+coil = "2.7.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -21,3 +23,5 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+appiconloader-coil = { group = "me.zhanghai.android.appiconloader", name = "appiconloader-coil", version.ref = "appiconloader" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
