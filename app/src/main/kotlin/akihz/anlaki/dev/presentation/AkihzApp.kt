@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,7 @@ private enum class BottomNavPage(
  * Displays the main app shell with bottom navigation and page routing.
  *
  * Supports navigating to the AppMonitorPage from Settings.
+ * Intercepts system back button to handle nested navigation properly.
  *
  * @param supportedRates refresh rates supported by the current display
  * @param currentRate currently active refresh rate
@@ -45,6 +47,11 @@ fun AkihzApp(
 ) {
     var bottomNavPage by rememberSaveable { mutableStateOf(BottomNavPage.Home) }
     var showAppMonitor by rememberSaveable { mutableStateOf(false) }
+
+    // Handle system back button: if on AppMonitorPage, go back to Settings
+    BackHandler(enabled = showAppMonitor) {
+        showAppMonitor = false
+    }
 
     Scaffold(
         bottomBar = {
