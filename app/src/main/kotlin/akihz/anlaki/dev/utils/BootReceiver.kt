@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 
 /**
- * Restarts [KeepAliveService] after device boot or app update.
+ * Restarts [KeepAliveService] and [RefreshRateWatchdogService] after device boot or app update.
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -20,7 +20,9 @@ class BootReceiver : BroadcastReceiver() {
                 intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
 
         if (isBootOrUpdate) {
+            PreferencesHelper.init(context)
             KeepAliveService.start(context)
+            RefreshRateWatchdogService.start(context)
         }
     }
 }

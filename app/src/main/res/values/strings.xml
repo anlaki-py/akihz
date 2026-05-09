@@ -3,4 +3,8 @@
     <string name="keep_alive_channel_name">akihz background service</string>
     <string name="keep_alive_notification_title">akihz is running</string>
     <string name="keep_alive_notification_text">Keeping refresh rate controls available in the background.</string>
+    <string name="watchdog_channel_name">Refresh rate watchdog</string>
+    <string name="watchdog_channel_description">Monitors and re-applies your refresh rate when the system overrides it</string>
+    <string name="watchdog_notification_title">akihz watchdog</string>
+    <string name="watchdog_notification_text">Guarding %s against system override</string>
 </resources>

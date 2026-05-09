@@ -1,6 +1,7 @@
 package akihz.anlaki.dev.data
 
 import akihz.anlaki.dev.utils.ErrorType
+import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,12 +11,17 @@ import kotlinx.coroutines.withContext
  *
  * - **Read paths** always prefer [DisplayManagerDataSource] (hardware API, no permissions).
  * - **Write paths** delegate to [ShizukuHelper] which writes to an OEM-specific
- *   fallback chain of Secure Settings keys.
+ *   fallback chain of Secure/System/Global Settings keys.
+ * - **Lock mode** sets min == peak to constrain SurfaceFlinger.
+ * - **Per-app profiles** allow different rates for different apps.
  */
 class RefreshRateRepository(
     private val displayManagerDataSource: DisplayManagerDataSource,
     private val setRateCommand: suspend (Float) -> Result<Unit> = { hz ->
         ShizukuHelper.setRefreshRate(hz)
+    },
+    private val setRateLockedCommand: suspend (Float) -> Result<Unit> = { hz ->
+        ShizukuHelper.setRefreshRateLocked(hz)
     }
 ) {
 
@@ -35,16 +41,26 @@ class RefreshRateRepository(
     }
 
     /**
-     * Applies the requested rate via Shizuku settings calls and returns immediately.
-     * The caller may verify the switch independently via [getCurrentRate].
+     * Applies the requested rate and returns immediately.
+     * Respects lock mode setting from preferences.
      *
      * @param hz target refresh rate in Hz
      * @return [Result.Success] if the write succeeded, or [Result.Error].
      */
     suspend fun setRate(hz: Float): Result<Unit> = withContext(Dispatchers.IO) {
-        val setResult = setRateCommand(hz)
-        if (setResult.isError) {
-            val err = setResult.getErrorOrNull()
+        val useLockMode = PreferencesHelper.lockModeEnabled
+        val result = if (useLockMode) {
+            setRateLockedCommand(hz)
+        } else {
+            setRateCommand(hz)
+        }
+
+        if (result.isSuccess) {
+            PreferencesHelper.lastRate = hz
+        }
+
+        if (result.isError) {
+            val err = result.getErrorOrNull()
             return@withContext Result.error(
                 err?.errorType ?: ErrorType.COMMAND_EXECUTION_FAILED,
                 err?.message ?: "Failed to set refresh rate"
@@ -52,5 +68,50 @@ class RefreshRateRepository(
         }
 
         Result.success(Unit)
+    }
+
+    /**
+     * Applies the requested rate for a specific app package.
+     * Stores the per-app profile and applies immediately.
+     *
+     * @param packageName the app package name
+     * @param hz target refresh rate in Hz
+     */
+    suspend fun setRateForApp(packageName: String, hz: Float): Result<Unit> = withContext(Dispatchers.IO) {
+        PreferencesHelper.setAppProfile(packageName, hz)
+        setRate(hz)
+    }
+
+    /**
+     * Gets the refresh rate profile for a specific app.
+     *
+     * @param packageName the app package name
+     * @return the preferred rate, or null if no profile exists
+     */
+    fun getAppProfile(packageName: String): Float? {
+        return PreferencesHelper.getAppProfile(packageName)
+    }
+
+    /**
+     * Removes the per-app profile for a package.
+     *
+     * @param packageName the app package name
+     */
+    fun removeAppProfile(packageName: String) {
+        PreferencesHelper.removeAppProfile(packageName)
+    }
+
+    /**
+     * Returns all stored per-app profiles.
+     */
+    fun getAllAppProfiles(): Map<String, Float> {
+        return PreferencesHelper.getAllAppProfiles()
+    }
+
+    /**
+     * Resets all refresh rate settings to defaults (adaptive mode).
+     */
+    suspend fun resetToDefaults(): Result<Unit> = withContext(Dispatchers.IO) {
+        ShizukuHelper.resetRefreshRate()
     }
 }
