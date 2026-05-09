@@ -31,9 +31,6 @@ import kotlinx.coroutines.withContext
  * Foreground service that continuously monitors the current refresh rate
  * and re-applies the desired rate when the system overrides it.
  *
- * When app monitor has an active override, the watchdog defers to it
- * and only re-applies if the system overrode even the override rate.
- *
  * Configurable via [PreferencesHelper]:
  * - Enabled/disabled
  * - Re-apply interval (ms)
@@ -208,32 +205,28 @@ class RefreshRateWatchdogService : Service() {
             return
         }
 
-        // Determine what rate we should be enforcing right now
-        val activeOverride = PreferencesHelper.activeOverrideRate
-        val targetRate = if (activeOverride > 0) activeOverride else desiredRate
-
         scope.launch {
             val currentResult = withContext(Dispatchers.IO) {
                 refreshRateRepository.getCurrentRate()
             }
 
             currentResult.onSuccess { currentRate ->
-                if (kotlin.math.abs(currentRate - targetRate) >= 1f) {
-                    Log.d(TAG, "Rate mismatch: current=$currentRate, target=$targetRate (override=$activeOverride, desired=$desiredRate). Re-applying...")
-                    reapplyRate(targetRate)
+                if (kotlin.math.abs(currentRate - desiredRate) >= 1f) {
+                    Log.d(TAG, "Rate mismatch: current=$currentRate, desired=$desiredRate. Re-applying...")
+                    reapplyRate()
                 }
             }
         }
     }
 
-    private fun reapplyRate(rate: Float) {
+    private fun reapplyRate() {
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(rate)
+                refreshRateRepository.setRate(desiredRate)
             }
 
             result.onSuccess {
-                Log.d(TAG, "Successfully re-applied ${rate.toInt()} Hz")
+                Log.d(TAG, "Successfully re-applied ${desiredRate.toInt()} Hz")
             }.onError { _, message ->
                 Log.w(TAG, "Failed to re-apply rate: $message")
             }

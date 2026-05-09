@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -46,7 +45,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.data.OemSettingsStrategy
-import akihz.anlaki.dev.utils.AppMonitorService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 
@@ -57,18 +55,15 @@ private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/relea
 
 /**
  * Settings screen with all configuration options:
- * - General: Lock mode, default rate, battery saver handling
+ * - General: Lock mode, battery saver handling
  * - Watchdog: Enable/disable, interval, aggressive mode
- * - App Monitor: Enable/disable, navigate to app monitor page
  * - Advanced: OEM override, debug info
  * - About: Links and version
  *
- * @param onNavigateToAppMonitor called when user wants to open the app monitor page
  * @param modifier layout modifier
  */
 @Composable
 fun SettingsScreen(
-    onNavigateToAppMonitor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -89,7 +84,6 @@ fun SettingsScreen(
 
         GeneralSection()
         WatchdogSection()
-        AppMonitorSection(onNavigateToAppMonitor)
         AdvancedSection()
         AboutSection()
     }
@@ -204,58 +198,6 @@ private fun WatchdogSection() {
                 }
             }
         )
-    }
-}
-
-@Composable
-private fun AppMonitorSection(onNavigateToAppMonitor: () -> Unit) {
-    val context = LocalContext.current
-    var monitorEnabled by remember { mutableStateOf(PreferencesHelper.appMonitorEnabled) }
-    val isAccessibilityEnabled = remember { AppMonitorService.isEnabled(context) }
-
-    SettingsCard(title = "App Monitor") {
-        Text(
-            text = "Requires Accessibility Service",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline
-        )
-
-        ToggleRow(
-            label = "Enable app monitor",
-            description = "Apply per-app refresh rate profiles",
-            checked = monitorEnabled,
-            onCheckedChange = {
-                monitorEnabled = it
-                PreferencesHelper.appMonitorEnabled = it
-                if (it && !AppMonitorService.isEnabled(context)) {
-                    AppMonitorService.openSettings(context)
-                }
-            }
-        )
-
-        if (!isAccessibilityEnabled && monitorEnabled) {
-            Text(
-                text = "Accessibility service not enabled. Tap to configure.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            Button(
-                onClick = { AppMonitorService.openSettings(context) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Open Accessibility Settings")
-            }
-        }
-
-        OutlinedButton(
-            onClick = onNavigateToAppMonitor,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Manage per-app profiles")
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-        }
     }
 }
 

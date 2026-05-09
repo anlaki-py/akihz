@@ -8,8 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
 
     <application
         android:allowBackup="true"
@@ -71,18 +70,6 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Monitors and re-applies refresh rate when the system overrides it" />
-        </service>
-
-        <service
-            android:name=".utils.AppMonitorService"
-            android:exported="true"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
         </service>
 
         <receiver

@@ -18,7 +18,6 @@ import akihz.anlaki.dev.data.DisplayManagerDataSource
 import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
-import akihz.anlaki.dev.utils.AppMonitorService
 import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
@@ -100,7 +99,6 @@ class MainActivity : ComponentActivity() {
             result.onSuccess {
                 currentRate = hz
                 selectedRate = hz
-                PreferencesHelper.globalRate = hz
                 Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
             }.onError { _, message ->
                 showError(message)
