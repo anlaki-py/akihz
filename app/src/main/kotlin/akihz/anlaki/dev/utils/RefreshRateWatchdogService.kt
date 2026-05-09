@@ -205,6 +205,25 @@ class RefreshRateWatchdogService : Service() {
             return
         }
 
+        // Skip if app monitor has an active override (it's intentionally different)
+        val activeOverride = PreferencesHelper.activeOverrideRate
+        if (activeOverride > 0) {
+            // Watchdog should not fight app monitor overrides
+            // But we still check if the system overrode even the override
+            scope.launch {
+                val currentResult = withContext(Dispatchers.IO) {
+                    refreshRateRepository.getCurrentRate()
+                }
+                currentResult.onSuccess { currentRate ->
+                    if (kotlin.math.abs(currentRate - activeOverride) >= 1f) {
+                        Log.d(TAG, "Override rate mismatch: current=$currentRate, override=$activeOverride. Re-applying override...")
+                        reapplyRate(activeOverride)
+                    }
+                }
+            }
+            return
+        }
+
         scope.launch {
             val currentResult = withContext(Dispatchers.IO) {
                 refreshRateRepository.getCurrentRate()
@@ -213,20 +232,20 @@ class RefreshRateWatchdogService : Service() {
             currentResult.onSuccess { currentRate ->
                 if (kotlin.math.abs(currentRate - desiredRate) >= 1f) {
                     Log.d(TAG, "Rate mismatch: current=$currentRate, desired=$desiredRate. Re-applying...")
-                    reapplyRate()
+                    reapplyRate(desiredRate)
                 }
             }
         }
     }
 
-    private fun reapplyRate() {
+    private fun reapplyRate(rate: Float = desiredRate) {
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(desiredRate)
+                refreshRateRepository.setRate(rate)
             }
 
             result.onSuccess {
-                Log.d(TAG, "Successfully re-applied ${desiredRate.toInt()} Hz")
+                Log.d(TAG, "Successfully re-applied ${rate.toInt()} Hz")
             }.onError { _, message ->
                 Log.w(TAG, "Failed to re-apply rate: $message")
             }

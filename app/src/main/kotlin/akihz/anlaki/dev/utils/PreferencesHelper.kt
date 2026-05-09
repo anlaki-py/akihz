@@ -104,6 +104,16 @@ object PreferencesHelper {
         get() = prefs.getFloat("global_rate", 0f)
         set(value) = prefs.edit { putFloat("global_rate", value) }
 
+    // Active rate override — set by AppMonitor to tell watchdog "this is intentional, don't fight it"
+    var activeOverrideRate: Float
+        get() = prefs.getFloat("active_override_rate", 0f)
+        set(value) = prefs.edit { putFloat("active_override_rate", value) }
+
+    // Package that currently has an active override — for tracking
+    var activeOverridePackage: String
+        get() = prefs.getString("active_override_package", "") ?: ""
+        set(value) = prefs.edit { putString("active_override_package", value) }
+
     // Per-app profiles stored as JSON
     private fun getProfilesJson(): JSONObject {
         return try {
