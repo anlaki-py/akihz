@@ -18,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 
-private enum class AppPage(
+private enum class BottomNavPage(
     val label: String,
     val icon: ImageVector
 ) {
@@ -27,7 +27,9 @@ private enum class AppPage(
 }
 
 /**
- * Displays the main two-page app shell with bottom navigation.
+ * Displays the main app shell with bottom navigation and page routing.
+ *
+ * Supports navigating to the AppMonitorPage from Settings.
  *
  * @param supportedRates refresh rates supported by the current display
  * @param currentRate currently active refresh rate
@@ -41,55 +43,71 @@ fun AkihzApp(
     selectedRate: Float?,
     onRateSelected: (Float) -> Unit
 ) {
-    var currentPage by rememberSaveable { mutableStateOf(AppPage.Home) }
+    var bottomNavPage by rememberSaveable { mutableStateOf(BottomNavPage.Home) }
+    var showAppMonitor by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
-            AkihzBottomBar(
-                currentPage = currentPage,
-                onPageSelected = { currentPage = it }
-            )
+            // Hide bottom bar when on AppMonitorPage
+            if (!showAppMonitor) {
+                AkihzBottomBar(
+                    currentPage = bottomNavPage,
+                    onPageSelected = { bottomNavPage = it }
+                )
+            }
         }
     ) { padding ->
-        AppPageContent(
-            currentPage = currentPage,
-            padding = padding,
-            supportedRates = supportedRates,
-            currentRate = currentRate,
-            selectedRate = selectedRate,
-            onRateSelected = onRateSelected
-        )
+        if (showAppMonitor) {
+            AppMonitorPage(
+                supportedRates = supportedRates,
+                onBack = { showAppMonitor = false }
+            )
+        } else {
+            MainPageContent(
+                bottomNavPage = bottomNavPage,
+                padding = padding,
+                supportedRates = supportedRates,
+                currentRate = currentRate,
+                selectedRate = selectedRate,
+                onRateSelected = onRateSelected,
+                onNavigateToAppMonitor = { showAppMonitor = true }
+            )
+        }
     }
 }
 
 @Composable
-private fun AppPageContent(
-    currentPage: AppPage,
+private fun MainPageContent(
+    bottomNavPage: BottomNavPage,
     padding: PaddingValues,
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
-    onRateSelected: (Float) -> Unit
+    onRateSelected: (Float) -> Unit,
+    onNavigateToAppMonitor: () -> Unit
 ) {
-    when (currentPage) {
-        AppPage.Home -> RefreshRateScreen(
+    when (bottomNavPage) {
+        BottomNavPage.Home -> RefreshRateScreen(
             supportedRates = supportedRates,
             currentRate = currentRate,
             selectedRate = selectedRate,
             onRateSelected = onRateSelected,
             modifier = Modifier.padding(padding)
         )
-        AppPage.Settings -> SettingsScreen(modifier = Modifier.padding(padding))
+        BottomNavPage.Settings -> SettingsScreen(
+            onNavigateToAppMonitor = onNavigateToAppMonitor,
+            modifier = Modifier.padding(padding)
+        )
     }
 }
 
 @Composable
 private fun AkihzBottomBar(
-    currentPage: AppPage,
-    onPageSelected: (AppPage) -> Unit
+    currentPage: BottomNavPage,
+    onPageSelected: (BottomNavPage) -> Unit
 ) {
     NavigationBar {
-        AppPage.entries.forEach { page ->
+        BottomNavPage.entries.forEach { page ->
             NavigationBarItem(
                 selected = currentPage == page,
                 onClick = { onPageSelected(page) },
