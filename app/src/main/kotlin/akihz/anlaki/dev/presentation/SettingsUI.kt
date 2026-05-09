@@ -27,11 +27,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -71,7 +71,6 @@ fun SettingsScreen(
     onNavigateToAppMonitor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     Column(
@@ -265,7 +264,6 @@ private fun AppMonitorSection(onNavigateToAppMonitor: () -> Unit) {
 private fun AdvancedSection() {
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
-    var expanded by remember { mutableStateOf(false) }
     var showDebug by remember { mutableStateOf(false) }
 
     SettingsCard(title = "Advanced") {
@@ -275,11 +273,13 @@ private fun AdvancedSection() {
             fontWeight = FontWeight.Bold
         )
 
+        var expanded by remember { mutableStateOf(false) }
+
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            onExpandedChange = { expanded = it }
         ) {
-            TextField(
+            OutlinedTextField(
                 value = selectedOem,
                 onValueChange = {},
                 readOnly = true,
