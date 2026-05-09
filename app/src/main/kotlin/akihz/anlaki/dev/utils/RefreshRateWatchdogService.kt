@@ -31,10 +31,13 @@ import kotlinx.coroutines.withContext
  * Foreground service that continuously monitors the current refresh rate
  * and re-applies the desired rate when the system overrides it.
  *
+ * When app monitor has an active override, the watchdog defers to it
+ * and only re-applies if the system overrode even the override rate.
+ *
  * Configurable via [PreferencesHelper]:
  * - Enabled/disabled
  * - Re-apply interval (ms)
- * - Aggressive mode (shorter interval, immediate re-apply)
+ * - Aggressive mode (shorter interval)
  */
 class RefreshRateWatchdogService : Service() {
 
@@ -205,24 +208,9 @@ class RefreshRateWatchdogService : Service() {
             return
         }
 
-        // Skip if app monitor has an active override (it's intentionally different)
+        // Determine what rate we should be enforcing right now
         val activeOverride = PreferencesHelper.activeOverrideRate
-        if (activeOverride > 0) {
-            // Watchdog should not fight app monitor overrides
-            // But we still check if the system overrode even the override
-            scope.launch {
-                val currentResult = withContext(Dispatchers.IO) {
-                    refreshRateRepository.getCurrentRate()
-                }
-                currentResult.onSuccess { currentRate ->
-                    if (kotlin.math.abs(currentRate - activeOverride) >= 1f) {
-                        Log.d(TAG, "Override rate mismatch: current=$currentRate, override=$activeOverride. Re-applying override...")
-                        reapplyRate(activeOverride)
-                    }
-                }
-            }
-            return
-        }
+        val targetRate = if (activeOverride > 0) activeOverride else desiredRate
 
         scope.launch {
             val currentResult = withContext(Dispatchers.IO) {
@@ -230,15 +218,15 @@ class RefreshRateWatchdogService : Service() {
             }
 
             currentResult.onSuccess { currentRate ->
-                if (kotlin.math.abs(currentRate - desiredRate) >= 1f) {
-                    Log.d(TAG, "Rate mismatch: current=$currentRate, desired=$desiredRate. Re-applying...")
-                    reapplyRate(desiredRate)
+                if (kotlin.math.abs(currentRate - targetRate) >= 1f) {
+                    Log.d(TAG, "Rate mismatch: current=$currentRate, target=$targetRate (override=$activeOverride, desired=$desiredRate). Re-applying...")
+                    reapplyRate(targetRate)
                 }
             }
         }
     }
 
-    private fun reapplyRate(rate: Float = desiredRate) {
+    private fun reapplyRate(rate: Float) {
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(rate)
