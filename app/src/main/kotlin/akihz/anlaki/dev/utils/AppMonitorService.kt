@@ -21,9 +21,10 @@ import kotlinx.coroutines.withContext
  * Accessibility service that monitors foreground app changes
  * and applies per-app refresh rate profiles.
  *
- * When switching to an app with a profile, it applies that profile's rate.
+ * When switching to an app with a profile, it applies that profile's rate
+ * and tells the watchdog "this is intentional, don't fight it."
  * When switching away from a profiled app, it restores the global rate
- * that the user set in the main UI.
+ * and clears the override so the watchdog resumes normal operation.
  *
  * Requires user to enable this service in Accessibility settings.
  */
@@ -69,14 +70,34 @@ class AppMonitorService : AccessibilityService() {
         val profileRate = PreferencesHelper.getAppProfile(packageName)
 
         if (profileRate != null) {
-            // Switching TO an app with a profile — apply its rate
+            // Switching TO an app with a profile — apply its rate and register override
             lastProfiledPackage = packageName
+            registerOverride(profileRate, packageName)
             applyRate(profileRate, packageName)
         } else if (lastProfiledPackage != null) {
-            // Switching AWAY from a profiled app — restore global rate
+            // Switching AWAY from a profiled app — restore global rate and clear override
             lastProfiledPackage = null
+            clearOverride()
             restoreGlobalRate()
         }
+    }
+
+    /**
+     * Registers an active override so the watchdog knows not to fight it.
+     */
+    private fun registerOverride(rate: Float, packageName: String) {
+        PreferencesHelper.activeOverrideRate = rate
+        PreferencesHelper.activeOverridePackage = packageName
+        Log.d(TAG, "Registered override: $packageName @ ${rate.toInt()}Hz")
+    }
+
+    /**
+     * Clears the active override so the watchdog resumes normal operation.
+     */
+    private fun clearOverride() {
+        PreferencesHelper.activeOverrideRate = 0f
+        PreferencesHelper.activeOverridePackage = ""
+        Log.d(TAG, "Cleared override")
     }
 
     private fun applyRate(rate: Float, packageName: String) {
