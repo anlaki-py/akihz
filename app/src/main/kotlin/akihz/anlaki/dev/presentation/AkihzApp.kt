@@ -80,7 +80,7 @@ private fun MainPageContent(
             modifier = Modifier.padding(padding)
         )
         BottomNavPage.Settings -> SettingsScreen(
-            modifier = Modifier.padding(padding)
+            onBackClick = { /* no-op, back arrow hidden in tab nav */ }
         )
     }
 }
