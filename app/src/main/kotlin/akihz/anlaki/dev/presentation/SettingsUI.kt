@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -30,7 +31,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.utils.AppMonitorService
-import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 
@@ -59,12 +58,18 @@ private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/relea
  * Settings screen with all configuration options:
  * - General: Lock mode, default rate, battery saver handling
  * - Watchdog: Enable/disable, interval, aggressive mode
- * - App Monitor: Enable/disable, per-app profiles
+ * - App Monitor: Enable/disable, navigate to app monitor page
  * - Advanced: OEM override, debug info
  * - About: Links and version
+ *
+ * @param onNavigateToAppMonitor called when user wants to open the app monitor page
+ * @param modifier layout modifier
  */
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    onNavigateToAppMonitor: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -84,7 +89,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         GeneralSection()
         WatchdogSection()
-        AppMonitorSection()
+        AppMonitorSection(onNavigateToAppMonitor)
         AdvancedSection()
         AboutSection()
     }
@@ -92,10 +97,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun GeneralSection() {
-    val context = LocalContext.current
     var lockMode by remember { mutableStateOf(PreferencesHelper.lockModeEnabled) }
     var batterySaverOverride by remember { mutableStateOf(PreferencesHelper.batterySaverOverride) }
-    var defaultRate by remember { mutableFloatStateOf(PreferencesHelper.defaultRate) }
 
     SettingsCard(title = "General") {
         ToggleRow(
@@ -117,14 +120,6 @@ private fun GeneralSection() {
                 PreferencesHelper.batterySaverOverride = it
             }
         )
-
-        if (defaultRate > 0) {
-            Text(
-                text = "Default rate: ${defaultRate.toInt()} Hz",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
     }
 }
 
@@ -213,15 +208,10 @@ private fun WatchdogSection() {
 }
 
 @Composable
-private fun AppMonitorSection() {
+private fun AppMonitorSection(onNavigateToAppMonitor: () -> Unit) {
     val context = LocalContext.current
     var monitorEnabled by remember { mutableStateOf(PreferencesHelper.appMonitorEnabled) }
-    var showProfiles by remember { mutableStateOf(false) }
-
-    // Re-check accessibility status reactively
-    val isAccessibilityEnabled by remember(monitorEnabled) {
-        mutableStateOf(AppMonitorService.isEnabled(context))
-    }
+    val isAccessibilityEnabled = remember { AppMonitorService.isEnabled(context) }
 
     SettingsCard(title = "App Monitor") {
         Text(
@@ -259,90 +249,12 @@ private fun AppMonitorSection() {
         }
 
         OutlinedButton(
-            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) },
+            onClick = onNavigateToAppMonitor,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Allow background activity")
-        }
-
-        if (monitorEnabled && isAccessibilityEnabled) {
-            OutlinedButton(
-                onClick = { showProfiles = !showProfiles },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (showProfiles) "Hide profiles" else "Manage per-app profiles")
-            }
-        }
-
-        if (showProfiles) {
-            PerAppProfilesSection()
-        }
-    }
-}
-
-@Composable
-private fun PerAppProfilesSection() {
-    val profiles = remember { PreferencesHelper.getAllAppProfiles().toSortedMap() }
-    var newPackage by remember { mutableStateOf("") }
-    var newRate by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        if (profiles.isNotEmpty()) {
-            profiles.forEach { (pkg, rate) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "$pkg: ${rate.toInt()} Hz",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    TextButton(onClick = {
-                        PreferencesHelper.removeAppProfile(pkg)
-                    }) {
-                        Text("Remove", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        }
-
-        Text("Add new profile", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-
-        TextField(
-            value = newPackage,
-            onValueChange = { newPackage = it },
-            label = { Text("Package name (e.g., com.android.chrome)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        TextField(
-            value = newRate,
-            onValueChange = { newRate = it },
-            label = { Text("Refresh rate (e.g., 120)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Button(
-            onClick = {
-                val rate = newRate.toFloatOrNull()
-                if (newPackage.isNotBlank() && rate != null && rate > 0) {
-                    PreferencesHelper.setAppProfile(newPackage, rate)
-                    newPackage = ""
-                    newRate = ""
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = newPackage.isNotBlank() && newRate.toFloatOrNull() != null
-        ) {
-            Text("Add profile")
+            Text("Manage per-app profiles")
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
         }
     }
 }
@@ -410,7 +322,6 @@ private fun AdvancedSection() {
 
 @Composable
 private fun DebugInfoSection() {
-    val context = LocalContext.current
     val strategy = OemSettingsStrategy.resolve()
 
     Card(
@@ -444,7 +355,6 @@ private fun DebugInfoSection() {
 
 @Composable
 private fun AboutSection() {
-    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 
     SettingsCard(title = "About") {
