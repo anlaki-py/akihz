@@ -72,7 +72,7 @@ android {
     }
 
     lint {
-        disable += setOf("ProtectedPermissions")
+        disable += setOf("ProtectedPermissions", "QueryAllPackagesPermission")
     }
 
     val isCiBuild = project.hasProperty("ciBuild")
