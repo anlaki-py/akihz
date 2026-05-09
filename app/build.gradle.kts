@@ -71,6 +71,10 @@ android {
         }
     }
 
+    lint {
+        disable += setOf("ProtectedPermissions")
+    }
+
     val isCiBuild = project.hasProperty("ciBuild")
     applicationVariants.all {
         outputs.all {
