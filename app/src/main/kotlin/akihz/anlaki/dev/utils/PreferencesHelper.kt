@@ -99,6 +99,11 @@ object PreferencesHelper {
         get() = prefs.getFloat(KEY_DESIRED_RATE, 0f)
         set(value) = prefs.edit { putFloat(KEY_DESIRED_RATE, value) }
 
+    // Global/default rate set by user in the main UI (used for restoring after app monitor)
+    var globalRate: Float
+        get() = prefs.getFloat("global_rate", 0f)
+        set(value) = prefs.edit { putFloat("global_rate", value) }
+
     // Per-app profiles stored as JSON
     private fun getProfilesJson(): JSONObject {
         return try {

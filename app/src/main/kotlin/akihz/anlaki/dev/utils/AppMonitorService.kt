@@ -21,9 +21,11 @@ import kotlinx.coroutines.withContext
  * Accessibility service that monitors foreground app changes
  * and applies per-app refresh rate profiles.
  *
+ * When switching to an app with a profile, it applies that profile's rate.
+ * When switching away from a profiled app, it restores the global rate
+ * that the user set in the main UI.
+ *
  * Requires user to enable this service in Accessibility settings.
- * When enabled, it detects app switches and applies the configured
- * refresh rate for each app.
  */
 class AppMonitorService : AccessibilityService() {
 
@@ -33,6 +35,7 @@ class AppMonitorService : AccessibilityService() {
 
     private var currentPackage: String? = null
     private var isApplying = false
+    private var lastProfiledPackage: String? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -55,24 +58,29 @@ class AppMonitorService : AccessibilityService() {
         if (packageName.startsWith("android")) return // Skip system UI transitions
 
         currentPackage = packageName
-        applyProfileForApp(packageName)
+        handleAppSwitch(packageName)
     }
 
     override fun onInterrupt() {
         // No-op
     }
 
-    private fun applyProfileForApp(packageName: String) {
-        if (isApplying) return
-
+    private fun handleAppSwitch(packageName: String) {
         val profileRate = PreferencesHelper.getAppProfile(packageName)
-        val rateToApply = profileRate ?: PreferencesHelper.defaultRate
 
-        if (rateToApply <= 0) {
-            Log.d(TAG, "No profile or default rate for $packageName, skipping")
-            return
+        if (profileRate != null) {
+            // Switching TO an app with a profile — apply its rate
+            lastProfiledPackage = packageName
+            applyRate(profileRate, packageName)
+        } else if (lastProfiledPackage != null) {
+            // Switching AWAY from a profiled app — restore global rate
+            lastProfiledPackage = null
+            restoreGlobalRate()
         }
+    }
 
+    private fun applyRate(rate: Float, packageName: String) {
+        if (isApplying) return
         if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) {
             Log.w(TAG, "Shizuku not available, cannot apply rate for $packageName")
             return
@@ -81,16 +89,41 @@ class AppMonitorService : AccessibilityService() {
         isApplying = true
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(rateToApply)
+                refreshRateRepository.setRate(rate)
             }
 
             result.onSuccess {
-                Log.d(TAG, "Applied ${rateToApply.toInt()} Hz for $packageName")
+                Log.d(TAG, "Applied ${rate.toInt()} Hz for $packageName")
             }.onError { _, message ->
                 Log.w(TAG, "Failed to apply rate for $packageName: $message")
             }
 
             handler.postDelayed({ isApplying = false }, DEBOUNCE_MS)
+        }
+    }
+
+    private fun restoreGlobalRate() {
+        val globalRate = PreferencesHelper.globalRate
+        if (globalRate <= 0) {
+            Log.d(TAG, "No global rate set, skipping restore")
+            return
+        }
+
+        if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) {
+            Log.w(TAG, "Shizuku not available, cannot restore global rate")
+            return
+        }
+
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                refreshRateRepository.setRate(globalRate)
+            }
+
+            result.onSuccess {
+                Log.d(TAG, "Restored global rate ${globalRate.toInt()} Hz")
+            }.onError { _, message ->
+                Log.w(TAG, "Failed to restore global rate: $message")
+            }
         }
     }
 
