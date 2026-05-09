@@ -57,7 +57,6 @@ fun SettingsScreen() {
 @Composable
 private fun GeneralSection() {
     var lockMode by remember { mutableStateOf(PreferencesHelper.lockModeEnabled) }
-    var batterySaverOverride by remember { mutableStateOf(PreferencesHelper.batterySaverOverride) }
 
     PreferenceGroup(heading = "General") {
         PreferenceTemplate(
@@ -67,16 +66,6 @@ private fun GeneralSection() {
             onCheckedChange = {
                 lockMode = it
                 PreferencesHelper.lockModeEnabled = it
-            }
-        )
-
-        PreferenceTemplate(
-            title = "Override battery saver",
-            description = "Re-apply rate even when battery saver is active",
-            checked = batterySaverOverride,
-            onCheckedChange = {
-                batterySaverOverride = it
-                PreferencesHelper.batterySaverOverride = it
             }
         )
     }
