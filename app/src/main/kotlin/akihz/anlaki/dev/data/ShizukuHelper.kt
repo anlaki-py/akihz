@@ -1,14 +1,22 @@
 package akihz.anlaki.dev.data
 
 import akihz.anlaki.dev.ICommandService
+import akihz.anlaki.dev.data.OemSettingsStrategy.Namespace
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import akihz.anlaki.dev.utils.ErrorType
+import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.Result
 import rikka.shizuku.Shizuku
 
+/**
+ * Helper for binding to Shizuku user service and executing settings commands.
+ *
+ * All command execution goes through [ICommandService] running in a Shizuku-owned
+ * process with elevated privileges.
+ */
 object ShizukuHelper {
 
     private var commandService: ICommandService? = null
@@ -37,6 +45,7 @@ object ShizukuHelper {
             try {
                 Shizuku.requestPermission(requestCode)
             } catch (e: Exception) {
+                // ignored
             }
         }
     }
@@ -106,6 +115,7 @@ object ShizukuHelper {
             try {
                 Shizuku.unbindUserService(args, conn, true)
             } catch (e: Exception) {
+                // ignored
             }
         }
 
@@ -132,10 +142,16 @@ object ShizukuHelper {
         }
     }
 
+    /**
+     * Reads the current refresh rate from OEM-specific settings keys.
+     */
     fun getCurrentRefreshRate(): Result<Float> {
-        val keys = OemSettingsStrategy.resolve().readKeys
-        for (key in keys) {
-            val result = exec("settings get secure $key")
+        val strategy = getActiveStrategy()
+        val keys = strategy.readKeys
+
+        for (settingsKey in keys) {
+            val ns = namespaceToString(settingsKey.namespace)
+            val result = exec("settings get $ns ${settingsKey.key}")
             if (result.isSuccess) {
                 result.getOrNull()?.let { raw ->
                     if (raw.isNotBlank() && raw != "null") {
@@ -149,20 +165,17 @@ object ShizukuHelper {
         return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Could not retrieve refresh rate")
     }
 
+    /**
+     * Sets the refresh rate using standard write keys.
+     */
     fun setRefreshRate(hz: Float): Result<Unit> {
         val hzInt = hz.toInt()
-        val strategy = OemSettingsStrategy.resolve()
+        val strategy = getActiveStrategy()
         var anySuccess = false
 
-        strategy.writeKeys.forEach { key ->
-            val result = exec("settings put secure $key $hzInt")
-            if (result.isSuccess) {
-                anySuccess = true
-            }
-        }
-
-        strategy.systemWriteKeys.forEach { key ->
-            val result = exec("settings put system $key $hzInt")
+        strategy.writeKeys.forEach { settingsKey ->
+            val ns = namespaceToString(settingsKey.namespace)
+            val result = exec("settings put $ns ${settingsKey.key} $hzInt")
             if (result.isSuccess) {
                 anySuccess = true
             }
@@ -171,16 +184,77 @@ object ShizukuHelper {
         return if (anySuccess) {
             Result.success(Unit)
         } else {
-            Result.error(
-                ErrorType.COMMAND_EXECUTION_FAILED,
-                "Failed to set refresh rate"
-            )
+            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Failed to set refresh rate")
         }
     }
 
+    /**
+     * Sets refresh rate in lock mode: writes both min and peak to the same value.
+     * This constrains SurfaceFlinger's selection range to a single rate.
+     */
+    fun setRefreshRateLocked(hz: Float): Result<Unit> {
+        val hzInt = hz.toInt()
+        val strategy = getActiveStrategy()
+        var anySuccess = false
+
+        strategy.lockKeys.forEach { settingsKey ->
+            val ns = namespaceToString(settingsKey.namespace)
+            val result = exec("settings put $ns ${settingsKey.key} $hzInt")
+            if (result.isSuccess) {
+                anySuccess = true
+            }
+        }
+
+        // Also set mode to "high" (3) if supported, to prevent adaptive switching
+        if (strategy.supportsMode && strategy.modeKey != null) {
+            val ns = namespaceToString(strategy.modeKey.namespace)
+            exec("settings put $ns ${strategy.modeKey.key} 3")
+        }
+
+        return if (anySuccess) {
+            Result.success(Unit)
+        } else {
+            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Failed to set locked refresh rate")
+        }
+    }
+
+    /**
+     * Resets refresh rate settings to defaults (adaptive mode).
+     */
     fun resetRefreshRate(): Result<Unit> {
-        exec("settings delete secure user_refresh_rate")
-        exec("settings delete secure miui_refresh_rate")
+        val strategy = getActiveStrategy()
+
+        strategy.writeKeys.forEach { settingsKey ->
+            val ns = namespaceToString(settingsKey.namespace)
+            exec("settings delete $ns ${settingsKey.key}")
+        }
+
+        // Reset mode to adaptive (0) if supported
+        if (strategy.supportsMode && strategy.modeKey != null) {
+            val ns = namespaceToString(strategy.modeKey.namespace)
+            exec("settings put $ns ${strategy.modeKey.key} 0")
+        }
+
         return Result.success(Unit)
+    }
+
+    /**
+     * Gets the active strategy, respecting manual OEM override if set.
+     */
+    private fun getActiveStrategy(): OemSettingsStrategy.KeySet {
+        val override = PreferencesHelper.oemOverride
+        return if (override.isNotBlank() && override != "Auto-detect") {
+            OemSettingsStrategy.resolveByName(override)
+        } else {
+            OemSettingsStrategy.resolve()
+        }
+    }
+
+    private fun namespaceToString(namespace: Namespace): String {
+        return when (namespace) {
+            Namespace.SECURE -> "secure"
+            Namespace.SYSTEM -> "system"
+            Namespace.GLOBAL -> "global"
+        }
     }
 }

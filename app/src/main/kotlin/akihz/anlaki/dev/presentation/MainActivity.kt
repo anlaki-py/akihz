@@ -3,7 +3,6 @@ package akihz.anlaki.dev.presentation
 import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.core.view.WindowCompat
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,11 +13,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
 import akihz.anlaki.dev.data.DisplayManagerDataSource
 import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
+import akihz.anlaki.dev.utils.AppMonitorService
 import akihz.anlaki.dev.utils.KeepAliveService
+import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -60,8 +63,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        PreferencesHelper.init(this)
         KeepAliveService.start(this)
+        RefreshRateWatchdogService.start(this)
+
         refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(this))
+
         setContent {
             AnlakiTheme {
                 val darkTheme = isSystemInDarkTheme()

@@ -17,9 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
+import akihz.anlaki.dev.utils.PreferencesHelper
 
 /**
  * Shows detected refresh rates and lets the user select one.
+ * Displays lock mode indicator if enabled.
  *
  * @param supportedRates refresh rates supported by the current display
  * @param currentRate currently active refresh rate
@@ -36,6 +38,8 @@ fun RefreshRateScreen(
     onRateSelected: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lockMode = PreferencesHelper.lockModeEnabled
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -50,8 +54,27 @@ fun RefreshRateScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 8.dp)
         )
+
+        if (lockMode) {
+            Text(
+                text = "Lock mode ON",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "min = peak rate enforced",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         if (supportedRates.isEmpty()) {
             Text(
