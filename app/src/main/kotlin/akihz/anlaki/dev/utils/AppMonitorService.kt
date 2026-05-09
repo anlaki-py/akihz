@@ -43,11 +43,16 @@ class AppMonitorService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (!PreferencesHelper.appMonitorEnabled) return
-        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+
+        val eventType = event.eventType
+        if (eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        ) return
 
         val packageName = event.packageName?.toString() ?: return
         if (packageName == currentPackage) return
         if (packageName == "akihz.anlaki.dev") return // Skip self
+        if (packageName.startsWith("android")) return // Skip system UI transitions
 
         currentPackage = packageName
         applyProfileForApp(packageName)
@@ -59,21 +64,19 @@ class AppMonitorService : AccessibilityService() {
 
     private fun applyProfileForApp(packageName: String) {
         if (isApplying) return
-        if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) {
-            // Try to bind if not connected
-            if (!ShizukuHelper.isUserServiceBound()) {
-                ShizukuHelper.bindUserService(
-                    onConnected = { applyProfileForApp(packageName) },
-                    onFailed = { _, _ -> }
-                )
-            }
-            return
-        }
 
         val profileRate = PreferencesHelper.getAppProfile(packageName)
         val rateToApply = profileRate ?: PreferencesHelper.defaultRate
 
-        if (rateToApply <= 0) return
+        if (rateToApply <= 0) {
+            Log.d(TAG, "No profile or default rate for $packageName, skipping")
+            return
+        }
+
+        if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) {
+            Log.w(TAG, "Shizuku not available, cannot apply rate for $packageName")
+            return
+        }
 
         isApplying = true
         scope.launch {
@@ -108,8 +111,8 @@ class AppMonitorService : AccessibilityService() {
                 android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
             ) ?: return false
 
-            val componentName = "${context.packageName}/${AppMonitorService::class.java.name}"
-            return enabledServices.contains(componentName)
+            val expectedComponent = "${context.packageName}/${AppMonitorService::class.java.canonicalName}"
+            return enabledServices.split(":").any { it.trim() == expectedComponent }
         }
 
         /**
