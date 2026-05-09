@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SettingsApplications
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
