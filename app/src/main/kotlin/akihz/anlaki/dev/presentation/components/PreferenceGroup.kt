@@ -10,14 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * A grouped section of preferences with a heading label.
- *
- * @param heading The group title displayed above the content
- * @param content The preference items in this group
+ * Simple section with a heading and content.
  */
 @Composable
 fun PreferenceGroup(
@@ -30,14 +26,11 @@ fun PreferenceGroup(
             text = heading,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(vertical = 12.dp)
         )
 
-        Column {
-            content()
-        }
+        content()
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

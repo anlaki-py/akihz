@@ -79,9 +79,7 @@ private fun MainPageContent(
             onRateSelected = onRateSelected,
             modifier = Modifier.padding(padding)
         )
-        BottomNavPage.Settings -> SettingsScreen(
-            onBackClick = { /* no-op, back arrow hidden in tab nav */ }
-        )
+        BottomNavPage.Settings -> SettingsScreen()
     }
 }
 

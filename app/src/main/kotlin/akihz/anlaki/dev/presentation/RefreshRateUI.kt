@@ -9,14 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +32,6 @@ import akihz.anlaki.dev.utils.PreferencesHelper
  * @param onRateSelected called when the user picks a refresh rate
  * @param modifier layout modifier supplied by the parent screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RefreshRateScreen(
     supportedRates: List<Float>,
@@ -47,93 +42,71 @@ fun RefreshRateScreen(
 ) {
     val lockMode = PreferencesHelper.lockModeEnabled
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "akihz",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Current rate display
+        Text(
+            text = if (currentRate != null) "${currentRate.toInt()} Hz" else "akihz",
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-            // Current rate display
+        if (currentRate != null) {
             Text(
-                text = if (currentRate != null) "${currentRate.toInt()} Hz" else "-- Hz",
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                text = "Current refresh rate",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
 
-            if (currentRate != null) {
-                Text(
-                    text = "Current refresh rate",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+        // Lock mode indicator
+        if (lockMode) {
+            Text(
+                text = "Lock mode ON",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "min = peak rate enforced",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-            // Lock mode indicator
-            if (lockMode) {
-                Text(
-                    text = "Lock mode ON",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "min = peak rate enforced",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Rate selection buttons
-            if (supportedRates.isEmpty()) {
-                EmptyState()
-            } else {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    supportedRates.forEach { hz ->
-                        RefreshRateButton(
-                            hz = hz,
-                            isSelected = selectedRate != null && kotlin.math.abs(hz - selectedRate) < 1f,
-                            onClick = { onRateSelected(hz) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+        // Rate selection buttons
+        if (supportedRates.isEmpty()) {
+            EmptyState()
+        } else {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                supportedRates.forEach { hz ->
+                    RefreshRateButton(
+                        hz = hz,
+                        isSelected = selectedRate != null && kotlin.math.abs(hz - selectedRate) < 1f,
+                        onClick = { onRateSelected(hz) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
