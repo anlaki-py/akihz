@@ -66,7 +66,7 @@ private fun WatchdogSection() {
     PreferenceGroup(heading = "Watchdog") {
         PreferenceTemplate(
             title = "Enable watchdog",
-            description = "Monitor and re-apply refresh rate automatically",
+            description = "Monitor and re-apply refresh rate automatically (untested)",
             checked = watchdogEnabled,
             onCheckedChange = {
                 watchdogEnabled = it
