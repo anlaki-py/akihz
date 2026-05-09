@@ -46,11 +46,11 @@ fun PreferenceLayout(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             content()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
