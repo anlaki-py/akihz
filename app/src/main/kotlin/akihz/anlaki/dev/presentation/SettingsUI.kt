@@ -33,6 +33,7 @@ import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
+import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 
@@ -43,12 +44,14 @@ private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/relea
 
 /**
  * Settings screen with clean, simple layout.
+ *
+ * @param onResetToDefaults called when the user confirms resetting refresh rate settings
  */
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(onResetToDefaults: () -> Unit) {
     PreferenceLayout(label = "Settings") {
         WatchdogSection()
-        AdvancedSection()
+        AdvancedSection(onResetToDefaults = onResetToDefaults)
         AboutSection()
     }
 }
@@ -66,7 +69,7 @@ private fun WatchdogSection() {
     PreferenceGroup(heading = "Watchdog") {
         PreferenceTemplate(
             title = "Enable watchdog",
-            description = "Monitor and re-apply refresh rate automatically (untested)",
+            description = "Monitor and re-apply refresh rate automatically (untested on all devices)",
             checked = watchdogEnabled,
             onCheckedChange = {
                 watchdogEnabled = it
@@ -129,11 +132,14 @@ private fun WatchdogSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdvancedSection() {
+private fun AdvancedSection(onResetToDefaults: () -> Unit) {
+    val context = LocalContext.current
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
     var showDebug by remember { mutableStateOf(false) }
+    var showResetConfirm by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+    val batteryUnrestricted = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
 
     PreferenceGroup(heading = "Advanced") {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -176,6 +182,22 @@ private fun AdvancedSection() {
         }
 
         PreferenceTemplate(
+            title = "Battery optimization",
+            description = if (batteryUnrestricted) {
+                "Unrestricted — background service can run reliably"
+            } else {
+                "Tap to exclude akiHz from battery restrictions"
+            },
+            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) }
+        )
+
+        PreferenceTemplate(
+            title = "Reset to defaults",
+            description = "Restore adaptive refresh rate (system defaults)",
+            onClick = { showResetConfirm = true }
+        )
+
+        PreferenceTemplate(
             title = if (showDebug) "Hide debug info" else "Show debug info",
             onClick = { showDebug = !showDebug }
         )
@@ -183,6 +205,34 @@ private fun AdvancedSection() {
         if (showDebug) {
             DebugInfoSection()
         }
+    }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text("Reset to defaults") },
+            text = {
+                Text(
+                    "This clears OEM refresh rate settings and restores adaptive mode. " +
+                    "Your akiHz preferences are kept."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetConfirm = false
+                        onResetToDefaults()
+                    }
+                ) {
+                    Text("Reset")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

@@ -33,13 +33,15 @@ private enum class BottomNavPage(
  * @param currentRate currently active refresh rate
  * @param selectedRate refresh rate selected in the UI
  * @param onRateSelected called when the user picks a refresh rate
+ * @param onResetToDefaults called when the user confirms reset to system defaults
  */
 @Composable
 fun AkihzApp(
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
-    onRateSelected: (Float) -> Unit
+    onRateSelected: (Float) -> Unit,
+    onResetToDefaults: () -> Unit
 ) {
     var bottomNavPage by rememberSaveable { mutableStateOf(BottomNavPage.Home) }
 
@@ -57,7 +59,8 @@ fun AkihzApp(
             supportedRates = supportedRates,
             currentRate = currentRate,
             selectedRate = selectedRate,
-            onRateSelected = onRateSelected
+            onRateSelected = onRateSelected,
+            onResetToDefaults = onResetToDefaults
         )
     }
 }
@@ -69,7 +72,8 @@ private fun MainPageContent(
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
-    onRateSelected: (Float) -> Unit
+    onRateSelected: (Float) -> Unit,
+    onResetToDefaults: () -> Unit
 ) {
     when (bottomNavPage) {
         BottomNavPage.Home -> RefreshRateScreen(
@@ -79,7 +83,7 @@ private fun MainPageContent(
             onRateSelected = onRateSelected,
             modifier = Modifier.padding(padding)
         )
-        BottomNavPage.Settings -> SettingsScreen()
+        BottomNavPage.Settings -> SettingsScreen(onResetToDefaults = onResetToDefaults)
     }
 }
 

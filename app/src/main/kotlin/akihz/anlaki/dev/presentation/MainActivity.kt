@@ -82,7 +82,8 @@ class MainActivity : ComponentActivity() {
                     supportedRates = supportedRates,
                     currentRate = currentRate,
                     selectedRate = selectedRate,
-                    onRateSelected = { hz -> onRateSelected(hz) }
+                    onRateSelected = { hz -> onRateSelected(hz) },
+                    onResetToDefaults = { onResetToDefaults() }
                 )
             }
         }
@@ -103,6 +104,46 @@ class MainActivity : ComponentActivity() {
             }.onError { _, message ->
                 showError(message)
             }
+        }
+    }
+
+    private fun onResetToDefaults() {
+        if (!ShizukuHelper.isBinderReady()) {
+            showError("Shizuku is not running.")
+            return
+        }
+        if (!ShizukuHelper.hasPermission()) {
+            showError("Shizuku permission not granted.")
+            return
+        }
+
+        val performReset = {
+            scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    refreshRateRepository.resetToDefaults()
+                }
+
+                result.onSuccess {
+                    PreferencesHelper.desiredRate = 0f
+                    loadCurrentRate()
+                    RefreshRateWatchdogService.restart(this@MainActivity)
+                    Toast.makeText(this@MainActivity, "Reset to defaults", Toast.LENGTH_SHORT).show()
+                }.onError { _, message ->
+                    showError(message)
+                }
+            }
+        }
+
+        if (isServiceBound) {
+            performReset()
+        } else {
+            ShizukuHelper.bindUserService(
+                onConnected = {
+                    isServiceBound = true
+                    performReset()
+                },
+                onFailed = { _, message -> showError(message) }
+            )
         }
     }
 
