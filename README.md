@@ -1,6 +1,4 @@
-# akihz
-
-A lightweight Android refresh rate manager with a Quick Settings tile. No root required — works through [Shizuku](https://shizuku.rikka.app/).
+"akiHz is a lightweight, FOSS Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using [Shizuku](https://shizuku.rikka.app/). Features a convenient Quick Settings tile for one-tap cycling and automatic detection of supported refresh rates. Perfect for Xiaomi, Samsung, Pixel, and other devices."
 
 ## Features
 
