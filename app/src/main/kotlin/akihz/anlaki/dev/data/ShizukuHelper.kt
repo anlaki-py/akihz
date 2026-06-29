@@ -1,22 +1,17 @@
 package akihz.anlaki.dev.data
 
-import akihz.anlaki.dev.ICommandService
-import akihz.anlaki.dev.data.OemSettingsStrategy.Namespace
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import rikka.shizuku.Shizuku
+import timber.log.Timber
+import akihz.anlaki.dev.ICommandService
+import akihz.anlaki.dev.data.OemSettingsStrategy.Namespace
 import akihz.anlaki.dev.utils.ErrorType
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.Result
-import rikka.shizuku.Shizuku
 
-/**
- * Helper for binding to Shizuku user service and executing settings commands.
- *
- * All command execution goes through [ICommandService] running in a Shizuku-owned
- * process with elevated privileges.
- */
 object ShizukuHelper {
 
     private var commandService: ICommandService? = null
@@ -26,7 +21,8 @@ object ShizukuHelper {
     fun isBinderReady(): Boolean {
         return try {
             Shizuku.pingBinder()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Timber.v(e, "Shizuku binder not ready")
             false
         }
     }
@@ -35,7 +31,8 @@ object ShizukuHelper {
         if (!isBinderReady()) return false
         return try {
             Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to check Shizuku permission")
             false
         }
     }
@@ -44,8 +41,8 @@ object ShizukuHelper {
         if (isBinderReady() && !hasPermission()) {
             try {
                 Shizuku.requestPermission(requestCode)
-            } catch (_: Exception) {
-                // ignored
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to request Shizuku permission")
             }
         }
     }
@@ -53,7 +50,8 @@ object ShizukuHelper {
     fun getUid(): Int {
         return try {
             Shizuku.getUid()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to get Shizuku UID")
             -1
         }
     }
@@ -91,11 +89,13 @@ object ShizukuHelper {
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 commandService = ICommandService.Stub.asInterface(binder)
+                Timber.i("Shizuku user service connected")
                 onConnected()
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
                 commandService = null
+                Timber.i("Shizuku user service disconnected")
             }
         }
 
@@ -103,6 +103,7 @@ object ShizukuHelper {
             Shizuku.bindUserService(args, serviceConnection!!)
         } catch (e: Exception) {
             commandService = null
+            Timber.e(e, "Failed to bind Shizuku user service")
             onFailed(ErrorType.SERVICE_BINDING_FAILED, e.message ?: "Unknown binding error")
         }
     }
@@ -114,8 +115,8 @@ object ShizukuHelper {
         if (args != null && conn != null) {
             try {
                 Shizuku.unbindUserService(args, conn, true)
-            } catch (_: Exception) {
-                // ignored
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to unbind Shizuku user service")
             }
         }
 
@@ -133,11 +134,13 @@ object ShizukuHelper {
         return try {
             val result = service.runCommand(command)
             if (result.startsWith("ERROR")) {
+                Timber.w("Command failed: %s", result)
                 Result.error(ErrorType.COMMAND_EXECUTION_FAILED, result)
             } else {
                 Result.success(result)
             }
         } catch (e: Exception) {
+            Timber.e(e, "Command execution exception")
             Result.error(ErrorType.COMMAND_EXECUTION_FAILED, e.message ?: "Unknown error")
         }
     }
@@ -199,7 +202,6 @@ object ShizukuHelper {
             exec("settings delete $ns ${settingsKey.key}")
         }
 
-        // Reset mode to adaptive (0) if supported
         if (strategy.supportsMode && strategy.modeKey != null) {
             val ns = namespaceToString(strategy.modeKey.namespace)
             exec("settings put $ns ${strategy.modeKey.key} 0")
@@ -208,9 +210,6 @@ object ShizukuHelper {
         return Result.success(Unit)
     }
 
-    /**
-     * Gets the active strategy, respecting manual OEM override if set.
-     */
     private fun getActiveStrategy(): OemSettingsStrategy.KeySet {
         val override = PreferencesHelper.oemOverride
         return if (override.isNotBlank() && override != "Auto-detect") {

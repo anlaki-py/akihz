@@ -5,10 +5,10 @@ import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.widget.Toast
+import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.R
-import akihz.anlaki.dev.data.DisplayManagerDataSource
-import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import kotlinx.coroutines.CoroutineScope
@@ -18,23 +18,22 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import javax.inject.Inject
 
-/**
- * Quick Settings tile that cycles through supported refresh rates.
- */
+@AndroidEntryPoint
 class RefreshRateTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private lateinit var refreshRateRepository: RefreshRateRepository
     private var supportedRates: List<Float> = emptyList()
     private var currentIndex = 0
     private var isConnecting = false
+
+    @Inject lateinit var refreshRateRepository: RefreshRateRepository
 
     override fun onStartListening() {
         super.onStartListening()
         KeepAliveService.start(applicationContext)
         PreferencesHelper.init(applicationContext)
-        refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(applicationContext))
         loadSupportedRatesAndRestore()
     }
 

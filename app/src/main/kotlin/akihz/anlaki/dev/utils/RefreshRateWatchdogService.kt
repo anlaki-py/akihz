@@ -13,12 +13,11 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.NotificationCompat
+import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.R
-import akihz.anlaki.dev.data.DisplayManagerDataSource
-import akihz.anlaki.dev.data.RefreshRateRepository
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.presentation.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,23 +25,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-/**
- * Foreground service that continuously monitors the current refresh rate
- * and re-applies the desired rate when the system overrides it.
- *
- * Configurable via [PreferencesHelper]:
- * - Enabled/disabled
- * - Re-apply interval (ms)
- * - Aggressive mode (shorter interval)
- */
+@AndroidEntryPoint
 class RefreshRateWatchdogService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var displayManager: DisplayManager
-    private lateinit var refreshRateRepository: RefreshRateRepository
     private lateinit var systemOverrideDetector: SystemOverrideDetector
+
+    @Inject lateinit var refreshRateRepository: RefreshRateRepository
 
     private var desiredRate: Float = 0f
     private var isRunning = false
@@ -69,13 +62,13 @@ class RefreshRateWatchdogService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        PreferencesHelper.init(applicationContext)
         displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(applicationContext))
         systemOverrideDetector = SystemOverrideDetector(applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        PreferencesHelper.init(applicationContext)
+
         if (!PreferencesHelper.watchdogEnabled) {
             stopSelf()
             return START_NOT_STICKY
@@ -108,19 +101,13 @@ class RefreshRateWatchdogService : Service() {
                         isScreenOn = false
                         handler.removeCallbacks(periodicCheckRunnable)
                     }
-                    is SystemOverrideDetector.SystemEvent.PowerSaveChanged -> {
-                        // Skip re-applying during power save to avoid fighting the system
-                    }
-                    is SystemOverrideDetector.SystemEvent.ThermalThrottling -> {
-                        // Skip re-applying during thermal throttling
-                        Log.d(TAG, "Thermal throttling detected: ${event.temperatureCelsius}C")
-                    }
+                    is SystemOverrideDetector.SystemEvent.PowerSaveChanged -> {}
+                    is SystemOverrideDetector.SystemEvent.ThermalThrottling -> {}
                 }
             }
         }
 
         scheduleNextCheck()
-
         return START_STICKY
     }
 
@@ -202,7 +189,6 @@ class RefreshRateWatchdogService : Service() {
 
             currentResult.onSuccess { currentRate ->
                 if (kotlin.math.abs(currentRate - desiredRate) >= 1f) {
-                    Log.d(TAG, "Rate mismatch: current=$currentRate, desired=$desiredRate. Re-applying...")
                     reapplyRate()
                 }
             }
@@ -214,12 +200,7 @@ class RefreshRateWatchdogService : Service() {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(desiredRate)
             }
-
-            result.onSuccess {
-                Log.d(TAG, "Successfully re-applied ${desiredRate.toInt()} Hz")
-            }.onError { _, message ->
-                Log.w(TAG, "Failed to re-apply rate: $message")
-            }
+            result.onSuccess {}
         }
     }
 
@@ -235,36 +216,26 @@ class RefreshRateWatchdogService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
-        private const val TAG = "RefreshRateWatchdog"
         private const val CHANNEL_ID = "akihz_watchdog"
         private const val NOTIFICATION_ID = 1002
         private const val MIN_INTERVAL_MS = 1000L
         private const val MAX_INTERVAL_MS = 30000L
         private const val AGGRESSIVE_INTERVAL_MS = 500L
 
-        /**
-         * Starts the watchdog service if enabled in preferences.
-         */
         fun start(context: Context) {
             if (!PreferencesHelper.watchdogEnabled) return
             try {
                 val intent = Intent(context, RefreshRateWatchdogService::class.java)
                 androidx.core.content.ContextCompat.startForegroundService(context, intent)
             } catch (e: Exception) {
-                Log.w(TAG, "Unable to start watchdog service", e)
+                // Service start may fail if process is not running
             }
         }
 
-        /**
-         * Stops the watchdog service.
-         */
         fun stop(context: Context) {
             context.stopService(Intent(context, RefreshRateWatchdogService::class.java))
         }
 
-        /**
-         * Restarts the watchdog service with updated settings.
-         */
         fun restart(context: Context) {
             stop(context)
             if (PreferencesHelper.watchdogEnabled) {

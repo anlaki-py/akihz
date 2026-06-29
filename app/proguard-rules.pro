@@ -7,6 +7,14 @@
 -keep class akihz.anlaki.dev.ICommandService$Stub$Proxy { *; }
 -keep class akihz.anlaki.dev.data.ICommandServiceImpl { *; }
 
+# Hilt / Dagger
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+
+# Keep Hilt generated components
+-keep class * extends dagger.hilt.android.components.** { *; }
+
 # Preserve line numbers for debugging
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile

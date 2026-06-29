@@ -3,45 +3,34 @@ package akihz.anlaki.dev.presentation
 import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
-import akihz.anlaki.dev.data.DisplayManagerDataSource
-import akihz.anlaki.dev.data.RefreshRateRepository
+import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         private const val REQUEST_CODE_SHIZUKU = 1001
     }
 
-    private lateinit var refreshRateRepository: RefreshRateRepository
+    private val viewModel: MainViewModel by viewModels()
     private var isServiceBound = false
-    private var currentRate: Float? = null
-    private var selectedRate by mutableStateOf<Float?>(null)
-    private var supportedRates by mutableStateOf<List<Float>>(emptyList())
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
@@ -62,12 +51,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         PreferencesHelper.init(this)
         KeepAliveService.start(this)
         RefreshRateWatchdogService.start(this)
-
-        refreshRateRepository = RefreshRateRepository(DisplayManagerDataSource(this))
 
         setContent {
             AnlakiTheme {
@@ -78,72 +66,15 @@ class MainActivity : ComponentActivity() {
                     window.navigationBarColor = backgroundColor.toArgb()
                     WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
                 }
+                val uiState by viewModel.uiState.collectAsState()
+
                 AkihzApp(
-                    supportedRates = supportedRates,
-                    currentRate = currentRate,
-                    selectedRate = selectedRate,
-                    onRateSelected = { hz -> onRateSelected(hz) },
-                    onResetToDefaults = { onResetToDefaults() }
+                    uiState = uiState,
+                    onRateSelected = { viewModel.selectRate(it) },
+                    onResetToDefaults = { viewModel.resetToDefaults(onReady = { RefreshRateWatchdogService.restart(this) }) },
+                    onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
             }
-        }
-    }
-
-    private fun onRateSelected(hz: Float) {
-        if (!isServiceBound || !ShizukuHelper.hasPermission()) return
-
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(hz)
-            }
-
-            result.onSuccess {
-                currentRate = hz
-                selectedRate = hz
-                Toast.makeText(this@MainActivity, "${hz.toInt()} Hz", Toast.LENGTH_SHORT).show()
-            }.onError { _, message ->
-                showError(message)
-            }
-        }
-    }
-
-    private fun onResetToDefaults() {
-        if (!ShizukuHelper.isBinderReady()) {
-            showError("Shizuku is not running.")
-            return
-        }
-        if (!ShizukuHelper.hasPermission()) {
-            showError("Shizuku permission not granted.")
-            return
-        }
-
-        val performReset = {
-            scope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    refreshRateRepository.resetToDefaults()
-                }
-
-                result.onSuccess {
-                    PreferencesHelper.desiredRate = 0f
-                    loadCurrentRate()
-                    RefreshRateWatchdogService.restart(this@MainActivity)
-                    Toast.makeText(this@MainActivity, "Reset to defaults", Toast.LENGTH_SHORT).show()
-                }.onError { _, message ->
-                    showError(message)
-                }
-            }
-        }
-
-        if (isServiceBound) {
-            performReset()
-        } else {
-            ShizukuHelper.bindUserService(
-                onConnected = {
-                    isServiceBound = true
-                    performReset()
-                },
-                onFailed = { _, message -> showError(message) }
-            )
         }
     }
 
@@ -166,7 +97,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        scope.cancel()
         ShizukuHelper.unbindUserService()
     }
 
@@ -184,50 +114,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun bindUserServiceAndLoad() {
-        if (isServiceBound) {
-            loadSupportedRates()
-            loadCurrentRate()
-            return
-        }
+        if (isServiceBound) return
 
         ShizukuHelper.bindUserService(
             onConnected = {
                 isServiceBound = true
-                loadSupportedRates()
-                loadCurrentRate()
+                viewModel.onShizukuBound()
             },
             onFailed = { _, message ->
                 showError(message)
             }
         )
-    }
-
-    private fun loadSupportedRates() {
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.getSupportedRates()
-            }
-            result.onSuccess { rates ->
-                supportedRates = rates
-            }.onError { _, message ->
-                showError("Failed to detect supported rates: $message")
-            }
-        }
-    }
-
-    private fun loadCurrentRate() {
-        if (!isServiceBound) return
-
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.getCurrentRate()
-            }
-
-            result.onSuccess { rate ->
-                currentRate = rate
-                selectedRate = rate
-            }
-        }
     }
 
     private fun showShizukuNotInstalledDialog() {

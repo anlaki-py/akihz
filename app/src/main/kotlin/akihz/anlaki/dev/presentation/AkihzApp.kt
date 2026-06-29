@@ -6,13 +6,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,24 +32,22 @@ private enum class BottomNavPage(
     Settings("Settings", Icons.Default.Settings)
 }
 
-/**
- * Displays the main app shell with bottom navigation and page routing.
- *
- * @param supportedRates refresh rates supported by the current display
- * @param currentRate currently active refresh rate
- * @param selectedRate refresh rate selected in the UI
- * @param onRateSelected called when the user picks a refresh rate
- * @param onResetToDefaults called when the user confirms reset to system defaults
- */
 @Composable
 fun AkihzApp(
-    supportedRates: List<Float>,
-    currentRate: Float?,
-    selectedRate: Float?,
+    uiState: MainUiState,
     onRateSelected: (Float) -> Unit,
-    onResetToDefaults: () -> Unit
+    onResetToDefaults: () -> Unit,
+    onErrorDismissed: () -> Unit = {}
 ) {
     var bottomNavPage by rememberSaveable { mutableStateOf(BottomNavPage.Home) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(error)
+            onErrorDismissed()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -51,14 +55,15 @@ fun AkihzApp(
                 currentPage = bottomNavPage,
                 onPageSelected = { bottomNavPage = it }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { padding ->
         MainPageContent(
             bottomNavPage = bottomNavPage,
             padding = padding,
-            supportedRates = supportedRates,
-            currentRate = currentRate,
-            selectedRate = selectedRate,
+            uiState = uiState,
             onRateSelected = onRateSelected,
             onResetToDefaults = onResetToDefaults
         )
@@ -69,17 +74,15 @@ fun AkihzApp(
 private fun MainPageContent(
     bottomNavPage: BottomNavPage,
     padding: PaddingValues,
-    supportedRates: List<Float>,
-    currentRate: Float?,
-    selectedRate: Float?,
+    uiState: MainUiState,
     onRateSelected: (Float) -> Unit,
     onResetToDefaults: () -> Unit
 ) {
     when (bottomNavPage) {
         BottomNavPage.Home -> RefreshRateScreen(
-            supportedRates = supportedRates,
-            currentRate = currentRate,
-            selectedRate = selectedRate,
+            supportedRates = uiState.supportedRates,
+            currentRate = uiState.currentRate,
+            selectedRate = uiState.selectedRate,
             onRateSelected = onRateSelected,
             modifier = Modifier.padding(padding)
         )
