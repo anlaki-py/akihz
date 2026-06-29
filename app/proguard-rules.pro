@@ -15,6 +15,9 @@
 # Keep Hilt generated components
 -keep class * extends dagger.hilt.android.components.** { *; }
 
+# Keep @HiltViewModel constructors (R8 can strip these in AGP 8.9+)
+-keepnames @dagger.hilt.android.lifecycle.HiltViewModel class * extends androidx.lifecycle.ViewModel
+
 # Preserve line numbers for debugging
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
