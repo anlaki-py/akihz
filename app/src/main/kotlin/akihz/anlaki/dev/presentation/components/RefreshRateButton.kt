@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun RefreshRateButton(
@@ -30,12 +32,12 @@ fun RefreshRateButton(
                 performHapticFeedback(vibrator)
                 onClick()
             },
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth().heightIn(64.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Text(text = "${hz.toInt()} Hz", fontWeight = FontWeight.Bold)
+            Text(text = "${hz.toInt()} Hz", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
     } else {
         FilledTonalButton(
@@ -43,9 +45,9 @@ fun RefreshRateButton(
                 performHapticFeedback(vibrator)
                 onClick()
             },
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth().heightIn(64.dp)
         ) {
-            Text(text = "${hz.toInt()} Hz")
+            Text(text = "${hz.toInt()} Hz", style = MaterialTheme.typography.headlineSmall)
         }
     }
 }
