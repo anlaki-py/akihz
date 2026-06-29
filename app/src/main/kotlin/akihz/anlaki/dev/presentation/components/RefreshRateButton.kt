@@ -4,27 +4,16 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
-/**
- * A large toggle button for selecting a refresh rate.
- * Provides haptic feedback on selection.
- *
- * @param hz the refresh rate value in Hz
- * @param isSelected whether this rate is currently active
- * @param onClick called when the user selects this rate
- * @param modifier layout modifier
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RefreshRateButton(
     hz: Float,
@@ -34,27 +23,30 @@ fun RefreshRateButton(
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-    val size = ButtonDefaults.ExtraLargeContainerHeight
 
-    ToggleButton(
-        checked = isSelected,
-        onCheckedChange = { checked ->
-            if (checked) {
+    if (isSelected) {
+        Button(
+            onClick = {
                 performHapticFeedback(vibrator)
                 onClick()
-            }
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(size),
-        shapes = ToggleButtonDefaults.shapesFor(size),
-        contentPadding = ButtonDefaults.contentPaddingFor(size)
-    ) {
-        Text(
-            text = "${hz.toInt()} Hz",
-            style = ButtonDefaults.textStyleFor(size),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
+            },
+            modifier = modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text(text = "${hz.toInt()} Hz", fontWeight = FontWeight.Bold)
+        }
+    } else {
+        FilledTonalButton(
+            onClick = {
+                performHapticFeedback(vibrator)
+                onClick()
+            },
+            modifier = modifier.fillMaxWidth()
+        ) {
+            Text(text = "${hz.toInt()} Hz")
+        }
     }
 }
 

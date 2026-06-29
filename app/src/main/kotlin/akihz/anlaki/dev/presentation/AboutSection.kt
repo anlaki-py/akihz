@@ -1,6 +1,7 @@
 package akihz.anlaki.dev.presentation
 
 import android.content.pm.PackageManager
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
