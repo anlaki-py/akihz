@@ -21,10 +21,12 @@ import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.presentation.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -40,6 +42,9 @@ class RefreshRateWatchdogService : Service() {
     private var desiredRate: Float = 0f
     private var isRunning = false
     private var isScreenOn = true
+    private var listenersRegistered = false
+    private var eventCollector: Job? = null
+    private var checkJob: Job? = null
 
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) {}
@@ -76,10 +81,6 @@ class RefreshRateWatchdogService : Service() {
 
         desiredRate = PreferencesHelper.desiredRate
         if (desiredRate <= 0) {
-            desiredRate = PreferencesHelper.lastRate
-        }
-
-        if (desiredRate <= 0) {
             stopSelf()
             return START_NOT_STICKY
         }
@@ -87,22 +88,26 @@ class RefreshRateWatchdogService : Service() {
         startForeground()
         isRunning = true
 
-        displayManager.registerDisplayListener(displayListener, handler)
-        systemOverrideDetector.register()
+        if (!listenersRegistered) {
+            isScreenOn = systemOverrideDetector.isInteractive()
+            displayManager.registerDisplayListener(displayListener, handler)
+            systemOverrideDetector.register()
+            listenersRegistered = true
 
-        scope.launch {
-            systemOverrideDetector.events.collect { event ->
-                when (event) {
-                    is SystemOverrideDetector.SystemEvent.ScreenOn -> {
-                        isScreenOn = true
-                        scheduleNextCheck()
+            eventCollector = scope.launch {
+                systemOverrideDetector.events.collect { event ->
+                    when (event) {
+                        is SystemOverrideDetector.SystemEvent.ScreenOn -> {
+                            isScreenOn = true
+                            scheduleNextCheck()
+                        }
+                        is SystemOverrideDetector.SystemEvent.ScreenOff -> {
+                            isScreenOn = false
+                            handler.removeCallbacks(periodicCheckRunnable)
+                        }
+                        is SystemOverrideDetector.SystemEvent.PowerSaveChanged -> Unit
+                        is SystemOverrideDetector.SystemEvent.ThermalThrottling -> Unit
                     }
-                    is SystemOverrideDetector.SystemEvent.ScreenOff -> {
-                        isScreenOn = false
-                        handler.removeCallbacks(periodicCheckRunnable)
-                    }
-                    is SystemOverrideDetector.SystemEvent.PowerSaveChanged -> {}
-                    is SystemOverrideDetector.SystemEvent.ThermalThrottling -> {}
                 }
             }
         }
@@ -181,26 +186,26 @@ class RefreshRateWatchdogService : Service() {
     private fun checkAndReapply() {
         if (!isRunning || !isScreenOn) return
         if (!ShizukuHelper.isBinderReady() || !ShizukuHelper.hasPermission()) return
+        if (checkJob?.isActive == true) return
 
-        scope.launch {
+        checkJob = scope.launch {
+            desiredRate = PreferencesHelper.desiredRate
+            if (desiredRate <= 0) return@launch
+
             val currentResult = withContext(Dispatchers.IO) {
                 refreshRateRepository.getCurrentRate()
             }
 
             currentResult.onSuccess { currentRate ->
                 if (kotlin.math.abs(currentRate - desiredRate) >= 1f) {
-                    reapplyRate()
+                    val result = withContext(Dispatchers.IO) {
+                        refreshRateRepository.setRate(desiredRate)
+                    }
+                    result.onError { _, message ->
+                        Timber.w("Watchdog could not reapply refresh rate: %s", message)
+                    }
                 }
             }
-        }
-    }
-
-    private fun reapplyRate() {
-        scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(desiredRate)
-            }
-            result.onSuccess {}
         }
     }
 
@@ -208,8 +213,13 @@ class RefreshRateWatchdogService : Service() {
         super.onDestroy()
         isRunning = false
         handler.removeCallbacks(periodicCheckRunnable)
-        displayManager.unregisterDisplayListener(displayListener)
-        systemOverrideDetector.unregister()
+        checkJob?.cancel()
+        eventCollector?.cancel()
+        if (listenersRegistered) {
+            displayManager.unregisterDisplayListener(displayListener)
+            systemOverrideDetector.unregister()
+            listenersRegistered = false
+        }
         scope.cancel()
     }
 
@@ -228,7 +238,7 @@ class RefreshRateWatchdogService : Service() {
                 val intent = Intent(context, RefreshRateWatchdogService::class.java)
                 androidx.core.content.ContextCompat.startForegroundService(context, intent)
             } catch (e: Exception) {
-                // Service start may fail if process is not running
+                Timber.w(e, "Unable to start refresh-rate watchdog")
             }
         }
 

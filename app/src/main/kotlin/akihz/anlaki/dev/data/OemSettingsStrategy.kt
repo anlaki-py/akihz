@@ -71,17 +71,17 @@ object OemSettingsStrategy {
      */
     fun resolveByName(oemName: String): KeySet {
         return when (oemName.lowercase()) {
-            "xiaomi", "redmi" -> xiaomiKeySet()
+            "xiaomi", "redmi", "xiaomi / redmi" -> xiaomiKeySet()
             "samsung" -> samsungKeySet()
             "oneplus" -> onePlusKeySet()
             "oppo" -> oppoKeySet()
-            "vivo", "iqoo" -> vivoKeySet()
+            "vivo", "iqoo", "vivo / iqoo" -> vivoKeySet()
             "realme" -> realmeKeySet()
-            "asus", "rog" -> asusKeySet()
+            "asus", "rog", "asus / rog" -> asusKeySet()
             "motorola", "moto" -> motorolaKeySet()
             "sony" -> sonyKeySet()
-            "google", "pixel" -> pixelKeySet()
-            "aosp", "stock", "generic" -> aospKeySet()
+            "google", "pixel", "google pixel" -> pixelKeySet()
+            "aosp", "stock", "generic", "aosp / stock" -> aospKeySet()
             else -> resolve()
         }
     }

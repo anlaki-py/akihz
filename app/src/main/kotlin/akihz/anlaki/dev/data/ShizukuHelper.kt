@@ -174,20 +174,24 @@ object ShizukuHelper {
     fun setRefreshRate(hz: Float): Result<Unit> {
         val hzInt = hz.toInt()
         val strategy = getActiveStrategy()
-        var anySuccess = false
+        val failures = mutableListOf<String>()
 
         strategy.writeKeys.forEach { settingsKey ->
             val ns = namespaceToString(settingsKey.namespace)
-            val result = exec("settings put $ns ${settingsKey.key} $hzInt")
-            if (result.isSuccess) {
-                anySuccess = true
+            val value = RefreshRateSettingValue.forKey(settingsKey.key, hzInt)
+            val result = exec("settings put $ns ${settingsKey.key} $value")
+            if (result.isError) {
+                failures += "$ns/${settingsKey.key}"
             }
         }
 
-        return if (anySuccess) {
+        return if (failures.isEmpty()) {
             Result.success(Unit)
         } else {
-            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Failed to set refresh rate")
+            Result.error(
+                ErrorType.COMMAND_EXECUTION_FAILED,
+                "Failed to update: ${failures.joinToString()}"
+            )
         }
     }
 
@@ -196,18 +200,32 @@ object ShizukuHelper {
      */
     fun resetRefreshRate(): Result<Unit> {
         val strategy = getActiveStrategy()
+        val failures = mutableListOf<String>()
 
         strategy.writeKeys.forEach { settingsKey ->
             val ns = namespaceToString(settingsKey.namespace)
-            exec("settings delete $ns ${settingsKey.key}")
+            val result = exec("settings delete $ns ${settingsKey.key}")
+            if (result.isError) {
+                failures += "$ns/${settingsKey.key}"
+            }
         }
 
         if (strategy.supportsMode && strategy.modeKey != null) {
             val ns = namespaceToString(strategy.modeKey.namespace)
-            exec("settings put $ns ${strategy.modeKey.key} 0")
+            val result = exec("settings put $ns ${strategy.modeKey.key} 0")
+            if (result.isError) {
+                failures += "$ns/${strategy.modeKey.key}"
+            }
         }
 
-        return Result.success(Unit)
+        return if (failures.isEmpty()) {
+            Result.success(Unit)
+        } else {
+            Result.error(
+                ErrorType.COMMAND_EXECUTION_FAILED,
+                "Failed to reset: ${failures.distinct().joinToString()}"
+            )
+        }
     }
 
     private fun getActiveStrategy(): OemSettingsStrategy.KeySet {
@@ -226,4 +244,5 @@ object ShizukuHelper {
             Namespace.GLOBAL -> "global"
         }
     }
+
 }

@@ -94,7 +94,7 @@ Only rates your display actually supports. akiHz reads them from the system inst
 akiHz lets you switch rates in one tap from Quick Settings and cycle through them without opening the full settings menu. The optional watchdog (untested on all devices) can re-apply your choice if the system changes it.
 
 **Does the Quick Settings tile work when the app is closed?**  
-akiHz runs a lightweight background service so the tile stays responsive. Use **Settings → Advanced → Battery optimization** if your OEM restricts background apps.
+Yes. Android starts the Quick Settings tile service when you tap the tile, so akiHz does not need to run a permanent keep-alive service. The optional watchdog uses a foreground service only while enabled.
 
 **What does the watchdog do?**  
 It periodically checks whether the system changed your refresh rate (for example after reboot) and writes your selected rate back. Enable it under **Settings → Watchdog**. This feature is untested on all devices.
