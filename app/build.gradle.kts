@@ -56,6 +56,15 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -89,13 +98,14 @@ android {
             val versionName = versionName
             val versionCode = versionCode
             val buildType = buildType.name
+            val abi = getFilter(com.android.build.OutputFile.ABI) ?: "universal"
 
             val newName = if (isCiBuild) {
-                "app-release.apk"
+                "app-$abi-$buildType.apk"
             } else if (buildType == "debug") {
-                "app-v${versionName}(${versionCode})-debug.apk"
+                "app-v${versionName}(${versionCode})-$abi-debug.apk"
             } else {
-                "app-v${versionName}(${versionCode}).apk"
+                "app-v${versionName}(${versionCode})-$abi.apk"
             }
 
             output.outputFileName = newName

@@ -2,7 +2,9 @@ name: Build & Release
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - main
+      - beta
     paths:
       - 'app/**'
       - 'build.gradle.kts'
@@ -10,11 +12,11 @@ on:
       - 'gradle/**'
       - 'gradle.properties'
       - '.github/workflows/**'
-    tags: ['v*']
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -31,9 +33,8 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
       version_name: ${{ steps.version.outputs.version_name }}
       version_code: ${{ steps.version.outputs.version_code }}
-      create_tag: ${{ steps.version.outputs.create_tag }}
       is_beta: ${{ steps.version.outputs.is_beta }}
-      apk_name: ${{ steps.version.outputs.apk_name }}
+      channel: ${{ steps.version.outputs.channel }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -45,48 +46,46 @@ jobs:
         id: version
         shell: bash
         run: |
-          BASE_VERSION=$(grep 'val baseVersion' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          set -euo pipefail
+          BASE_VERSION=$(sed -n 's/.*val baseVersion = "\(.*\)"/\1/p' app/build.gradle.kts)
+          LATEST_PATCH=$(
+            git tag -l "v${BASE_VERSION}.*" |
+              sed -n "s/^v${BASE_VERSION}\.\([0-9][0-9]*\)$/\1/p" |
+              sort -n |
+              tail -1
+          )
+          NEXT_PATCH=$(( ${LATEST_PATCH:--1} + 1 ))
 
-          # Sanitize branch name for use in filenames/tags (replace / and other special chars with -)
-          BRANCH_SAFE="${GITHUB_REF_NAME//\//-}"
-          BRANCH_SAFE="${BRANCH_SAFE//[^a-zA-Z0-9._-]/-}"
-
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            TAG="${{ github.ref_name }}"
-            IS_BETA=false
-            CREATE_TAG=false
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            PATCH=$(git tag -l "v${BASE_VERSION}.*" | { grep -v beta || true; } | sed "s/v${BASE_VERSION}\.//" | sort -n | tail -1)
-            if [ -z "$PATCH" ]; then
-              NEXT=1
-            else
-              NEXT=$((${PATCH} + 1))
-            fi
-            TAG="v${BASE_VERSION}.${NEXT}"
-            IS_BETA=false
-            CREATE_TAG=true
-          else
-            # Any non-main branch → beta release
-            PATCH=$(git tag -l "v${BASE_VERSION}.*-beta.${BRANCH_SAFE}.*" | sed "s/v${BASE_VERSION}\.\(.*\)-beta.${BRANCH_SAFE}\..*/\1/" | sort -n | tail -1)
-            BUILD=$(git tag -l "v${BASE_VERSION}.${PATCH:--}-beta.${BRANCH_SAFE}.*" | sed "s/.*-beta.${BRANCH_SAFE}\.//" | sort -n | tail -1)
-            NEXT_PATCH=$((${PATCH:--1} + 1))
-            # Reuse same patch number, increment build counter per branch
-            NEXT_BUILD=$((${BUILD:--1} + 1))
-            TAG="v${BASE_VERSION}.${NEXT_PATCH}-beta.${BRANCH_SAFE}.${NEXT_BUILD}"
+          if [[ "$GITHUB_REF_NAME" == "beta" ]]; then
+            LATEST_BETA=$(
+              git tag -l "v${BASE_VERSION}.${NEXT_PATCH}-beta.*" |
+                sed -n "s/^v${BASE_VERSION}\.${NEXT_PATCH}-beta\.\([0-9][0-9]*\)$/\1/p" |
+                sort -n |
+                tail -1
+            )
+            NEXT_BETA=$(( ${LATEST_BETA:-0} + 1 ))
+            TAG="v${BASE_VERSION}.${NEXT_PATCH}-beta.${NEXT_BETA}"
             IS_BETA=true
-            CREATE_TAG=true
+            CHANNEL=beta
+          elif [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            TAG="v${BASE_VERSION}.${NEXT_PATCH}"
+            IS_BETA=false
+            CHANNEL=stable
+          else
+            echo "::error::Releases are only supported from main or beta"
+            exit 1
           fi
 
+          # Seconds since 2024-01-01 remain below Android's versionCode limit
+          # for decades and ensure later beta/stable builds are upgrades.
+          VERSION_CODE=$(( $(date -u +%s) - 1704067200 ))
           VERSION_NAME="${TAG#v}"
-          VERSION_CODE=$(( ($(date -u +%s) - 1704067200) / 60 ))
-          APK_NAME="akihz-${TAG}"
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "create_tag=$CREATE_TAG" >> "$GITHUB_OUTPUT"
           echo "is_beta=$IS_BETA" >> "$GITHUB_OUTPUT"
-          echo "apk_name=$APK_NAME" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
 
   lint:
     name: Lint
@@ -100,7 +99,7 @@ jobs:
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
@@ -109,16 +108,8 @@ jobs:
           gradle-home-cache-cleanup: true
 
       - name: Run lint
-        id: lint
         shell: bash
-        run: |
-          result=1
-          for i in 1 2 3; do
-            ./gradlew lint --parallel --build-cache --no-daemon --configuration-cache-problems=warn && { result=0; break; }
-            echo "::warning::Lint attempt $i failed, retrying..."
-            sleep 10
-          done
-          exit $result
+        run: ./gradlew lint --parallel --build-cache --no-daemon
 
       - name: Upload lint results
         if: always()
@@ -129,7 +120,7 @@ jobs:
           retention-days: 14
 
   build:
-    name: Build Signed APK
+    name: Build Signed APKs
     needs: [version, lint]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -141,7 +132,7 @@ jobs:
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
@@ -151,101 +142,136 @@ jobs:
 
       - name: Decode signing keystore
         shell: bash
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/release.keystore
-          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> "$GITHUB_ENV"
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> "$GITHUB_ENV"
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/release.keystore"
 
-      - name: Build Release APK
+      - name: Build release APKs
         shell: bash
-        run: |
-          result=1
-          for i in 1 2 3; do
-            ./gradlew assembleRelease --parallel --build-cache --no-daemon --configuration-cache-problems=warn --stacktrace \
-              -PversionCode=${{ needs.version.outputs.version_code }} \
-              -PversionName=${{ needs.version.outputs.version_name }} \
-              -PciBuild && { result=0; break; }
-            echo "::warning::Build attempt $i failed, retrying..."
-            sleep 15
-          done
-          exit $result
         env:
           KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
-          KEYSTORE_PASSWORD: ${{ env.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ env.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease --parallel --build-cache --no-daemon --stacktrace \
+            -PversionCode=${{ needs.version.outputs.version_code }} \
+            -PversionName=${{ needs.version.outputs.version_name }} \
+            -PciBuild
+
+      - name: Prepare and verify release assets
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          VERSION_NAME: ${{ needs.version.outputs.version_name }}
+          VERSION_CODE: ${{ needs.version.outputs.version_code }}
+          RELEASE_CHANNEL: ${{ needs.version.outputs.channel }}
+          IS_BETA: ${{ needs.version.outputs.is_beta }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          ABIS=(arm64-v8a armeabi-v7a x86 x86_64 universal)
+
+          for ABI in "${ABIS[@]}"; do
+            SOURCE="app/build/outputs/apk/release/app-${ABI}-release.apk"
+            TARGET="release-assets/akihz-${RELEASE_TAG}-${ABI}.apk"
+            test -s "$SOURCE" || { echo "::error::Missing APK for $ABI"; exit 1; }
+            "$BUILD_TOOLS/apksigner" verify --print-certs "$SOURCE"
+            mv "$SOURCE" "$TARGET"
+          done
+
+          (
+            cd release-assets
+            sha256sum ./*.apk > checksums-sha256.txt
+          )
+
+          ASSETS_JSON=$(
+            for ABI in "${ABIS[@]}"; do
+              FILE="akihz-${RELEASE_TAG}-${ABI}.apk"
+              SHA=$(sha256sum "release-assets/$FILE" | cut -d' ' -f1)
+              SIZE=$(stat -c%s "release-assets/$FILE")
+              jq -n \
+                --arg abi "$ABI" \
+                --arg file "$FILE" \
+                --arg sha256 "$SHA" \
+                --argjson size "$SIZE" \
+                '{abi: $abi, file: $file, sha256: $sha256, size: $size}'
+            done | jq -s .
+          )
+
+          jq -n \
+            --arg schema_version "1" \
+            --arg package_name "akihz.anlaki.dev" \
+            --arg version_name "$VERSION_NAME" \
+            --argjson version_code "$VERSION_CODE" \
+            --arg channel "$RELEASE_CHANNEL" \
+            --argjson prerelease "$IS_BETA" \
+            --arg commit "$GITHUB_SHA" \
+            --arg min_sdk "30" \
+            --arg target_sdk "36" \
+            --argjson assets "$ASSETS_JSON" \
+            '{
+              schemaVersion: ($schema_version | tonumber),
+              packageName: $package_name,
+              versionName: $version_name,
+              versionCode: $version_code,
+              channel: $channel,
+              prerelease: $prerelease,
+              commit: $commit,
+              minSdk: ($min_sdk | tonumber),
+              targetSdk: ($target_sdk | tonumber),
+              assets: $assets
+            }' > release-assets/release-metadata.json
+
+          {
+            echo "## Release assets"
+            echo
+            echo "- Channel: $RELEASE_CHANNEL"
+            echo "- Version: $VERSION_NAME ($VERSION_CODE)"
+            echo "- APKs: ${#ABIS[@]} signed variants"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Cleanup keystore
         if: always()
         shell: bash
-        run: rm -f ${{ github.workspace }}/release.keystore
+        run: rm -f "$GITHUB_WORKSPACE/release.keystore"
 
-      - name: Verify APK and log size
-        shell: bash
-        run: |
-          APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          if [ ! -f "$APK_PATH" ]; then
-            echo "::error::APK not found at $APK_PATH"
-            exit 1
-          fi
-          SIZE=$(stat -c%s "$APK_PATH")
-          SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE / 1048576}")
-          echo "## APK Size: ${SIZE_MB}MB ($SIZE bytes)" >> "$GITHUB_STEP_SUMMARY"
-          echo "::notice::APK size: ${SIZE_MB}MB ($SIZE bytes)"
-          if [ "$SIZE" -lt 100000 ]; then
-            echo "::error::APK suspiciously small ($SIZE bytes)"
-            exit 1
-          fi
-
-      - name: Verify APK signature
-        shell: bash
-        run: |
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
-          ${BUILD_TOOLS}apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
-
-      - name: Rename APK
-        shell: bash
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/${{ needs.version.outputs.apk_name }}.apk
-
-      - name: Upload APK artifact
+      - name: Upload release assets
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ needs.version.outputs.apk_name }}
-          path: app/build/outputs/apk/release/${{ needs.version.outputs.apk_name }}.apk
+          name: release-assets-${{ needs.version.outputs.tag }}
+          path: release-assets/
           retention-days: 90
+          if-no-files-found: error
 
   release:
-    name: Release
+    name: Publish ${{ needs.version.outputs.channel }} release
     needs: [version, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
-      - name: Download APK
+      - name: Download release assets
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ needs.version.outputs.apk_name }}
+          name: release-assets-${{ needs.version.outputs.tag }}
           path: artifacts/
 
-      - name: Create tag
-        if: needs.version.outputs.create_tag == 'true'
+      - name: Create and push tag
         shell: bash
         run: |
-          git tag "${{ needs.version.outputs.tag }}"
+          git tag "${{ needs.version.outputs.tag }}" "$GITHUB_SHA"
           git push origin "${{ needs.version.outputs.tag }}"
 
-      - name: Release
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: ${{ needs.version.outputs.tag }}
-          files: artifacts/${{ needs.version.outputs.apk_name }}.apk
-          name: >-
-            akihz ${{ needs.version.outputs.tag }}${{ needs.version.outputs.is_beta == 'true' && ' [BETA]' || '' }}
+          files: artifacts/*
+          name: akihz ${{ needs.version.outputs.tag }}
           generate_release_notes: true
           draft: false
           prerelease: ${{ needs.version.outputs.is_beta == 'true' }}
@@ -267,10 +293,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue create \
-            --repo "${{ github.repository }}" \
+            --repo "$GITHUB_REPOSITORY" \
             --title "CI failure on ${GITHUB_REF_NAME} ($(date +%Y-%m-%d))" \
             --body "Pipeline failed for commit [\`${GITHUB_SHA::7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}).
 
           **Run:** [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})
           **Branch:** \`${GITHUB_REF_NAME}\`" \
-            --label "bug"
+            --label bug
