@@ -17,7 +17,6 @@ import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
-import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 import rikka.shizuku.Shizuku
@@ -54,7 +53,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         PreferencesHelper.init(this)
-        KeepAliveService.start(this)
         RefreshRateWatchdogService.start(this)
 
         setContent {
@@ -70,8 +68,16 @@ class MainActivity : ComponentActivity() {
 
                 AkihzApp(
                     uiState = uiState,
-                    onRateSelected = { viewModel.selectRate(it) },
-                    onResetToDefaults = { viewModel.resetToDefaults(onReady = { RefreshRateWatchdogService.restart(this) }) },
+                    onRateSelected = {
+                        viewModel.selectRate(it) {
+                            RefreshRateWatchdogService.start(this)
+                        }
+                    },
+                    onResetToDefaults = {
+                        viewModel.resetToDefaults {
+                            RefreshRateWatchdogService.stop(this)
+                        }
+                    },
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
             }
@@ -80,11 +86,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (ShizukuHelper.isBinderReady()) {
-            Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
-            Shizuku.addBinderDeadListener(binderDeadListener)
-            Shizuku.addRequestPermissionResultListener(permissionResultListener)
-        }
+        Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
+        Shizuku.addBinderDeadListener(binderDeadListener)
+        Shizuku.addRequestPermissionResultListener(permissionResultListener)
         checkShizukuPermission()
     }
 

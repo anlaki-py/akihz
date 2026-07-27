@@ -74,7 +74,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun selectRate(hz: Float) {
+    fun selectRate(hz: Float, onSelected: () -> Unit = {}) {
         if (!_uiState.value.isServiceBound || !ShizukuHelper.hasPermission()) return
 
         viewModelScope.launch {
@@ -84,13 +84,14 @@ class MainViewModel @Inject constructor(
             }
             result.onSuccess {
                 _uiState.update { it.copy(currentRate = hz, selectedRate = hz, isLoading = false) }
+                onSelected()
             }.onError { _, message ->
                 _uiState.update { it.copy(error = message, isLoading = false) }
             }
         }
     }
 
-    fun resetToDefaults(onReady: () -> Unit = {}) {
+    fun resetToDefaults(onReset: () -> Unit = {}) {
         if (!ShizukuHelper.isBinderReady()) {
             _uiState.update { it.copy(error = "Shizuku is not running.") }
             return
@@ -107,6 +108,7 @@ class MainViewModel @Inject constructor(
             }
             result.onSuccess {
                 PreferencesHelper.desiredRate = 0f
+                onReset()
                 loadCurrentRate()
                 _uiState.update { it.copy(isLoading = false) }
             }.onError { _, message ->

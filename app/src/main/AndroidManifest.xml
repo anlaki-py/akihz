@@ -56,15 +56,6 @@
         </service>
 
         <service
-            android:name=".utils.KeepAliveService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Keeps akihz running so the Quick Settings tile can switch refresh rates reliably" />
-        </service>
-
-        <service
             android:name=".utils.RefreshRateWatchdogService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
