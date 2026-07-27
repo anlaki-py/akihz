@@ -70,6 +70,19 @@ akiHz is aimed at people who switch refresh rates often and want a fast, FOSS al
 
 Download the latest APK from [Releases](https://github.com/anlaki-py/akihz/releases).
 
+Each release provides standalone APKs for `arm64-v8a`, `armeabi-v7a`, `x86`,
+and `x86_64`, plus a `universal` APK. Most modern phones use `arm64-v8a`;
+use `universal` if you are unsure.
+
+Releases from `main` are stable. Releases from `beta` are marked as GitHub
+prereleases. Both channels use the same application ID and signing key, and
+monotonically increasing version codes, so a newer beta can update an installed
+stable release without uninstalling it.
+
+GitHub release assets use predictable names and include SHA-256 checksums and a
+machine-readable `release-metadata.json` file for release indexers and Android
+update clients.
+
 ## Usage
 
 1. Open Shizuku and start it (wireless debugging or ADB)
