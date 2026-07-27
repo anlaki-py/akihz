@@ -9,6 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Added adaptive, round, legacy, and monochrome launcher icon resources.
+- Added a 512×512 store listing icon.
 - Stable releases from `main` and prereleases from `beta`.
 - Standalone `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` APKs.
 - A universal APK, SHA-256 checksums, and machine-readable release metadata.
