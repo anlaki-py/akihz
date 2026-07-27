@@ -83,6 +83,8 @@ GitHub release assets use predictable names and include SHA-256 checksums and a
 machine-readable `release-metadata.json` file for release indexers and Android
 update clients.
 
+See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
+
 ## Usage
 
 1. Open Shizuku and start it (wireless debugging or ADB)

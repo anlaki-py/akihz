@@ -272,6 +272,9 @@ jobs:
           tag_name: ${{ needs.version.outputs.tag }}
           files: artifacts/*
           name: akihz ${{ needs.version.outputs.tag }}
+          body: >-
+            See the [full changelog](${{ github.server_url }}/${{ github.repository }}/blob/${{ needs.version.outputs.tag }}/CHANGELOG.md)
+            for release history and upgrade details.
           generate_release_notes: true
           draft: false
           prerelease: ${{ needs.version.outputs.is_beta == 'true' }}
