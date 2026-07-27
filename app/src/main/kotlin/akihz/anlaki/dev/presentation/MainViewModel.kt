@@ -75,10 +75,12 @@ class MainViewModel @Inject constructor(
     }
 
     fun selectRate(hz: Float, onSelected: () -> Unit = {}) {
-        if (!_uiState.value.isServiceBound || !ShizukuHelper.hasPermission()) return
+        val state = _uiState.value
+        if (state.isLoading || !state.isServiceBound || !ShizukuHelper.hasPermission()) return
 
+        // Reflect the user's choice immediately; OEM writes can take several IPC round trips.
+        _uiState.update { it.copy(selectedRate = hz, isLoading = true) }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(hz)
             }
@@ -87,6 +89,7 @@ class MainViewModel @Inject constructor(
                 onSelected()
             }.onError { _, message ->
                 _uiState.update { it.copy(error = message, isLoading = false) }
+                loadCurrentRate()
             }
         }
     }

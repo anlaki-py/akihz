@@ -26,6 +26,7 @@ class RefreshRateTileService : TileService() {
     private var supportedRates: List<Float> = emptyList()
     private var currentIndex = 0
     private var isConnecting = false
+    private var isSwitching = false
 
     @Inject lateinit var refreshRateRepository: RefreshRateRepository
 
@@ -72,7 +73,7 @@ class RefreshRateTileService : TileService() {
             return
         }
 
-        if (isConnecting) {
+        if (isConnecting || isSwitching) {
             return
         }
 
@@ -108,8 +109,11 @@ class RefreshRateTileService : TileService() {
             return
         }
 
+        val previousIndex = currentIndex
         currentIndex = (currentIndex + 1) % supportedRates.size
         val newRate = supportedRates[currentIndex]
+        isSwitching = true
+        updateTileWithRate(newRate)
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -119,8 +123,11 @@ class RefreshRateTileService : TileService() {
             result.onSuccess {
                 PreferencesHelper.saveState(currentIndex, newRate)
                 akihz.anlaki.dev.utils.RefreshRateWatchdogService.start(applicationContext)
-                updateTileWithRate(newRate)
+                isSwitching = false
             }.onError { _, msg ->
+                currentIndex = previousIndex
+                isSwitching = false
+                updateTile()
                 showToast(msg)
             }
         }
