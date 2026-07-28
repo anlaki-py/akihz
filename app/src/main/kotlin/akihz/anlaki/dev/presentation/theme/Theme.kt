@@ -36,20 +36,25 @@ private val LightColorScheme = lightColorScheme(
  * App theme with dynamic color support on Android 12+.
  *
  * @param darkTheme whether to use dark theme
+ * @param pitchBlackTheme whether dark surfaces should use pure black
  * @param dynamicColor whether to use Material You dynamic colors (Android 12+)
  * @param content root composable content
  */
 @Composable
 fun AnlakiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    pitchBlackTheme: Boolean = false,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            val dynamicScheme =
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme && pitchBlackTheme) dynamicScheme.withPitchBlackSurfaces() else dynamicScheme
         }
+        darkTheme && pitchBlackTheme -> DarkColorScheme.withPitchBlackSurfaces()
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
@@ -60,3 +65,15 @@ fun AnlakiTheme(
         content = content
     )
 }
+
+private fun androidx.compose.material3.ColorScheme.withPitchBlackSurfaces() = copy(
+    background = androidx.compose.ui.graphics.Color.Black,
+    surface = androidx.compose.ui.graphics.Color.Black,
+    surfaceDim = androidx.compose.ui.graphics.Color.Black,
+    surfaceBright = androidx.compose.ui.graphics.Color(0xFF101010),
+    surfaceContainerLowest = androidx.compose.ui.graphics.Color.Black,
+    surfaceContainerLow = androidx.compose.ui.graphics.Color.Black,
+    surfaceContainer = androidx.compose.ui.graphics.Color(0xFF080808),
+    surfaceContainerHigh = androidx.compose.ui.graphics.Color(0xFF101010),
+    surfaceContainerHighest = androidx.compose.ui.graphics.Color(0xFF181818)
+)

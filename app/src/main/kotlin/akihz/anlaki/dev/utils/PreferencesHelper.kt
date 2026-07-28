@@ -3,6 +3,7 @@ package akihz.anlaki.dev.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
  * SharedPreferences wrapper for all app configuration.
@@ -23,6 +24,8 @@ object PreferencesHelper {
     private const val KEY_WATCHDOG_AGGRESSIVE = "watchdog_aggressive"
     private const val KEY_OEM_OVERRIDE = "oem_override"
     private const val KEY_DESIRED_RATE = "desired_rate"
+    private const val KEY_THEME_MODE = "theme_mode"
+    private const val KEY_AMOLED_MODE = "amoled_mode"
 
     private lateinit var prefs: SharedPreferences
 
@@ -69,6 +72,19 @@ object PreferencesHelper {
     var desiredRate: Float
         get() = prefs.getFloat(KEY_DESIRED_RATE, 0f)
         set(value) = prefs.edit { putFloat(KEY_DESIRED_RATE, value) }
+
+    var themeMode: AppThemeMode
+        get() = runCatching {
+            AppThemeMode.valueOf(
+                prefs.getString(KEY_THEME_MODE, AppThemeMode.System.name)
+                    ?: AppThemeMode.System.name
+            )
+        }.getOrDefault(AppThemeMode.System)
+        set(value) = prefs.edit { putString(KEY_THEME_MODE, value.name) }
+
+    var amoledMode: Boolean
+        get() = prefs.getBoolean(KEY_AMOLED_MODE, false)
+        set(value) = prefs.edit { putBoolean(KEY_AMOLED_MODE, value) }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {
