@@ -16,6 +16,8 @@
   </p>
 </div>
 
+---
+
 ## Screenshots
 
 | Home (light) | Home (dark) |
@@ -133,7 +135,7 @@ The app is MIT-licensed and fully open source. It only changes display refresh-r
 ## Build
 
 ```bash
-./gradlew assembleRelease
+./gradlew assembleDebug
 ```
 
 ## License
