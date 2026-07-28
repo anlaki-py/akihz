@@ -147,7 +147,7 @@ class RefreshRateTileService : TileService() {
         val iconRes = getIconRes(rate)
 
         tile.state = Tile.STATE_ACTIVE
-        tile.label = "akihz"
+        tile.label = getString(R.string.app_name)
         tile.subtitle = "${rate.toInt()} Hz"
         tile.icon = Icon.createWithResource(this, iconRes)
         tile.updateTile()
@@ -156,7 +156,7 @@ class RefreshRateTileService : TileService() {
     private fun updateTileUnavailable() {
         val tile = qsTile ?: return
         tile.state = Tile.STATE_UNAVAILABLE
-        tile.label = "akihz"
+        tile.label = getString(R.string.app_name)
         tile.subtitle = "Open app first"
         tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
         tile.updateTile()

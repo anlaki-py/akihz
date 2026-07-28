@@ -48,7 +48,7 @@ fun RefreshRateScreen(
     ) {
         // App title
         Text(
-            text = "akihz",
+            text = "akiHz",
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
