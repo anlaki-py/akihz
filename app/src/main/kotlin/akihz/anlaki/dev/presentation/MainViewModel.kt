@@ -22,7 +22,7 @@ data class MainUiState(
     val isShizukuReady: Boolean = false,
     val isServiceBound: Boolean = false,
     val error: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = true
 )
 
 @HiltViewModel
@@ -34,7 +34,7 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     fun onShizukuBound() {
-        _uiState.update { it.copy(isServiceBound = true) }
+        _uiState.update { it.copy(isServiceBound = true, isLoading = true) }
         loadSupportedRates()
         loadCurrentRate()
     }

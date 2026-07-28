@@ -5,4 +5,8 @@
         <item name="android:navigationBarColor">@android:color/white</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <style name="AppTheme.Starting" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
 </resources>

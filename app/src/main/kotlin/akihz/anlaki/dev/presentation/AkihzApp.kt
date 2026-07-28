@@ -136,6 +136,7 @@ fun AkihzApp(
                         supportedRates = uiState.supportedRates,
                         currentRate = uiState.currentRate,
                         selectedRate = uiState.selectedRate,
+                        isLoading = uiState.isLoading || !uiState.isServiceBound,
                         onRateSelected = onRateSelected,
                         modifier = Modifier.fillMaxSize()
                     )
