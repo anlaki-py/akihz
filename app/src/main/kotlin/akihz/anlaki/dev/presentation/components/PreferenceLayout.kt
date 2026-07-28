@@ -49,6 +49,7 @@ fun PreferenceLayout(
                 .padding(top = 20.dp, bottom = 12.dp)
         )
         content()
-        Spacer(modifier = Modifier.height(24.dp))
+        // Keep the final row reachable while content still scrolls behind the floating toolbar.
+        Spacer(modifier = Modifier.height(150.dp))
     }
 }

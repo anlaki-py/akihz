@@ -1,5 +1,10 @@
 package akihz.anlaki.dev.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -75,7 +80,11 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
             onClick = { showDebug = !showDebug }
         )
 
-        if (showDebug) {
+        AnimatedVisibility(
+            visible = showDebug,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
             DebugInfo()
         }
     }

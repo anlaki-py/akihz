@@ -15,10 +15,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
@@ -70,13 +74,27 @@ class MainActivity : ComponentActivity() {
         RefreshRateWatchdogService.start(this)
 
         setContent {
-            AnlakiTheme {
-                val darkTheme = isSystemInDarkTheme()
+            var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
+            var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
+            val systemDarkTheme = isSystemInDarkTheme()
+            val darkTheme = when (themeMode) {
+                AppThemeMode.System -> systemDarkTheme
+                AppThemeMode.Light -> false
+                AppThemeMode.Dark -> true
+            }
+
+            AnlakiTheme(
+                darkTheme = darkTheme,
+                pitchBlackTheme = amoledMode
+            ) {
                 val backgroundColor = MaterialTheme.colorScheme.background
                 SideEffect {
                     window.statusBarColor = backgroundColor.toArgb()
                     window.navigationBarColor = backgroundColor.toArgb()
-                    WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
+                    WindowCompat.getInsetsController(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !darkTheme
+                        isAppearanceLightNavigationBars = !darkTheme
+                    }
                 }
                 val uiState by viewModel.uiState.collectAsState()
                 val appDialog by dialogState.collectAsState()
@@ -92,6 +110,16 @@ class MainActivity : ComponentActivity() {
                         viewModel.resetToDefaults {
                             RefreshRateWatchdogService.stop(this)
                         }
+                    },
+                    themeMode = themeMode,
+                    amoledMode = amoledMode,
+                    onThemeModeChanged = { mode ->
+                        themeMode = mode
+                        PreferencesHelper.themeMode = mode
+                    },
+                    onAmoledModeChanged = { enabled ->
+                        amoledMode = enabled
+                        PreferencesHelper.amoledMode = enabled
                     },
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
