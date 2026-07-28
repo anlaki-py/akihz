@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="app/src/main/ic_launcher-playstore.png" alt="akiHz app icon" width="160" style="border-radius: 20%;">
+  <img src="app/src/main/ic_launcher-playstore.png" alt="akiHz app icon" width="160">
 
-  <h1><big>akiHz</big></h1>
+  <h1><strong>akiHz</strong></h1>
 
   <h3>Android refresh rate switcher (FOSS)</h3>
 
-  <p><strong>akiHz</strong> is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
+  <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
 
   <p>Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, and OEM-specific settings support.</p>
 
@@ -57,20 +57,6 @@ akiHz auto-detects your manufacturer and applies the right system settings keys.
 
 If auto-detection fails, open **Settings → Advanced → OEM override** and select your manufacturer manually.
 
-## Comparison
-
-| | **akiHz** | **Display settings** | **ADB / shell** | **Tasker + Shizuku** |
-|---|---|---|---|---|
-| One-tap switch from Quick Settings | Yes | No | No | Possible (setup required) |
-| Cycle through rates | Yes | No | Manual commands | Custom profiles |
-| Detects supported refresh rates | Yes | Yes | No | Depends on setup |
-| No root | Yes (Shizuku) | Yes | Yes (USB/wireless debugging) | Yes (Shizuku) |
-| Open source | Yes | N/A | N/A | Tasker is paid |
-| Multi-OEM key handling | Built-in | Built-in | Manual per device | Manual per device |
-| Watchdog for system overrides | Yes | No | No | Possible |
-
-akiHz is aimed at people who switch refresh rates often and want a fast, FOSS alternative without maintaining ADB scripts or Tasker tasks.
-
 ## Requirements
 
 - Android 11+ (API 30)
@@ -99,24 +85,12 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 
 1. Open Shizuku and start it (wireless debugging or ADB)
 2. Open akiHz and grant Shizuku permission
-3. Select a refresh rate from the buttons, or add the **akihz** tile to your Quick Settings panel and tap it to cycle
+3. Select a refresh rate from the buttons, or add the **akiHz** tile to your Quick Settings panel and tap it to cycle
 
 ## FAQ
 
-**What is akiHz?**  
-A free, open-source Android app that switches your display refresh rate (e.g. 60Hz, 90Hz, 120Hz) from in-app buttons or a Quick Settings tile.
-
-**Do I need root?**  
-No. akiHz uses [Shizuku](https://shizuku.rikka.app/) to write system display settings without root.
-
 **Why does Shizuku need to be running?**  
 Android blocks normal apps from changing refresh-rate settings directly. Shizuku grants akiHz the privileged access needed to update the correct OEM-specific keys.
-
-**Which refresh rates are shown?**  
-Only rates your display actually supports. akiHz reads them from the system instead of showing a fixed list.
-
-**How is this different from Settings → Display?**  
-akiHz lets you switch rates in one tap from Quick Settings and cycle through them without opening the full settings menu. The optional watchdog (untested on all devices) can re-apply your choice if the system changes it.
 
 **Does the Quick Settings tile work when the app is closed?**  
 Yes. Android starts the Quick Settings tile service when you tap the tile, so akiHz does not need to run a permanent keep-alive service. The optional watchdog uses a foreground service only while enabled.
@@ -131,6 +105,10 @@ It periodically checks whether the system changed your refresh rate (for example
 
 **Is akiHz safe?**  
 The app is MIT-licensed and fully open source. It only changes display refresh-rate related system settings — review the code on GitHub if you want to verify behavior.
+
+## Contributing and feedback
+
+Contributions are welcome. [Open an issue](https://github.com/anlaki-py/akihz/issues/new) to report a bug or suggest an improvement, or [submit a pull request](https://github.com/anlaki-py/akihz/pulls) with a change.
 
 ## Build
 

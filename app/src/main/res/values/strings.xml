@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">akihz</string>
+    <string name="app_name">akiHz</string>
     <string name="watchdog_channel_name">Refresh rate watchdog</string>
     <string name="watchdog_channel_description">Monitors and re-applies your refresh rate when the system overrides it</string>
-    <string name="watchdog_notification_title">akihz watchdog</string>
+    <string name="watchdog_notification_title">akiHz watchdog</string>
     <string name="watchdog_notification_text">Guarding %s against system override</string>
 </resources>

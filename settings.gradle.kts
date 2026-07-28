@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "akihz"
+rootProject.name = "akiHz"
 
 include(":app")

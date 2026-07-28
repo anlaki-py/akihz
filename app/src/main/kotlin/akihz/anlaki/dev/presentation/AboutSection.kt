@@ -36,7 +36,7 @@ fun AboutSection() {
 
     PreferenceGroup(heading = "About") {
         Text(
-            text = "akihz",
+            text = "akiHz",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 4.dp)
