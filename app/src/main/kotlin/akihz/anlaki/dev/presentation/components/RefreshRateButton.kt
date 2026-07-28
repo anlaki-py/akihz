@@ -1,13 +1,20 @@
 package akihz.anlaki.dev.presentation.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -30,38 +37,53 @@ fun RefreshRateButton(
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalHapticFeedback.current
-    val selectRate = {
-        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-        onClick()
-    }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cornerRadius by animateDpAsState(
+        targetValue = when {
+            isPressed -> 16.dp
+            isSelected -> 20.dp
+            else -> 32.dp
+        },
+        animationSpec = spring(),
+        label = "refresh rate button shape"
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer
+        },
+        label = "refresh rate button container"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        },
+        label = "refresh rate button content"
+    )
 
-    if (isSelected) {
-        Button(
-            onClick = selectRate,
-            modifier = modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Text(
-                text = "${hz.toInt()} Hz",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    } else {
-        FilledTonalButton(
-            onClick = selectRate,
-            modifier = modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-        ) {
-            Text(
-                text = "${hz.toInt()} Hz",
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }
+    Button(
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp),
+        shape = RoundedCornerShape(cornerRadius),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        interactionSource = interactionSource
+    ) {
+        Text(
+            text = "${hz.toInt()} Hz",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
