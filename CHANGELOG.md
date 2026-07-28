@@ -15,6 +15,12 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Standalone `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` APKs.
 - A universal APK, SHA-256 checksums, and machine-readable release metadata.
 - Regression tests for OEM override resolution and settings values.
+- Added System, Light, and Dark appearance modes with an optional AMOLED
+  theme.
+- Added swipe navigation between Home and Settings.
+- Added optional progressive edge blur behind system bars and floating
+  navigation.
+- Added an icon splash screen with light and dark variants.
 
 ### Changed
 
@@ -23,6 +29,12 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Unified selected-rate persistence between the app, tile, and watchdog.
 - Made watchdog startup idempotent and prevented overlapping checks.
 - Removed the permanent keep-alive foreground service.
+- Standardized the app on a modern Material 3 interface with redesigned
+  settings controls and a floating bottom navigation bar.
+- Restored large refresh-rate controls on Home with animated press and
+  selection shape morphing.
+- Updated app branding and documentation to consistently use the `akiHz`
+  name.
 
 ### Fixed
 
@@ -32,6 +44,12 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Fixed mode and boolean settings receiving literal refresh-rate values.
 - Fixed reset leaving the watchdog able to restore a stale rate.
 - Fixed Shizuku reconnection listener registration.
+- Fixed content insets and edge transitions around the status and navigation
+  bars.
+- Fixed regular dark mode incorrectly using pitch-black surfaces when AMOLED
+  mode was disabled.
+- Replaced the temporary disconnected-state flash during Shizuku startup with
+  a loading indicator.
 
 ## [0.0.31] - 2026-06-29
 
