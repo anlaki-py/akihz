@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import akihz.anlaki.dev.presentation.components.RefreshRateButton
  * @param supportedRates refresh rates supported by the current display
  * @param currentRate currently active refresh rate
  * @param selectedRate refresh rate selected in the UI
+ * @param isLoading whether Shizuku or refresh-rate data is still initializing
  * @param onRateSelected called when the user picks a refresh rate
  * @param modifier layout modifier supplied by the parent screen
  */
@@ -38,6 +40,7 @@ fun RefreshRateScreen(
     supportedRates: List<Float>,
     currentRate: Float?,
     selectedRate: Float?,
+    isLoading: Boolean,
     onRateSelected: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,7 +67,9 @@ fun RefreshRateScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (supportedRates.isEmpty()) {
+        if (isLoading && supportedRates.isEmpty()) {
+            LoadingState()
+        } else if (supportedRates.isEmpty()) {
             EmptyState()
         } else {
             Column(
@@ -81,6 +86,16 @@ fun RefreshRateScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }
 
