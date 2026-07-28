@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
@@ -34,16 +35,20 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  *
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
+ * @param blurEnabled whether progressive edge blur is enabled
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
+ * @param onBlurEnabledChanged invoked when progressive blur changes
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeSection(
     themeMode: AppThemeMode,
     amoledMode: Boolean,
+    blurEnabled: Boolean,
     onThemeModeChanged: (AppThemeMode) -> Unit,
-    onAmoledModeChanged: (Boolean) -> Unit
+    onAmoledModeChanged: (Boolean) -> Unit,
+    onBlurEnabledChanged: (Boolean) -> Unit
 ) {
     var showThemeOptions by remember { mutableStateOf(false) }
 
@@ -60,6 +65,13 @@ fun ThemeSection(
             icon = Icons.Default.DarkMode,
             checked = amoledMode,
             onCheckedChange = onAmoledModeChanged
+        )
+        PreferenceTemplate(
+            title = "Background blur",
+            description = "Blur content beneath the top and bottom overlays",
+            icon = Icons.Default.BlurOn,
+            checked = blurEnabled,
+            onCheckedChange = onBlurEnabledChanged
         )
     }
 

@@ -26,6 +26,7 @@ object PreferencesHelper {
     private const val KEY_DESIRED_RATE = "desired_rate"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_AMOLED_MODE = "amoled_mode"
+    private const val KEY_BLUR_ENABLED = "blur_enabled"
 
     private lateinit var prefs: SharedPreferences
 
@@ -85,6 +86,10 @@ object PreferencesHelper {
     var amoledMode: Boolean
         get() = prefs.getBoolean(KEY_AMOLED_MODE, false)
         set(value) = prefs.edit { putBoolean(KEY_AMOLED_MODE, value) }
+
+    var blurEnabled: Boolean
+        get() = prefs.getBoolean(KEY_BLUR_ENABLED, true)
+        set(value) = prefs.edit { putBoolean(KEY_BLUR_ENABLED, value) }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {
