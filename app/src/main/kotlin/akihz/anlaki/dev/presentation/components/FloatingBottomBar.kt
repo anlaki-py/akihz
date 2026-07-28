@@ -43,16 +43,16 @@ internal fun FloatingBottomBar(
         modifier = modifier
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-        shape = RoundedCornerShape(32.dp),
+        shape = RoundedCornerShape(36.dp),
         color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.background,
-        shadowElevation = 6.dp
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shadowElevation = 8.dp
     ) {
-        Row(modifier = Modifier.padding(4.dp)) {
+        Row(modifier = Modifier.padding(6.dp)) {
             items.forEachIndexed { index, item ->
                 val selected = index == selectedIndex
                 val labelWidth by animateDpAsState(
-                    targetValue = if (selected) 72.dp else 0.dp,
+                    targetValue = if (selected) 80.dp else 0.dp,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
@@ -62,16 +62,16 @@ internal fun FloatingBottomBar(
                 IconButton(
                     onClick = item.onClick,
                     modifier = Modifier
-                        .width(48.dp + labelWidth)
-                        .height(48.dp),
+                        .width(52.dp + labelWidth)
+                        .height(52.dp),
                     colors = if (selected) {
                         IconButtonDefaults.filledIconButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.background
+                            containerColor = MaterialTheme.colorScheme.surface
                         )
                     } else {
                         IconButtonDefaults.iconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.background
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 ) {
@@ -82,7 +82,7 @@ internal fun FloatingBottomBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                         if (selected) {
                             Spacer(modifier = Modifier.width(8.dp))

@@ -53,8 +53,10 @@ private enum class AppPage(
  * @param onResetToDefaults restores the system refresh-rate defaults
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
+ * @param blurEnabled whether progressive edge blur is enabled
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
+ * @param onBlurEnabledChanged invoked when progressive blur changes
  * @param onErrorDismissed clears an error after it is shown
  */
 @Composable
@@ -64,8 +66,10 @@ fun AkihzApp(
     onResetToDefaults: () -> Unit,
     themeMode: AppThemeMode,
     amoledMode: Boolean,
+    blurEnabled: Boolean,
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
+    onBlurEnabledChanged: (Boolean) -> Unit,
     onErrorDismissed: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -112,7 +116,7 @@ fun AkihzApp(
                 .fillMaxSize()
                 .padding(padding)
                 .progressiveBlur(
-                    blurRadius = 40f,
+                    blurRadius = if (blurEnabled) 40f else 0f,
                     height = statusBarHeightPx * 1.15f,
                     direction = BlurDirection.Top
                 )
@@ -122,7 +126,7 @@ fun AkihzApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .progressiveBlur(
-                        blurRadius = 40f,
+                        blurRadius = if (blurEnabled) 40f else 0f,
                         height = bottomBlurHeightPx,
                         direction = BlurDirection.Bottom
                     )
@@ -139,8 +143,10 @@ fun AkihzApp(
                         onResetToDefaults = onResetToDefaults,
                         themeMode = themeMode,
                         amoledMode = amoledMode,
+                        blurEnabled = blurEnabled,
                         onThemeModeChanged = onThemeModeChanged,
                         onAmoledModeChanged = onAmoledModeChanged,
+                        onBlurEnabledChanged = onBlurEnabledChanged,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

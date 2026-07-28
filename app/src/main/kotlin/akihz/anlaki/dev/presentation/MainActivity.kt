@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
             var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
+            var blurEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.blurEnabled) }
             val systemDarkTheme = isSystemInDarkTheme()
             val darkTheme = when (themeMode) {
                 AppThemeMode.System -> systemDarkTheme
@@ -113,6 +114,7 @@ class MainActivity : ComponentActivity() {
                     },
                     themeMode = themeMode,
                     amoledMode = amoledMode,
+                    blurEnabled = blurEnabled,
                     onThemeModeChanged = { mode ->
                         themeMode = mode
                         PreferencesHelper.themeMode = mode
@@ -120,6 +122,10 @@ class MainActivity : ComponentActivity() {
                     onAmoledModeChanged = { enabled ->
                         amoledMode = enabled
                         PreferencesHelper.amoledMode = enabled
+                    },
+                    onBlurEnabledChanged = { enabled ->
+                        blurEnabled = enabled
+                        PreferencesHelper.blurEnabled = enabled
                     },
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )

@@ -15,8 +15,15 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = androidx.compose.ui.graphics.Color.White,
     primaryContainer = androidx.compose.ui.graphics.Color(0xFF1E3A5F),
     secondary = androidx.compose.ui.graphics.Color(0xFF4B5563),
-    background = androidx.compose.ui.graphics.Color.Black,
-    surface = androidx.compose.ui.graphics.Color(0xFF1A1A1A),
+    background = androidx.compose.ui.graphics.Color(0xFF111318),
+    surface = androidx.compose.ui.graphics.Color(0xFF111318),
+    surfaceDim = androidx.compose.ui.graphics.Color(0xFF111318),
+    surfaceBright = androidx.compose.ui.graphics.Color(0xFF37393F),
+    surfaceContainerLowest = androidx.compose.ui.graphics.Color(0xFF0C0E13),
+    surfaceContainerLow = androidx.compose.ui.graphics.Color(0xFF191B20),
+    surfaceContainer = androidx.compose.ui.graphics.Color(0xFF1D1F24),
+    surfaceContainerHigh = androidx.compose.ui.graphics.Color(0xFF27292E),
+    surfaceContainerHighest = androidx.compose.ui.graphics.Color(0xFF32343A),
     onBackground = androidx.compose.ui.graphics.Color.White,
     onSurface = androidx.compose.ui.graphics.Color.White
 )
