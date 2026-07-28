@@ -42,7 +42,7 @@ internal fun FloatingBottomBar(
     Surface(
         modifier = modifier
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.background,

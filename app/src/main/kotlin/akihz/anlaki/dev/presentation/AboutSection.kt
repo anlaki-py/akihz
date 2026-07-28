@@ -1,21 +1,16 @@
 package akihz.anlaki.dev.presentation
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.SystemUpdate
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
@@ -43,17 +38,10 @@ fun AboutSection() {
     val versionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
 
     PreferenceGroup(heading = "About") {
-        Text(
-            text = "akiHz",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
-        )
-        Text(
-            text = "Version $versionName",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+        PreferenceTemplate(
+            title = "akiHz",
+            description = "Version $versionName",
+            icon = Icons.Default.Info
         )
 
         PreferenceTemplate(

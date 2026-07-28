@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation
 
-import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,7 +8,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,6 +23,13 @@ import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 import rikka.shizuku.Shizuku
+import kotlinx.coroutines.flow.MutableStateFlow
+
+private data class AppDialog(
+    val title: String,
+    val message: String,
+    val cancelable: Boolean
+)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -31,6 +40,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
     private var isServiceBound = false
+    private val dialogState = MutableStateFlow<AppDialog?>(null)
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
@@ -69,6 +79,7 @@ class MainActivity : ComponentActivity() {
                     WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
                 }
                 val uiState by viewModel.uiState.collectAsState()
+                val appDialog by dialogState.collectAsState()
 
                 AkihzApp(
                     uiState = uiState,
@@ -84,6 +95,20 @@ class MainActivity : ComponentActivity() {
                     },
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
+                appDialog?.let { dialog ->
+                    AlertDialog(
+                        onDismissRequest = {
+                            if (dialog.cancelable) dialogState.value = null
+                        },
+                        title = { Text(dialog.title) },
+                        text = { Text(dialog.message) },
+                        confirmButton = {
+                            TextButton(onClick = { dialogState.value = null }) {
+                                Text("OK")
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -142,11 +167,10 @@ class MainActivity : ComponentActivity() {
     private fun showError(message: String) = showDialog("Error", message)
 
     private fun showDialog(title: String, message: String, cancelable: Boolean = true) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .setCancelable(cancelable)
-            .show()
+        dialogState.value = AppDialog(
+            title = title,
+            message = message,
+            cancelable = cancelable
+        )
     }
 }
