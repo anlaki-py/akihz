@@ -1,12 +1,20 @@
-# akiHz — Android refresh rate switcher (FOSS)
+<div align="center">
+  <img src="app/src/main/ic_launcher-playstore.png" alt="akiHz app icon" width="160" style="border-radius: 20%;">
 
-**akiHz** is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using [Shizuku](https://shizuku.rikka.app/). No root required.
+  <h1><big>akiHz</big></h1>
 
-Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, and OEM-specific settings support.
+  <h3>Android refresh rate switcher (FOSS)</h3>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Android 11+](https://img.shields.io/badge/Android-11%2B-green.svg)](app/build.gradle.kts)
-[![Latest release](https://img.shields.io/github/v/release/anlaki-py/akihz?label=release)](https://github.com/anlaki-py/akihz/releases/latest)
+  <p><strong>akiHz</strong> is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
+
+  <p>Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, and OEM-specific settings support.</p>
+
+  <p>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+    <a href="app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-11%2B-green.svg" alt="Android 11+"></a>
+    <a href="https://github.com/anlaki-py/akihz/releases/latest"><img src="https://img.shields.io/github/v/release/anlaki-py/akihz?label=release" alt="Latest release"></a>
+  </p>
+</div>
 
 ## Screenshots
 
