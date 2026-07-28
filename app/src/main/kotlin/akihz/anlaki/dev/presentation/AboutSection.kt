@@ -2,6 +2,11 @@ package akihz.anlaki.dev.presentation
 
 import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +25,9 @@ private const val SOURCE_CODE_URL = "https://github.com/anlaki-py/akihz"
 private const val DONATION_URL = "https://ko-fi.com/unluky"
 private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/releases/latest"
 
+/**
+ * Displays app version information and project links.
+ */
 @Composable
 fun AboutSection() {
     val uriHandler = LocalUriHandler.current
@@ -39,35 +47,39 @@ fun AboutSection() {
             text = "akiHz",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
         )
         Text(
             text = "Version $versionName",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
         )
 
         PreferenceTemplate(
             title = "Website",
             description = "anlaki.dev",
+            icon = Icons.Default.Language,
             onClick = { uriHandler.openUri(WEBSITE_URL) }
         )
 
         PreferenceTemplate(
             title = "Source code",
             description = "github.com/anlaki-py/akihz",
+            icon = Icons.Default.Code,
             onClick = { uriHandler.openUri(SOURCE_CODE_URL) }
         )
 
         PreferenceTemplate(
             title = "Donate",
             description = "ko-fi.com/unluky",
+            icon = Icons.Default.Favorite,
             onClick = { uriHandler.openUri(DONATION_URL) }
         )
 
         PreferenceTemplate(
             title = "Check for updates",
+            icon = Icons.Default.SystemUpdate,
             onClick = { uriHandler.openUri(LATEST_RELEASE_URL) }
         )
     }

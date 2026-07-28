@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -23,6 +27,9 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 
+/**
+ * Displays controls for configuring the refresh-rate watchdog service.
+ */
 @Composable
 fun WatchdogSection() {
     val context = LocalContext.current
@@ -35,6 +42,7 @@ fun WatchdogSection() {
         PreferenceTemplate(
             title = "Enable watchdog",
             description = "Monitor and re-apply refresh rate automatically (untested on all devices)",
+            icon = Icons.Default.Shield,
             checked = watchdogEnabled,
             onCheckedChange = {
                 watchdogEnabled = it
@@ -47,6 +55,7 @@ fun WatchdogSection() {
             PreferenceTemplate(
                 title = "Aggressive mode",
                 description = "Check every 500ms (uses more battery)",
+                icon = Icons.Default.Bolt,
                 checked = aggressive,
                 onCheckedChange = {
                     aggressive = it
@@ -59,7 +68,8 @@ fun WatchdogSection() {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Check interval: ${(intervalMs / 1000).toInt()}s",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Slider(
                     value = intervalMs,
@@ -70,7 +80,9 @@ fun WatchdogSection() {
                     },
                     valueRange = 1000f..30000f,
                     steps = 28,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                 )
             }
         }

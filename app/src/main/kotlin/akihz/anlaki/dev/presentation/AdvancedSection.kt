@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatterySaver
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +34,11 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
 
+/**
+ * Displays OEM, battery, reset, and diagnostic preferences.
+ *
+ * @param onResetToDefaults restores adaptive system refresh-rate settings
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedSection(onResetToDefaults: () -> Unit) {
@@ -42,7 +51,7 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
     val batteryUnrestricted = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
 
     PreferenceGroup(heading = "Advanced") {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "OEM Override",
                 style = MaterialTheme.typography.bodyLarge
@@ -83,6 +92,7 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
 
         PreferenceTemplate(
             title = "Battery optimization",
+            icon = Icons.Default.BatterySaver,
             description = if (batteryUnrestricted) {
                 "Unrestricted — background service can run reliably"
             } else {
@@ -94,11 +104,13 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
         PreferenceTemplate(
             title = "Reset to defaults",
             description = "Restore adaptive refresh rate (system defaults)",
+            icon = Icons.Default.RestartAlt,
             onClick = { showResetConfirm = true }
         )
 
         PreferenceTemplate(
             title = if (showDebug) "Hide debug info" else "Show debug info",
+            icon = Icons.Default.BugReport,
             onClick = { showDebug = !showDebug }
         )
 
