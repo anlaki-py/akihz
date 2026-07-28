@@ -56,6 +56,7 @@ fun AnlakiTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        shapes = AkihzShapes,
         content = content
     )
 }

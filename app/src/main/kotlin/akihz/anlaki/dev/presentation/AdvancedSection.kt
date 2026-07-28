@@ -1,22 +1,15 @@
 package akihz.anlaki.dev.presentation
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,7 +32,6 @@ import akihz.anlaki.dev.utils.PreferencesHelper
  *
  * @param onResetToDefaults restores adaptive system refresh-rate settings
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedSection(onResetToDefaults: () -> Unit) {
     val context = LocalContext.current
@@ -47,48 +39,17 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
     var showDebug by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
     val batteryUnrestricted = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
 
     PreferenceGroup(heading = "Advanced") {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "OEM Override",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = it }
-            ) {
-                OutlinedTextField(
-                    value = selectedOem,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    oemNames.forEach { name ->
-                        DropdownMenuItem(
-                            text = { Text(name) },
-                            onClick = {
-                                selectedOem = name
-                                PreferencesHelper.oemOverride = if (name == "Auto-detect") "" else name
-                                expanded = false
-                            }
-                        )
-                    }
-                }
+        OemOverridePreference(
+            options = oemNames,
+            selectedOption = selectedOem,
+            onOptionSelected = { name ->
+                selectedOem = name
+                PreferencesHelper.oemOverride = if (name == "Auto-detect") "" else name
             }
-        }
+        )
 
         PreferenceTemplate(
             title = "Battery optimization",
@@ -155,7 +116,7 @@ private fun DebugInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Text(
             "Detected OEM: ${android.os.Build.MANUFACTURER}",
