@@ -19,3 +19,17 @@ fun selectUpdateApkName(
         assetNames.firstOrNull { it == expectedName }
     }
 }
+
+/**
+ * Returns the first syntactically valid SHA-256 digest from [candidates].
+ *
+ * GitHub may expose the digest on the asset and in release metadata. Requiring
+ * one valid source prevents unverified APK installation.
+ */
+fun selectValidSha256(vararg candidates: String?): String? =
+    candidates.asSequence()
+        .filterNotNull()
+        .map { it.removePrefix("sha256:").lowercase() }
+        .firstOrNull { digest ->
+            digest.length == 64 && digest.all { it in '0'..'9' || it in 'a'..'f' }
+        }

@@ -6,5 +6,5 @@ data class AppUpdate(
     val versionCode: Long,
     val apkName: String,
     val downloadUrl: String,
-    val sha256: String?
+    val sha256: String
 )

@@ -26,7 +26,14 @@ class UpdateDownloadStore(context: Context) {
         val versionName = preferences.getString(KEY_VERSION_NAME, null)
         val apkName = preferences.getString(KEY_APK_NAME, null)
         val downloadUrl = preferences.getString(KEY_DOWNLOAD_URL, null)
-        if (id < 0 || versionName == null || apkName == null || downloadUrl == null) return null
+        val sha256 = preferences.getString(KEY_SHA256, null)
+        if (
+            id < 0 ||
+            versionName == null ||
+            apkName == null ||
+            downloadUrl == null ||
+            sha256 == null
+        ) return null
         return PendingUpdateDownload(
             downloadId = id,
             update = AppUpdate(
@@ -34,7 +41,7 @@ class UpdateDownloadStore(context: Context) {
                 versionCode = preferences.getLong(KEY_VERSION_CODE, -1L),
                 apkName = apkName,
                 downloadUrl = downloadUrl,
-                sha256 = preferences.getString(KEY_SHA256, null)
+                sha256 = sha256
             )
         )
     }
