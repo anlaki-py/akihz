@@ -7,6 +7,46 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.34] - 2026-07-29
+
+### Added
+
+- Added custom refresh-rate key profiles for devices that are not covered by
+  the built-in OEM strategies.
+- Added an in-app update system with stable and prerelease channels,
+  ABI-specific APK selection, Android Download Manager integration, and
+  install-ready notifications.
+- Added persistent update recovery across activity and process recreation.
+- Added SHA-256 verification before handing downloaded APKs to Android's
+  package installer.
+- Added unit tests for update availability, release asset selection, digest
+  validation, and shared Shizuku connection ownership.
+
+### Changed
+
+- Replaced hardcoded refresh-rate tile PNGs with dynamically generated numeric
+  icons that support any detected refresh rate.
+- Made Shizuku user-service connections shared and independently owned by the
+  app activity and Quick Settings tile.
+- Made Shizuku component resolution use the runtime application ID so debug
+  and release variants bind correctly.
+- Simplified the About section and replaced browser-based update links with
+  the in-app updater.
+
+### Removed
+
+- Removed watchdog mode, its foreground service, boot receiver, battery
+  optimization controls, permissions, settings, and documentation.
+- Removed the website entry and obsolete refresh-rate PNG assets.
+
+### Fixed
+
+- Preserved update downloads and installation prompts when akiHz is not open.
+- Prevented prerelease builds from offering destructive downgrades when the
+  latest stable release has a lower version code.
+- Prevented one app component from disconnecting a Shizuku service still used
+  by another component.
+
 ## [0.0.33] - 2026-07-28
 
 ### Added
