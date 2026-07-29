@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.GitHubUpdateRepository
 import akihz.anlaki.dev.domain.update.AppUpdate
+import akihz.anlaki.dev.domain.update.UpdateAvailability
+import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
 import kotlinx.coroutines.delay
@@ -57,11 +59,23 @@ fun AppUpdateSection(currentVersionCode: Long) {
         scope.launch {
             runCatching { repository.findLatest(channel) }
                 .onSuccess { update ->
-                    if (update.versionCode > currentVersionCode) {
-                        availableUpdate = update
-                        statusText = "Version ${update.versionName} is available"
-                    } else {
-                        statusText = "You’re up to date"
+                    when (
+                        resolveUpdateAvailability(
+                            currentVersionCode = currentVersionCode,
+                            latestVersionCode = update.versionCode,
+                            channel = channel
+                        )
+                    ) {
+                        UpdateAvailability.Available -> {
+                            availableUpdate = update
+                            statusText = "Version ${update.versionName} is available"
+                        }
+                        UpdateAvailability.AheadOfStable -> {
+                            statusText = "You’re ahead of stable; the next stable will install normally"
+                        }
+                        UpdateAvailability.UpToDate -> {
+                            statusText = "You’re up to date"
+                        }
                     }
                 }
                 .onFailure {
