@@ -18,7 +18,7 @@ object ShizukuHelper {
     private var commandService: ICommandService? = null
     private var serviceConnection: ServiceConnection? = null
     private var userServiceArgs: Shizuku.UserServiceArgs? = null
-    private val connectionOwners = mutableSetOf<String>()
+    private val connectionOwners = ConnectionOwnership()
     private val pendingConnections = mutableListOf<PendingConnection>()
 
     fun isBinderReady(): Boolean {
@@ -83,13 +83,13 @@ object ShizukuHelper {
         }
 
         if (commandService != null) {
-            connectionOwners += owner
+            connectionOwners.acquire(owner)
             onConnected()
             return
         }
 
         if (pendingConnections.any { it.owner == owner }) return
-        connectionOwners += owner
+        connectionOwners.acquire(owner)
         pendingConnections += PendingConnection(owner, onConnected, onFailed)
         if (serviceConnection != null) return
 
@@ -134,7 +134,7 @@ object ShizukuHelper {
                 userServiceArgs = null
                 pendingConnections.toList().also {
                     pendingConnections.clear()
-                    it.forEach { request -> connectionOwners.remove(request.owner) }
+                    it.forEach { request -> connectionOwners.release(request.owner) }
                 }
             }
             Timber.e(e, "Failed to bind Shizuku user service")
@@ -150,9 +150,9 @@ object ShizukuHelper {
     /** Releases [owner] and disconnects only when no component still needs the service. */
     @Synchronized
     fun releaseUserService(owner: String) {
-        connectionOwners.remove(owner)
+        val shouldDisconnect = connectionOwners.release(owner)
         pendingConnections.removeAll { it.owner == owner }
-        if (connectionOwners.isNotEmpty()) return
+        if (!shouldDisconnect && connectionOwners.isActive()) return
 
         val args = userServiceArgs
         val conn = serviceConnection
