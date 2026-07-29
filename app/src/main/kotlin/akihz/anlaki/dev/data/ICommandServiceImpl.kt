@@ -13,9 +13,23 @@ import java.util.concurrent.TimeUnit
 class ICommandServiceImpl : ICommandService.Stub() {
 
     override fun runCommand(command: String): String {
+        return execute(listOf("/system/bin/sh", "-c", command))
+    }
+
+    /**
+     * Executes Android's settings utility without passing user values through a shell.
+     *
+     * @param arguments operation, namespace, key, and optional value
+     * @return command output or an error prefixed with `ERROR`
+     */
+    override fun runSettingsCommand(arguments: List<String>): String {
+        return execute(listOf("/system/bin/settings") + arguments)
+    }
+
+    private fun execute(command: List<String>): String {
         val executor = Executors.newSingleThreadExecutor()
         return try {
-            val process = ProcessBuilder("/system/bin/sh", "-c", command)
+            val process = ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start()
             val outputFuture = executor.submit<String> {

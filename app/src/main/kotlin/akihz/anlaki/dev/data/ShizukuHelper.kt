@@ -82,7 +82,7 @@ object ShizukuHelper {
             .daemon(false)
             .processNameSuffix("refresh_rate_service")
             .debuggable(false)
-            .version(1)
+            .version(2)
 
         userServiceArgs = args
 
@@ -145,6 +145,55 @@ object ShizukuHelper {
         }
     }
 
+    private fun execSettings(arguments: List<String>): Result<String> {
+        val service = commandService
+            ?: return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
+        return try {
+            val output = service.runSettingsCommand(arguments)
+            if (output.startsWith("ERROR")) {
+                Result.error(ErrorType.COMMAND_EXECUTION_FAILED, output)
+            } else {
+                Result.success(output)
+            }
+        } catch (e: Exception) {
+            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, e.message ?: "Settings command failed")
+        }
+    }
+
+    /** Lists all readable entries in one Android settings namespace. */
+    fun listSettings(namespace: Namespace): Result<Map<String, String>> =
+        execSettings(listOf("list", namespaceToString(namespace))).map { output ->
+            output.lineSequence().mapNotNull { line ->
+                val separator = line.indexOf('=')
+                if (separator <= 0) null else {
+                    line.substring(0, separator) to line.substring(separator + 1)
+                }
+            }.toMap()
+        }
+
+    /** Reads one setting, returning null when the key does not exist. */
+    fun getSetting(namespace: Namespace, key: String): Result<String?> {
+        if (!isValidKey(key)) return invalidKey()
+        return execSettings(listOf("get", namespaceToString(namespace), key)).map {
+            it.trim().takeUnless { value -> value == "null" || value == "OK" }
+        }
+    }
+
+    /** Writes one setting without evaluating user data as shell syntax. */
+    fun putSetting(namespace: Namespace, key: String, value: String): Result<Unit> {
+        if (!isValidKey(key)) return invalidKey()
+        if (value.contains('\u0000') || value.length > MAX_SETTING_VALUE_LENGTH) {
+            return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Invalid setting value.")
+        }
+        return execSettings(listOf("put", namespaceToString(namespace), key, value)).map { Unit }
+    }
+
+    /** Deletes one setting. */
+    fun deleteSetting(namespace: Namespace, key: String): Result<Unit> {
+        if (!isValidKey(key)) return invalidKey()
+        return execSettings(listOf("delete", namespaceToString(namespace), key)).map { Unit }
+    }
+
     /**
      * Reads the current refresh rate from OEM-specific settings keys.
      */
@@ -172,6 +221,9 @@ object ShizukuHelper {
      * Sets the refresh rate using standard write keys.
      */
     fun setRefreshRate(hz: Float): Result<Unit> {
+        if (CustomProfileManager.profile().enabled) {
+            return CustomProfileManager.applyRate(hz)
+        }
         val hzInt = hz.toInt()
         val strategy = getActiveStrategy()
         val failures = mutableListOf<String>()
@@ -199,6 +251,9 @@ object ShizukuHelper {
      * Resets refresh rate settings to defaults (adaptive mode).
      */
     fun resetRefreshRate(): Result<Unit> {
+        if (CustomProfileManager.profile().enabled) {
+            return CustomProfileManager.disable()
+        }
         val strategy = getActiveStrategy()
         val failures = mutableListOf<String>()
 
@@ -245,4 +300,14 @@ object ShizukuHelper {
         }
     }
 
+    private fun isValidKey(key: String): Boolean =
+        key.length in 1..MAX_SETTING_KEY_LENGTH && key.all {
+            it.isLetterOrDigit() || it == '_' || it == '.' || it == '-'
+        }
+
+    private fun <T> invalidKey(): Result<T> =
+        Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Invalid setting key.")
+
+    private const val MAX_SETTING_KEY_LENGTH = 128
+    private const val MAX_SETTING_VALUE_LENGTH = 512
 }

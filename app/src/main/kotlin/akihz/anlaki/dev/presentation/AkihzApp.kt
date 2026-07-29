@@ -20,6 +20,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +54,7 @@ private enum class AppPage(
  * @param uiState current refresh-rate screen state
  * @param onRateSelected invoked when the user selects a refresh rate
  * @param onResetToDefaults restores the system refresh-rate defaults
+ * @param onCustomProfileChanged refreshes rates after custom profile activation changes
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param blurEnabled whether progressive edge blur is enabled
@@ -64,6 +68,7 @@ fun AkihzApp(
     uiState: MainUiState,
     onRateSelected: (Float) -> Unit,
     onResetToDefaults: () -> Unit,
+    onCustomProfileChanged: () -> Unit,
     themeMode: AppThemeMode,
     amoledMode: Boolean,
     blurEnabled: Boolean,
@@ -72,6 +77,14 @@ fun AkihzApp(
     onBlurEnabledChanged: (Boolean) -> Unit,
     onErrorDismissed: () -> Unit = {}
 ) {
+    var showCustomKeys by remember { mutableStateOf(false) }
+    if (showCustomKeys) {
+        CustomKeysScreen(
+            onBack = { showCustomKeys = false },
+            onProfileChanged = onCustomProfileChanged
+        )
+        return
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { AppPage.entries.size })
     val scope = rememberCoroutineScope()
@@ -142,6 +155,7 @@ fun AkihzApp(
                     )
                     AppPage.Settings -> SettingsScreen(
                         onResetToDefaults = onResetToDefaults,
+                        onOpenCustomKeys = { showCustomKeys = true },
                         themeMode = themeMode,
                         amoledMode = amoledMode,
                         blurEnabled = blurEnabled,

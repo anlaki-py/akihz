@@ -7,6 +7,7 @@ import android.os.Parcel
 
 interface ICommandService : IInterface {
     fun runCommand(command: String): String
+    fun runSettingsCommand(arguments: List<String>): String
     fun destroy()
 
     abstract class Stub : Binder(), ICommandService {
@@ -33,6 +34,13 @@ interface ICommandService : IInterface {
                     reply?.writeString(result)
                     true
                 }
+                TRANSACTION_runSettingsCommand -> {
+                    val arguments = data.createStringArrayList() ?: arrayListOf()
+                    val result = this.runSettingsCommand(arguments)
+                    reply?.writeNoException()
+                    reply?.writeString(result)
+                    true
+                }
                 TRANSACTION_destroy -> {
                     this.destroy()
                     reply?.writeNoException()
@@ -45,7 +53,8 @@ interface ICommandService : IInterface {
         companion object {
             const val DESCRIPTOR = "akihz.anlaki.dev.ICommandService"
             const val TRANSACTION_runCommand = IBinder.FIRST_CALL_TRANSACTION + 0
-            const val TRANSACTION_destroy = IBinder.FIRST_CALL_TRANSACTION + 1
+            const val TRANSACTION_runSettingsCommand = IBinder.FIRST_CALL_TRANSACTION + 1
+            const val TRANSACTION_destroy = IBinder.FIRST_CALL_TRANSACTION + 2
 
             @JvmStatic
             fun asInterface(obj: IBinder?): ICommandService? {
@@ -76,6 +85,21 @@ interface ICommandService : IInterface {
                     data.recycle()
                 }
                 return result
+            }
+
+            override fun runSettingsCommand(arguments: List<String>): String {
+                val data = Parcel.obtain()
+                val reply = Parcel.obtain()
+                return try {
+                    data.writeInterfaceToken(DESCRIPTOR)
+                    data.writeStringList(arguments)
+                    mRemote.transact(TRANSACTION_runSettingsCommand, data, reply, 0)
+                    reply.readException()
+                    reply.readString() ?: ""
+                } finally {
+                    reply.recycle()
+                    data.recycle()
+                }
             }
 
             override fun destroy() {
