@@ -17,6 +17,8 @@ object ShizukuHelper {
     private var commandService: ICommandService? = null
     private var serviceConnection: ServiceConnection? = null
     private var userServiceArgs: Shizuku.UserServiceArgs? = null
+    private val connectionOwners = mutableSetOf<String>()
+    private val pendingConnections = mutableListOf<PendingConnection>()
 
     fun isBinderReady(): Boolean {
         return try {
@@ -58,7 +60,14 @@ object ShizukuHelper {
 
     fun isUserServiceBound(): Boolean = commandService != null
 
-    fun bindUserService(
+    /**
+     * Acquires the shared Shizuku user service for [owner].
+     *
+     * Concurrent requests share one binding operation and each receive a result.
+     */
+    @Synchronized
+    fun acquireUserService(
+        owner: String,
         onConnected: () -> Unit,
         onFailed: (ErrorType, String) -> Unit = { _, _ -> }
     ) {
@@ -73,9 +82,15 @@ object ShizukuHelper {
         }
 
         if (commandService != null) {
+            connectionOwners += owner
             onConnected()
             return
         }
+
+        if (pendingConnections.any { it.owner == owner }) return
+        connectionOwners += owner
+        pendingConnections += PendingConnection(owner, onConnected, onFailed)
+        if (serviceConnection != null) return
 
         val componentName = ComponentName("akihz.anlaki.dev", "akihz.anlaki.dev.data.ICommandServiceImpl")
         val args = Shizuku.UserServiceArgs(componentName)
@@ -88,27 +103,53 @@ object ShizukuHelper {
 
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                commandService = ICommandService.Stub.asInterface(binder)
+                val callbacks = synchronized(this@ShizukuHelper) {
+                    commandService = ICommandService.Stub.asInterface(binder)
+                    pendingConnections.toList().also { pendingConnections.clear() }
+                }
                 Timber.i("Shizuku user service connected")
-                onConnected()
+                callbacks.forEach { it.onConnected() }
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
-                commandService = null
+                synchronized(this@ShizukuHelper) {
+                    commandService = null
+                    serviceConnection = null
+                    userServiceArgs = null
+                }
                 Timber.i("Shizuku user service disconnected")
             }
         }
 
         try {
-            Shizuku.bindUserService(args, serviceConnection!!)
+            Shizuku.bindUserService(args, requireNotNull(serviceConnection))
         } catch (e: Exception) {
-            commandService = null
+            val callbacks = synchronized(this) {
+                commandService = null
+                serviceConnection = null
+                userServiceArgs = null
+                pendingConnections.toList().also {
+                    pendingConnections.clear()
+                    it.forEach { request -> connectionOwners.remove(request.owner) }
+                }
+            }
             Timber.e(e, "Failed to bind Shizuku user service")
-            onFailed(ErrorType.SERVICE_BINDING_FAILED, e.message ?: "Unknown binding error")
+            callbacks.forEach {
+                it.onFailed(
+                    ErrorType.SERVICE_BINDING_FAILED,
+                    e.message ?: "Unknown binding error"
+                )
+            }
         }
     }
 
-    fun unbindUserService() {
+    /** Releases [owner] and disconnects only when no component still needs the service. */
+    @Synchronized
+    fun releaseUserService(owner: String) {
+        connectionOwners.remove(owner)
+        pendingConnections.removeAll { it.owner == owner }
+        if (connectionOwners.isNotEmpty()) return
+
         val args = userServiceArgs
         val conn = serviceConnection
 
@@ -310,4 +351,10 @@ object ShizukuHelper {
 
     private const val MAX_SETTING_KEY_LENGTH = 128
     private const val MAX_SETTING_VALUE_LENGTH = 512
+
+    private data class PendingConnection(
+        val owner: String,
+        val onConnected: () -> Unit,
+        val onFailed: (ErrorType, String) -> Unit
+    )
 }
