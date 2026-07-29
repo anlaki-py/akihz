@@ -1,6 +1,9 @@
 package akihz.anlaki.dev.presentation
 
+import android.Manifest
 import android.app.DownloadManager
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
@@ -18,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.GitHubUpdateRepository
 import akihz.anlaki.dev.domain.update.AppUpdate
@@ -40,17 +44,35 @@ fun AppUpdateSection(currentVersionCode: Long) {
     var showChannels by remember { mutableStateOf(false) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var downloadingUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var pendingDownloadRequest by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    var needsInstallPermission by remember { mutableStateOf(false) }
     var statusText by remember { mutableStateOf<String?>(null) }
     var downloadId by remember { mutableLongStateOf(-1L) }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        if (downloader.canInstallPackages()) {
-            downloader.install(downloadId)
+
+    fun enqueueUpdate(update: AppUpdate) {
+        runCatching { downloader.enqueue(update) }
+            .onSuccess {
+                downloadingUpdate = update
+                downloadId = it
+                availableUpdate = null
+                pendingDownloadRequest = null
+                statusText = "Starting download…"
+            }
+            .onFailure {
+                statusText = "Download failed"
+                message = it.message ?: "Unable to start the download"
+            }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val update = pendingDownloadRequest
+        if (granted && update != null) {
+            enqueueUpdate(update)
         } else {
-            message = "Install permission was not granted."
+            pendingDownloadRequest = null
+            message = "Notification permission is required to alert you when the update is ready."
         }
     }
 
@@ -104,11 +126,7 @@ fun AppUpdateSection(currentVersionCode: Long) {
         downloader = downloader,
         onProgress = { statusText = "Downloading… $it%" },
         onReady = {
-            statusText = "Download complete"
-            if (downloader.canInstallPackages()) downloader.install(downloadId) else {
-                needsInstallPermission = true
-                message = "Allow akiHz to install updates on the next screen."
-            }
+            statusText = "Download complete; tap the notification to install"
         },
         onError = {
             statusText = "Download failed"
@@ -136,17 +154,19 @@ fun AppUpdateSection(currentVersionCode: Long) {
             text = { Text("Download and install akiHz ${update.versionName}?") },
             confirmButton = {
                 TextButton(onClick = {
-                    runCatching { downloader.enqueue(update) }
-                        .onSuccess {
-                            downloadingUpdate = update
-                            downloadId = it
-                            availableUpdate = null
-                            statusText = "Starting download…"
-                        }
-                        .onFailure {
-                            statusText = "Download failed"
-                            message = it.message ?: "Unable to start the download"
-                        }
+                    val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                    if (permissionGranted) {
+                        enqueueUpdate(update)
+                    } else {
+                        pendingDownloadRequest = update
+                        notificationPermissionLauncher.launch(
+                            Manifest.permission.POST_NOTIFICATIONS
+                        )
+                    }
                 }) { Text("Download") }
             },
             dismissButton = {
@@ -156,20 +176,11 @@ fun AppUpdateSection(currentVersionCode: Long) {
     }
     message?.let { text ->
         AlertDialog(
-            onDismissRequest = {
-                message = null
-                needsInstallPermission = false
-            },
+            onDismissRequest = { message = null },
             title = { Text("App update") },
             text = { Text(text) },
             confirmButton = {
-                TextButton(onClick = {
-                    message = null
-                    if (needsInstallPermission) {
-                        needsInstallPermission = false
-                        permissionLauncher.launch(downloader.installPermissionIntent())
-                    }
-                }) { Text(if (needsInstallPermission) "Continue" else "OK") }
+                TextButton(onClick = { message = null }) { Text("OK") }
             }
         )
     }
