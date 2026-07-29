@@ -24,11 +24,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.GitHubUpdateRepository
+import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.utils.UpdateNotification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -39,15 +41,23 @@ fun AppUpdateSection(currentVersionCode: Long) {
     val context = LocalContext.current
     val repository = remember { GitHubUpdateRepository() }
     val downloader = remember { AppUpdateDownloader(context) }
+    val downloadStore = remember { UpdateDownloadStore(context) }
+    val restoredDownload = remember { downloadStore.load() }
     val scope = rememberCoroutineScope()
     var channel by remember { mutableStateOf(PreferencesHelper.updateChannel) }
     var showChannels by remember { mutableStateOf(false) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
-    var downloadingUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var downloadingUpdate by remember {
+        mutableStateOf(restoredDownload?.update)
+    }
     var pendingDownloadRequest by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    var statusText by remember { mutableStateOf<String?>(null) }
-    var downloadId by remember { mutableLongStateOf(-1L) }
+    var statusText by remember {
+        mutableStateOf(restoredDownload?.let { "Restoring update download…" })
+    }
+    var downloadId by remember {
+        mutableLongStateOf(restoredDownload?.downloadId ?: -1L)
+    }
 
     fun enqueueUpdate(update: AppUpdate) {
         runCatching { downloader.enqueue(update) }
@@ -127,8 +137,12 @@ fun AppUpdateSection(currentVersionCode: Long) {
         onProgress = { statusText = "Downloading… $it%" },
         onReady = {
             statusText = "Download complete; tap the notification to install"
+            downloadingUpdate?.let {
+                UpdateNotification.showReady(context, downloadId, it.versionName)
+            }
         },
         onError = {
+            downloadStore.clear()
             statusText = "Download failed"
             message = it
             downloadId = -1L

@@ -3,9 +3,13 @@ package akihz.anlaki.dev.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.utils.UpdateNotification
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Bridges an update notification to Android's permission and package installer screens. */
 class UpdateInstallActivity : ComponentActivity() {
@@ -14,7 +18,7 @@ class UpdateInstallActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        if (downloader.canInstallPackages()) install() else finish()
+        if (downloader.canInstallPackages()) launchInstaller() else finish()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,17 +29,29 @@ class UpdateInstallActivity : ComponentActivity() {
             finish()
             return
         }
-        if (downloader.canInstallPackages()) {
-            install()
-        } else {
-            permissionLauncher.launch(downloader.installPermissionIntent())
+        lifecycleScope.launch {
+            val pending = UpdateDownloadStore(this@UpdateInstallActivity).load()
+                ?.takeIf { it.downloadId == downloadId }
+            val verified = pending != null && withContext(Dispatchers.IO) {
+                downloader.verify(downloadId, pending.update.sha256)
+            }
+            if (!verified) {
+                UpdateNotification.showFailure(
+                    this@UpdateInstallActivity,
+                    "APK security verification failed"
+                )
+                finish()
+            } else if (downloader.canInstallPackages()) {
+                launchInstaller()
+            } else {
+                permissionLauncher.launch(downloader.installPermissionIntent())
+            }
         }
     }
 
-    private fun install() {
+    private fun launchInstaller() {
         runCatching {
             UpdateNotification.cancelReady(this)
-            UpdateDownloadStore(this).clear()
             downloader.install(downloadId)
         }
         finish()

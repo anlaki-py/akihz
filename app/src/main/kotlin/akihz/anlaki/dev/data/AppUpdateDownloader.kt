@@ -48,8 +48,7 @@ class AppUpdateDownloader(private val context: Context) {
     }
 
     /** Verifies the downloaded APK against the release digest when available. */
-    fun verify(downloadId: Long, expectedSha256: String?): Boolean {
-        if (expectedSha256 == null) return true
+    fun verify(downloadId: Long, expectedSha256: String): Boolean {
         val digest = MessageDigest.getInstance("SHA-256")
         manager.openDownloadedFile(downloadId).use { descriptor ->
             descriptor.fileDescriptor.let { java.io.FileInputStream(it) }.use { input ->
@@ -77,7 +76,8 @@ class AppUpdateDownloader(private val context: Context) {
         val uri = manager.getUriForDownloadedFile(downloadId)
             ?: error("Downloaded APK is unavailable")
         context.startActivity(
-            Intent(Intent.ACTION_INSTALL_PACKAGE, uri)
+            Intent(Intent.ACTION_VIEW)
+                .setDataAndType(uri, APK_MIME_TYPE)
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         )
     }

@@ -43,4 +43,23 @@ class UpdateAssetSelectorTest {
 
         assertNull(result)
     }
+
+    @Test
+    fun acceptsPrefixedSha256Digest() {
+        val digest = "ab".repeat(32)
+
+        assertEquals(digest, selectValidSha256("sha256:$digest"))
+    }
+
+    @Test
+    fun fallsBackFromInvalidDigest() {
+        val fallback = "12".repeat(32)
+
+        assertEquals(fallback, selectValidSha256("invalid", fallback))
+    }
+
+    @Test
+    fun rejectsMissingOrMalformedDigests() {
+        assertNull(selectValidSha256(null, "1234", "z".repeat(64)))
+    }
 }

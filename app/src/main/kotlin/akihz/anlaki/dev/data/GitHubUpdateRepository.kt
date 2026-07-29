@@ -4,6 +4,7 @@ import android.os.Build
 import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.domain.update.selectUpdateApkName
+import akihz.anlaki.dev.domain.update.selectValidSha256
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -42,9 +43,11 @@ class GitHubUpdateRepository {
             "Release metadata belongs to a different app"
         }
         val apk = selectApk(assets, release.getString("tag_name"))
-        val digest = apk.optString("digest")
-            .removePrefix("sha256:")
-            .takeIf(String::isNotBlank)
+        val metadataDigest = metadata.getJSONArray("assets").objects()
+            .firstOrNull { it.getString("file") == apk.getString("name") }
+            ?.optString("sha256")
+        val digest = selectValidSha256(apk.optString("digest"), metadataDigest)
+            ?: error("Release APK has no valid SHA-256 digest")
 
         AppUpdate(
             versionName = metadata.getString("versionName"),
