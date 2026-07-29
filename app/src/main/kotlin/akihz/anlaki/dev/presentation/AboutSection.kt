@@ -5,8 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -15,10 +13,8 @@ import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
-private const val WEBSITE_URL = "https://anlaki.dev"
 private const val SOURCE_CODE_URL = "https://github.com/anlaki-py/akihz"
 private const val DONATION_URL = "https://ko-fi.com/unluky"
-private const val LATEST_RELEASE_URL = "https://github.com/anlaki-py/akihz/releases/latest"
 
 /**
  * Displays app version information and project links.
@@ -36,19 +32,13 @@ fun AboutSection() {
         }
     }
     val versionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
+    val versionCode = packageInfo?.longVersionCode ?: BuildConfig.VERSION_CODE.toLong()
 
     PreferenceGroup(heading = "About") {
         PreferenceTemplate(
             title = "akiHz",
             description = "Version $versionName",
             icon = Icons.Default.Info
-        )
-
-        PreferenceTemplate(
-            title = "Website",
-            description = "anlaki.dev",
-            icon = Icons.Default.Language,
-            onClick = { uriHandler.openUri(WEBSITE_URL) }
         )
 
         PreferenceTemplate(
@@ -65,10 +55,6 @@ fun AboutSection() {
             onClick = { uriHandler.openUri(DONATION_URL) }
         )
 
-        PreferenceTemplate(
-            title = "Check for updates",
-            icon = Icons.Default.SystemUpdate,
-            onClick = { uriHandler.openUri(LATEST_RELEASE_URL) }
-        )
+        AppUpdateSection(currentVersionCode = versionCode)
     }
 }
