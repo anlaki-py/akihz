@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
                             RefreshRateWatchdogService.stop(this)
                         }
                     },
+                    onCustomProfileChanged = viewModel::onCustomProfileChanged,
                     themeMode = themeMode,
                     amoledMode = amoledMode,
                     blurEnabled = blurEnabled,

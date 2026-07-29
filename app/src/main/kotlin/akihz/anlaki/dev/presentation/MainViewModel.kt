@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.PreferencesHelper
 import javax.inject.Inject
@@ -35,6 +36,9 @@ class MainViewModel @Inject constructor(
 
     fun onShizukuBound() {
         _uiState.update { it.copy(isServiceBound = true, isLoading = true) }
+        viewModelScope.launch(Dispatchers.IO) {
+            CustomProfileManager.recoverInterruptedTest()
+        }
         loadSupportedRates()
         loadCurrentRate()
     }
@@ -59,6 +63,12 @@ class MainViewModel @Inject constructor(
                 _uiState.update { it.copy(error = "Failed to detect supported rates: $message", isLoading = false) }
             }
         }
+    }
+
+    /** Reloads available rates after the active custom profile changes. */
+    fun onCustomProfileChanged() {
+        loadSupportedRates()
+        loadCurrentRate()
     }
 
     fun loadCurrentRate() {

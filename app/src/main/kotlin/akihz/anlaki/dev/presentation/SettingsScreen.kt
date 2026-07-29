@@ -9,6 +9,7 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * Displays watchdog, advanced, and app information preferences.
  *
  * @param onResetToDefaults restores system refresh-rate settings
+ * @param onOpenCustomKeys opens custom refresh-rate key configuration
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param blurEnabled whether progressive edge blur is enabled
@@ -20,6 +21,7 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
 @Composable
 fun SettingsScreen(
     onResetToDefaults: () -> Unit,
+    onOpenCustomKeys: () -> Unit,
     themeMode: AppThemeMode,
     amoledMode: Boolean,
     blurEnabled: Boolean,
@@ -41,7 +43,10 @@ fun SettingsScreen(
             onBlurEnabledChanged = onBlurEnabledChanged
         )
         WatchdogSection()
-        AdvancedSection(onResetToDefaults = onResetToDefaults)
+        AdvancedSection(
+            onResetToDefaults = onResetToDefaults,
+            onOpenCustomKeys = onOpenCustomKeys
+        )
         AboutSection()
     }
 }

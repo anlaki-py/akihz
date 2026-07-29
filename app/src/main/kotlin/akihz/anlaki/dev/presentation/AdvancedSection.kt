@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -36,9 +37,13 @@ import akihz.anlaki.dev.utils.PreferencesHelper
  * Displays OEM, battery, reset, and diagnostic preferences.
  *
  * @param onResetToDefaults restores adaptive system refresh-rate settings
+ * @param onOpenCustomKeys opens experimental custom-key configuration
  */
 @Composable
-fun AdvancedSection(onResetToDefaults: () -> Unit) {
+fun AdvancedSection(
+    onResetToDefaults: () -> Unit,
+    onOpenCustomKeys: () -> Unit
+) {
     val context = LocalContext.current
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
@@ -47,6 +52,13 @@ fun AdvancedSection(onResetToDefaults: () -> Unit) {
     val batteryUnrestricted = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
 
     PreferenceGroup(heading = "Advanced") {
+        PreferenceTemplate(
+            title = "Custom refresh-rate keys",
+            description = "Experimental discovery and manual key mappings",
+            icon = Icons.Default.Build,
+            onClick = onOpenCustomKeys
+        )
+
         OemOverridePreference(
             options = oemNames,
             selectedOption = selectedOem,

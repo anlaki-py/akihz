@@ -13,6 +13,8 @@ class RefreshRateRepositoryImpl(
 ) : RefreshRateRepository {
 
     override fun getSupportedRates(): Result<List<Float>> {
+        val customProfile = CustomProfileManager.profile()
+        if (customProfile.enabled) return Result.success(customProfile.rates)
         return displayManagerDataSource.getSupportedRefreshRates()
     }
 
