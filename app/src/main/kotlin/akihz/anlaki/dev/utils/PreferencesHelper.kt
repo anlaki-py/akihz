@@ -3,6 +3,7 @@ package akihz.anlaki.dev.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
@@ -27,6 +28,7 @@ object PreferencesHelper {
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_AMOLED_MODE = "amoled_mode"
     private const val KEY_BLUR_ENABLED = "blur_enabled"
+    private const val KEY_UPDATE_CHANNEL = "update_channel"
 
     private lateinit var prefs: SharedPreferences
 
@@ -90,6 +92,15 @@ object PreferencesHelper {
     var blurEnabled: Boolean
         get() = prefs.getBoolean(KEY_BLUR_ENABLED, true)
         set(value) = prefs.edit { putBoolean(KEY_BLUR_ENABLED, value) }
+
+    var updateChannel: UpdateChannel
+        get() = runCatching {
+            UpdateChannel.valueOf(
+                prefs.getString(KEY_UPDATE_CHANNEL, UpdateChannel.Stable.name)
+                    ?: UpdateChannel.Stable.name
+            )
+        }.getOrDefault(UpdateChannel.Stable)
+        set(value) = prefs.edit { putString(KEY_UPDATE_CHANNEL, value.name) }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {
