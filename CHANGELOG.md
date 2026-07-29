@@ -7,14 +7,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.33] - 2026-07-28
+
 ### Added
 
-- Added adaptive, round, legacy, and monochrome launcher icon resources.
-- Added a 512×512 store listing icon.
-- Stable releases from `main` and prereleases from `beta`.
-- Standalone `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` APKs.
-- A universal APK, SHA-256 checksums, and machine-readable release metadata.
-- Regression tests for OEM override resolution and settings values.
 - Added System, Light, and Dark appearance modes with an optional AMOLED
   theme.
 - Added swipe navigation between Home and Settings.
@@ -24,19 +20,42 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
-- Clarified that the project is provided as-is without maintenance, support,
-  or update commitments.
-- Made refresh-rate commands report partial failures instead of false success.
-- Made shell execution timeout-safe and resistant to output-buffer deadlocks.
-- Unified selected-rate persistence between the app, tile, and watchdog.
-- Made watchdog startup idempotent and prevented overlapping checks.
-- Removed the permanent keep-alive foreground service.
 - Standardized the app on a modern Material 3 interface with redesigned
   settings controls and a floating bottom navigation bar.
 - Restored large refresh-rate controls on Home with animated press and
   selection shape morphing.
 - Updated app branding and documentation to consistently use the `akiHz`
   name.
+- Clarified that the project is provided as-is without maintenance, support,
+  or update commitments.
+
+### Fixed
+
+- Fixed content insets and edge transitions around the status and navigation
+  bars.
+- Fixed regular dark mode incorrectly using pitch-black surfaces when AMOLED
+  mode was disabled.
+- Replaced the temporary disconnected-state flash during Shizuku startup with
+  a loading indicator.
+
+## [0.0.32] - 2026-07-27
+
+### Added
+
+- Added adaptive, round, legacy, and monochrome launcher icon resources.
+- Added a 512×512 store listing icon.
+- Stable releases from `main` and prereleases from `beta`.
+- Standalone `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` APKs.
+- A universal APK, SHA-256 checksums, and machine-readable release metadata.
+- Regression tests for OEM override resolution and settings values.
+
+### Changed
+
+- Made refresh-rate commands report partial failures instead of false success.
+- Made shell execution timeout-safe and resistant to output-buffer deadlocks.
+- Unified selected-rate persistence between the app, tile, and watchdog.
+- Made watchdog startup idempotent and prevented overlapping checks.
+- Removed the permanent keep-alive foreground service.
 
 ### Fixed
 
@@ -46,12 +65,6 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Fixed mode and boolean settings receiving literal refresh-rate values.
 - Fixed reset leaving the watchdog able to restore a stale rate.
 - Fixed Shizuku reconnection listener registration.
-- Fixed content insets and edge transitions around the status and navigation
-  bars.
-- Fixed regular dark mode incorrectly using pitch-black surfaces when AMOLED
-  mode was disabled.
-- Replaced the temporary disconnected-state flash during Shizuku startup with
-  a loading indicator.
 
 ## [0.0.31] - 2026-06-29
 
@@ -258,7 +271,9 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 - Added the initial Android application, Shizuku integration, CI, and tests.
 
-[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.31...HEAD
+[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.33...HEAD
+[0.0.33]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.33
+[0.0.32]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.32
 [0.0.31]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.31
 [0.0.30]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.30
 [0.0.29]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.29
