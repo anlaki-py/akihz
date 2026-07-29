@@ -72,7 +72,7 @@ fun AdvancedSection(
             title = "Battery optimization",
             icon = Icons.Default.BatterySaver,
             description = if (batteryUnrestricted) {
-                "Unrestricted — background service can run reliably"
+                "Unrestricted: background service can run reliably"
             } else {
                 "Tap to exclude akiHz from battery restrictions"
             },

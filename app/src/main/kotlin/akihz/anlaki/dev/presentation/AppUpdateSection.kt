@@ -42,7 +42,7 @@ fun AppUpdateSection(currentVersionCode: Long) {
     var downloadingUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var needsInstallPermission by remember { mutableStateOf(false) }
-    var statusText by remember { mutableStateOf("Check and install without opening GitHub") }
+    var statusText by remember { mutableStateOf<String?>(null) }
     var downloadId by remember { mutableLongStateOf(-1L) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -123,7 +123,7 @@ fun AppUpdateSection(currentVersionCode: Long) {
             onSelect = {
                 channel = it
                 PreferencesHelper.updateChannel = it
-                statusText = "Check and install without opening GitHub"
+                statusText = null
                 showChannels = false
             },
             onDismiss = { showChannels = false }
