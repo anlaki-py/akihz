@@ -27,7 +27,6 @@ class RefreshRateRepositoryImpl(
 
         if (result.isSuccess) {
             PreferencesHelper.lastRate = hz
-            PreferencesHelper.desiredRate = hz
         }
 
         if (result.isError) {

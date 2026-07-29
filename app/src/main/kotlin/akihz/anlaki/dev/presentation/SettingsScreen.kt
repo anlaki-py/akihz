@@ -6,7 +6,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
- * Displays watchdog, advanced, and app information preferences.
+ * Displays advanced and app information preferences.
  *
  * @param onResetToDefaults restores system refresh-rate settings
  * @param onOpenCustomKeys opens custom refresh-rate key configuration
@@ -42,7 +42,6 @@ fun SettingsScreen(
             onAmoledModeChanged = onAmoledModeChanged,
             onBlurEnabledChanged = onBlurEnabledChanged
         )
-        WatchdogSection()
         AdvancedSection(
             onResetToDefaults = onResetToDefaults,
             onOpenCustomKeys = onOpenCustomKeys

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.RestartAlt
@@ -24,17 +23,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
 
 /**
- * Displays OEM, battery, reset, and diagnostic preferences.
+ * Displays OEM, reset, and diagnostic preferences.
  *
  * @param onResetToDefaults restores adaptive system refresh-rate settings
  * @param onOpenCustomKeys opens experimental custom-key configuration
@@ -44,12 +41,10 @@ fun AdvancedSection(
     onResetToDefaults: () -> Unit,
     onOpenCustomKeys: () -> Unit
 ) {
-    val context = LocalContext.current
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
     var showDebug by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
-    val batteryUnrestricted = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
 
     PreferenceGroup(heading = "Advanced") {
         PreferenceTemplate(
@@ -66,17 +61,6 @@ fun AdvancedSection(
                 selectedOem = name
                 PreferencesHelper.oemOverride = if (name == "Auto-detect") "" else name
             }
-        )
-
-        PreferenceTemplate(
-            title = "Battery optimization",
-            icon = Icons.Default.BatterySaver,
-            description = if (batteryUnrestricted) {
-                "Unrestricted: background service can run reliably"
-            } else {
-                "Tap to exclude akiHz from battery restrictions"
-            },
-            onClick = { BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context) }
         )
 
         PreferenceTemplate(

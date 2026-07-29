@@ -34,7 +34,6 @@
 - **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
 - **Multi-OEM support:** targets the correct system settings keys per manufacturer
 - **Instant switching:** no artificial delays; the rate changes as soon as you tap
-- **Watchdog** (optional, untested on all devices): monitors and re-applies your refresh rate when the system overrides it
 - **OEM override:** manually pick a device profile in Settings if auto-detection does not match your phone
 
 ## Supported devices
@@ -82,10 +81,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 Android blocks normal apps from changing refresh-rate settings directly. Shizuku grants akiHz the privileged access needed to update the correct OEM-specific keys.
 
 **Does the Quick Settings tile work when the app is closed?**  
-Yes. Android starts the Quick Settings tile service when you tap the tile, so akiHz does not need to run a permanent keep-alive service. The optional watchdog uses a foreground service only while enabled.
-
-**What does the watchdog do?**  
-It periodically checks whether the system changed your refresh rate (for example after reboot) and writes your selected rate back. Enable it under **Settings → Watchdog**. This feature is untested on all devices.
+Yes. Android starts the Quick Settings tile service when you tap the tile, so akiHz does not need to run a permanent keep-alive service.
 
 **My phone is not switching rates correctly? What should I try?**
 1. Confirm Shizuku is running and akiHz has permission  

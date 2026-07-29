@@ -25,7 +25,6 @@ import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.RefreshRateWatchdogService
 import rikka.shizuku.Shizuku
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -72,7 +71,6 @@ class MainActivity : ComponentActivity() {
         }
 
         PreferencesHelper.init(this)
-        RefreshRateWatchdogService.start(this)
 
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
@@ -103,16 +101,8 @@ class MainActivity : ComponentActivity() {
 
                 AkihzApp(
                     uiState = uiState,
-                    onRateSelected = {
-                        viewModel.selectRate(it) {
-                            RefreshRateWatchdogService.start(this)
-                        }
-                    },
-                    onResetToDefaults = {
-                        viewModel.resetToDefaults {
-                            RefreshRateWatchdogService.stop(this)
-                        }
-                    },
+                    onRateSelected = viewModel::selectRate,
+                    onResetToDefaults = viewModel::resetToDefaults,
                     onCustomProfileChanged = viewModel::onCustomProfileChanged,
                     themeMode = themeMode,
                     amoledMode = amoledMode,

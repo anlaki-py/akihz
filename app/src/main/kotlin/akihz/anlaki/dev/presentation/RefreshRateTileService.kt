@@ -123,7 +123,6 @@ class RefreshRateTileService : TileService() {
 
             result.onSuccess {
                 PreferencesHelper.saveState(currentIndex, newRate)
-                akihz.anlaki.dev.utils.RefreshRateWatchdogService.start(applicationContext)
                 isSwitching = false
             }.onError { _, msg ->
                 currentIndex = previousIndex
