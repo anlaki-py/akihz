@@ -24,6 +24,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Clarified that the project is provided as-is without maintenance, support,
+  or update commitments.
 - Made refresh-rate commands report partial failures instead of false success.
 - Made shell execution timeout-safe and resistant to output-buffer deadlocks.
 - Unified selected-rate persistence between the app, tile, and watchdog.

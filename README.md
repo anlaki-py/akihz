@@ -101,14 +101,15 @@ It periodically checks whether the system changed your refresh rate (for example
 **My phone is not switching rates correctly — what should I try?**  
 1. Confirm Shizuku is running and akiHz has permission  
 2. Try **Settings → Advanced → OEM override** and pick your manufacturer  
-3. Open a [GitHub issue](https://github.com/anlaki-py/akihz/issues) with your device model and Android version
+3. If it still does not work, fork the project and investigate support for your device
 
 **Is akiHz safe?**  
 The app is MIT-licensed and fully open source. It only changes display refresh-rate related system settings — review the code on GitHub if you want to verify behavior.
 
-## Contributing and feedback
+## Contributions and support
 
-Contributions are welcome. [Open an issue](https://github.com/anlaki-py/akihz/issues/new) to report a bug or suggest an improvement, or [submit a pull request](https://github.com/anlaki-py/akihz/pulls) with a change.
+This project does not provide support and is not accepting bug reports or
+feature requests. You are welcome to fork it and make your own changes.
 
 ## Build
 
@@ -119,3 +120,20 @@ Contributions are welcome. [Open an issue](https://github.com/anlaki-py/akihz/is
 ## License
 
 [MIT](LICENSE)
+
+## Project status and disclaimer
+
+This is a personal app I vibe-coded to solve a problem I had. It is provided as
+is, with no promise of quality, reliability, compatibility, maintenance,
+support, or future updates. Development may slow down or stop permanently at
+any time and without notice.
+
+Please treat this repository as something to download and use at your own risk,
+or fork and maintain yourself. Do not open issues asking for support, bug fixes,
+device compatibility, features, or updates. If the app does not work for you,
+you will need to diagnose and fix it yourself.
+
+To the fullest extent permitted by law, I accept no responsibility or liability
+for any damage, data loss, device problems, security issues, or other
+consequences resulting from installing, using, modifying, or relying on this
+app.
