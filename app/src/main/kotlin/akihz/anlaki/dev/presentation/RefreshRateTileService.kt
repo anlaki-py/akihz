@@ -144,12 +144,11 @@ class RefreshRateTileService : TileService() {
 
     private fun updateTileWithRate(rate: Float) {
         val tile = qsTile ?: return
-        val iconRes = getIconRes(rate)
 
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
-        tile.subtitle = "${rate.toInt()} Hz"
-        tile.icon = Icon.createWithResource(this, iconRes)
+        tile.subtitle = "${rate.roundToInt()} Hz"
+        tile.icon = createRefreshRateTileIcon(rate)
         tile.updateTile()
     }
 
@@ -169,16 +168,5 @@ class RefreshRateTileService : TileService() {
 
     private fun showToast(message: String) {
         Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun getIconRes(rate: Float): Int = when (rate.roundToInt()) {
-        45 -> R.drawable.ic_rate_45
-        60 -> R.drawable.ic_rate_60
-        90 -> R.drawable.ic_rate_90
-        120 -> R.drawable.ic_rate_120
-        144 -> R.drawable.ic_rate_144
-        165 -> R.drawable.ic_rate_165
-        240 -> R.drawable.ic_rate_240
-        else -> R.drawable.ic_refresh_rate
     }
 }
