@@ -39,23 +39,12 @@
 
 ## Supported devices
 
-akiHz auto-detects your manufacturer and applies the right system settings keys. Android 11+ and Shizuku are required on all devices.
+I have only tested akiHz on my Xiaomi phone. The app includes support for
+several other manufacturers and many other devices should work, but none are
+tested or guaranteed.
 
-| Manufacturer | Brands / notes |
-|---|---|
-| **Xiaomi** | Xiaomi, Redmi (many POCO devices use Xiaomi keys; MIUI / HyperOS) |
-| **Samsung** | Galaxy phones (One UI) |
-| **Google** | Pixel (stock + `smooth_display` keys) |
-| **OnePlus** | OxygenOS / ColorOS builds |
-| **OPPO** | OPPO devices |
-| **realme** | realme devices |
-| **vivo** | vivo, iQOO (FunTouch OS) |
-| **ASUS** | ASUS, ROG Phone |
-| **Motorola** | moto devices |
-| **Sony** | Xperia |
-| **Stock Android** | Fallback for other OEMs using standard AOSP keys |
-
-If auto-detection fails, open **Settings → Advanced → OEM override** and select your manufacturer manually.
+If auto-detection fails, try **Settings → Advanced → OEM override** and select
+your manufacturer manually.
 
 ## Requirements
 
