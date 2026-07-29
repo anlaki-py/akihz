@@ -30,12 +30,12 @@
 
 ## Features
 
-- **Dynamic detection** — automatically reads your display's supported refresh rates instead of using hardcoded values
-- **Quick Settings tile** — tap to cycle through rates instantly; long-press to open the app
-- **Multi-OEM support** — targets the correct system settings keys per manufacturer
-- **Instant switching** — no artificial delays; the rate changes as soon as you tap
-- **Watchdog** (optional, untested on all devices) — monitors and re-applies your refresh rate when the system overrides it
-- **OEM override** — manually pick a device profile in Settings if auto-detection does not match your phone
+- **Dynamic detection:** automatically reads your display's supported refresh rates instead of using hardcoded values
+- **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
+- **Multi-OEM support:** targets the correct system settings keys per manufacturer
+- **Instant switching:** no artificial delays; the rate changes as soon as you tap
+- **Watchdog** (optional, untested on all devices): monitors and re-applies your refresh rate when the system overrides it
+- **OEM override:** manually pick a device profile in Settings if auto-detection does not match your phone
 
 ## Supported devices
 
@@ -87,13 +87,13 @@ Yes. Android starts the Quick Settings tile service when you tap the tile, so ak
 **What does the watchdog do?**  
 It periodically checks whether the system changed your refresh rate (for example after reboot) and writes your selected rate back. Enable it under **Settings → Watchdog**. This feature is untested on all devices.
 
-**My phone is not switching rates correctly — what should I try?**  
+**My phone is not switching rates correctly? What should I try?**
 1. Confirm Shizuku is running and akiHz has permission  
 2. Try **Settings → Advanced → OEM override** and pick your manufacturer  
 3. If it still does not work, fork the project and investigate support for your device
 
 **Is akiHz safe?**  
-The app is MIT-licensed and fully open source. It only changes display refresh-rate related system settings — review the code on GitHub if you want to verify behavior.
+The app is MIT-licensed and fully open source. It only changes display refresh-rate related system settings; review the code on GitHub if you want to verify behavior.
 
 ## Contributions and support
 
