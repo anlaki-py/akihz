@@ -3,6 +3,7 @@ package akihz.anlaki.dev.data
 import android.os.Build
 import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateChannel
+import akihz.anlaki.dev.domain.update.selectUpdateApkName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -56,10 +57,12 @@ class GitHubUpdateRepository {
 
     private fun selectApk(assets: JSONArray, tag: String): JSONObject {
         val apks = assets.objects().filter { it.getString("name").endsWith(".apk") }
-        val preferredAbis = Build.SUPPORTED_ABIS.toList() + "universal"
-        return preferredAbis.firstNotNullOfOrNull { abi ->
-            apks.firstOrNull { it.getString("name") == "akihz-$tag-$abi.apk" }
-        } ?: error("No compatible APK is available for this device")
+        val selectedName = selectUpdateApkName(
+            assetNames = apks.map { it.getString("name") },
+            tag = tag,
+            supportedAbis = Build.SUPPORTED_ABIS.toList()
+        ) ?: error("No compatible APK is available for this device")
+        return apks.first { it.getString("name") == selectedName }
     }
 
     private fun request(url: String): String {
