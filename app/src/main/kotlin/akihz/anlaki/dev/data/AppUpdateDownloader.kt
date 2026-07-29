@@ -26,7 +26,9 @@ class AppUpdateDownloader(private val context: Context) {
             .setMimeType(APK_MIME_TYPE)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, update.apkName)
-        return manager.enqueue(request)
+        return manager.enqueue(request).also { downloadId ->
+            UpdateDownloadStore(context).save(downloadId, update)
+        }
     }
 
     /** Returns download progress, or null when the download no longer exists. */
