@@ -88,7 +88,8 @@ class RefreshRateTileService : TileService() {
     private fun bindAndCycleRate() {
         isConnecting = true
 
-        ShizukuHelper.bindUserService(
+        ShizukuHelper.acquireUserService(
+            owner = SHIZUKU_OWNER,
             onConnected = {
                 scope.launch {
                     cycleRate()
@@ -163,10 +164,15 @@ class RefreshRateTileService : TileService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
         scope.cancel()
     }
 
     private fun showToast(message: String) {
         Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private companion object {
+        const val SHIZUKU_OWNER = "quick_settings_tile"
     }
 }

@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private const val REQUEST_CODE_SHIZUKU = 1001
+        private const val SHIZUKU_OWNER = "main_activity"
     }
 
     private val viewModel: MainViewModel by viewModels()
@@ -165,7 +166,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        ShizukuHelper.unbindUserService()
+        ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
     }
 
     private fun checkShizukuPermission() {
@@ -184,7 +185,8 @@ class MainActivity : ComponentActivity() {
     private fun bindUserServiceAndLoad() {
         if (isServiceBound) return
 
-        ShizukuHelper.bindUserService(
+        ShizukuHelper.acquireUserService(
+            owner = SHIZUKU_OWNER,
             onConnected = {
                 isServiceBound = true
                 viewModel.onShizukuBound()
