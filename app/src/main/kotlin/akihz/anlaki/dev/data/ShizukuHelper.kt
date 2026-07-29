@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import akihz.anlaki.dev.BuildConfig
 import rikka.shizuku.Shizuku
 import timber.log.Timber
 import akihz.anlaki.dev.ICommandService
@@ -92,7 +93,10 @@ object ShizukuHelper {
         pendingConnections += PendingConnection(owner, onConnected, onFailed)
         if (serviceConnection != null) return
 
-        val componentName = ComponentName("akihz.anlaki.dev", "akihz.anlaki.dev.data.ICommandServiceImpl")
+        val componentName = ComponentName(
+            BuildConfig.APPLICATION_ID,
+            ICommandServiceImpl::class.java.name
+        )
         val args = Shizuku.UserServiceArgs(componentName)
             .daemon(false)
             .processNameSuffix("refresh_rate_service")
