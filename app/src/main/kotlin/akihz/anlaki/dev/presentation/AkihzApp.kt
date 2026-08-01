@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import akihz.anlaki.dev.presentation.components.FloatingBottomBar
 import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
-import akihz.anlaki.dev.presentation.modifiers.BlurDirection
 import akihz.anlaki.dev.presentation.modifiers.progressiveBlur
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import kotlinx.coroutines.launch
@@ -128,11 +127,6 @@ fun AkihzApp(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .progressiveBlur(
-                    blurRadius = if (blurEnabled) 40f else 0f,
-                    height = statusBarHeightPx * 1.15f,
-                    direction = BlurDirection.Top
-                )
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -140,8 +134,8 @@ fun AkihzApp(
                     .fillMaxSize()
                     .progressiveBlur(
                         blurRadius = if (blurEnabled) 40f else 0f,
-                        height = bottomBlurHeightPx,
-                        direction = BlurDirection.Bottom
+                        topHeight = statusBarHeightPx * 1.15f,
+                        bottomHeight = bottomBlurHeightPx
                     )
             ) { pageIndex ->
                 when (AppPage.entries[pageIndex]) {

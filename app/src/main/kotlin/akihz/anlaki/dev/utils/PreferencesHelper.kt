@@ -57,7 +57,7 @@ object PreferencesHelper {
         set(value) = prefs.edit { putBoolean(KEY_AMOLED_MODE, value) }
 
     var blurEnabled: Boolean
-        get() = prefs.getBoolean(KEY_BLUR_ENABLED, true)
+        get() = prefs.getBoolean(KEY_BLUR_ENABLED, false)
         set(value) = prefs.edit { putBoolean(KEY_BLUR_ENABLED, value) }
 
     var updateChannel: UpdateChannel
