@@ -31,7 +31,7 @@ object CustomProfileManager {
     /** Returns stored discovery snapshots. */
     fun snapshots(): List<SettingsSnapshot> = store.loadSnapshots()
 
-    /** Captures and stores a complete settings snapshot. */
+    /** Captures a settings snapshot, replacing an older capture with the same label. */
     fun captureSnapshot(label: String): Result<SettingsSnapshot> {
         val scan = scanAll()
         if (scan.isError) return scan.map { SettingsSnapshot(label, it) }

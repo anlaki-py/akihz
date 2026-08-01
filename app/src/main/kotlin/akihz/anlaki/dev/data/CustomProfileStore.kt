@@ -8,6 +8,7 @@ import org.json.JSONObject
 /** Persists the single local custom refresh-rate profile and discovery snapshots. */
 class CustomProfileStore(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val snapshotStore = CustomSnapshotStore(context.filesDir)
 
     var warningAcknowledged: Boolean
         get() = prefs.getBoolean(KEY_WARNING, false)
@@ -26,23 +27,17 @@ class CustomProfileStore(context: Context) {
 
     /** Loads saved discovery snapshots. */
     fun loadSnapshots(): List<SettingsSnapshot> {
-        val raw = prefs.getString(KEY_SNAPSHOTS, null) ?: return emptyList()
-        return runCatching {
-            val array = JSONArray(raw)
-            List(array.length()) { index ->
-                val item = array.getJSONObject(index)
-                SettingsSnapshot(item.getString("label"), item.getJSONObject("values").toStringMap())
-            }
-        }.getOrDefault(emptyList())
+        if (snapshotStore.exists) return snapshotStore.load()
+        val legacy = prefs.getString(KEY_SNAPSHOTS, null) ?: return emptyList()
+        return snapshotStore.migrate(legacy).also {
+            prefs.edit { remove(KEY_SNAPSHOTS) }
+        }
     }
 
     /** Replaces saved discovery snapshots. */
     fun saveSnapshots(snapshots: List<SettingsSnapshot>) {
-        val array = JSONArray()
-        snapshots.forEach { snapshot ->
-            array.put(JSONObject().put("label", snapshot.label).put("values", JSONObject(snapshot.values)))
-        }
-        prefs.edit { putString(KEY_SNAPSHOTS, array.toString()) }
+        snapshotStore.save(snapshots)
+        prefs.edit { remove(KEY_SNAPSHOTS) }
     }
 
     /** Persists values that must be restored after an interrupted test. */
