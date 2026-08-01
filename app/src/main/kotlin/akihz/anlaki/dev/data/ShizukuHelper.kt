@@ -107,9 +107,26 @@ object ShizukuHelper {
 
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                var disconnectOwnerlessService = false
                 val callbacks = synchronized(this@ShizukuHelper) {
-                    commandService = ICommandService.Stub.asInterface(binder)
-                    pendingConnections.toList().also { pendingConnections.clear() }
+                    if (!connectionOwners.isActive()) {
+                        disconnectOwnerlessService = true
+                        emptyList()
+                    } else {
+                        commandService = ICommandService.Stub.asInterface(binder)
+                        pendingConnections.toList().also { pendingConnections.clear() }
+                    }
+                }
+                if (disconnectOwnerlessService) {
+                    runCatching { Shizuku.unbindUserService(args, this, true) }
+                        .onFailure { Timber.w(it, "Failed to release ownerless Shizuku service") }
+                    synchronized(this@ShizukuHelper) {
+                        if (serviceConnection === this) {
+                            serviceConnection = null
+                            userServiceArgs = null
+                        }
+                    }
+                    return
                 }
                 Timber.i("Shizuku user service connected")
                 callbacks.forEach { it.onConnected() }
@@ -117,9 +134,11 @@ object ShizukuHelper {
 
             override fun onServiceDisconnected(name: ComponentName?) {
                 synchronized(this@ShizukuHelper) {
-                    commandService = null
-                    serviceConnection = null
-                    userServiceArgs = null
+                    if (serviceConnection === this) {
+                        commandService = null
+                        serviceConnection = null
+                        userServiceArgs = null
+                    }
                 }
                 Timber.i("Shizuku user service disconnected")
             }

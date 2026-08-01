@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
     private val binderDeadListener = Shizuku.OnBinderDeadListener {
         isServiceBound = false
+        viewModel.onShizukuUnbound()
         showError("Shizuku service died. Please restart Shizuku.")
     }
 
@@ -154,9 +155,11 @@ class MainActivity : ComponentActivity() {
         Shizuku.removeRequestPermissionResultListener(permissionResultListener)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
         ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
+        isServiceBound = false
+        viewModel.onShizukuUnbound()
     }
 
     private fun checkShizukuPermission() {

@@ -43,6 +43,11 @@ class MainViewModel @Inject constructor(
         loadCurrentRate()
     }
 
+    /** Marks the privileged command service unavailable while the app is stopped. */
+    fun onShizukuUnbound() {
+        _uiState.update { it.copy(isServiceBound = false, isLoading = false) }
+    }
+
     fun onShizukuReadyChanged(ready: Boolean) {
         _uiState.update { it.copy(isShizukuReady = ready) }
     }

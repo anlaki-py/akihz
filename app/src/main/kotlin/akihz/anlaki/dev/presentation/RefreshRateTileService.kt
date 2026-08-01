@@ -54,10 +54,6 @@ class RefreshRateTileService : TileService() {
         }
     }
 
-    override fun onStopListening() {
-        super.onStopListening()
-    }
-
     override fun onClick() {
         super.onClick()
 
@@ -77,23 +73,19 @@ class RefreshRateTileService : TileService() {
             return
         }
 
-        if (!ShizukuHelper.isUserServiceBound()) {
-            showToast("Connecting...")
-            bindAndCycleRate()
-        } else {
-            cycleRate()
-        }
+        if (!ShizukuHelper.isUserServiceBound()) showToast("Connecting...")
+        acquireAndCycleRate()
     }
 
-    private fun bindAndCycleRate() {
+    private fun acquireAndCycleRate() {
         isConnecting = true
 
         ShizukuHelper.acquireUserService(
             owner = SHIZUKU_OWNER,
             onConnected = {
                 scope.launch {
-                    cycleRate()
                     isConnecting = false
+                    cycleRate()
                 }
             },
             onFailed = { _, message ->
@@ -107,6 +99,7 @@ class RefreshRateTileService : TileService() {
     private fun cycleRate() {
         if (supportedRates.isEmpty()) {
             showToast("No supported refresh rates detected")
+            ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
             return
         }
 
@@ -117,18 +110,21 @@ class RefreshRateTileService : TileService() {
         updateTileWithRate(newRate)
 
         scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(newRate)
-            }
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    refreshRateRepository.setRate(newRate)
+                }
 
-            result.onSuccess {
-                PreferencesHelper.saveState(currentIndex, newRate)
+                result.onSuccess {
+                    PreferencesHelper.saveState(currentIndex, newRate)
+                }.onError { _, msg ->
+                    currentIndex = previousIndex
+                    updateTile()
+                    showToast(msg)
+                }
+            } finally {
                 isSwitching = false
-            }.onError { _, msg ->
-                currentIndex = previousIndex
-                isSwitching = false
-                updateTile()
-                showToast(msg)
+                ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
             }
         }
     }
