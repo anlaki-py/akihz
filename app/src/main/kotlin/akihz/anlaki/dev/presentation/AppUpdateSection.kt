@@ -22,6 +22,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.GitHubUpdateRepository
 import akihz.anlaki.dev.data.UpdateDownloadStore
@@ -31,8 +34,10 @@ import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.UpdateNotification
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 /** Displays update channel selection and the in-app update action. */
@@ -209,28 +214,42 @@ private fun UpdateDownloadMonitor(
     onReady: () -> Unit,
     onError: (String) -> Unit
 ) {
-    LaunchedEffect(downloadId) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(downloadId, update, lifecycle) {
         if (downloadId < 0 || update == null) return@LaunchedEffect
-        while (true) {
-            val status = downloader.status(downloadId)
-                ?: return@LaunchedEffect onError("The system download was removed")
-            when (status.state) {
-                DownloadManager.STATUS_SUCCESSFUL -> {
-                    if (downloader.verify(downloadId, update.sha256)) onReady()
-                    else onError("The downloaded APK failed its security check")
-                    return@LaunchedEffect
+        var terminal = false
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (!terminal) {
+                val status = withContext(Dispatchers.IO) {
+                    downloader.status(downloadId)
                 }
-                DownloadManager.STATUS_FAILED -> {
-                    onError("Android Download Manager failed (${status.reason})")
-                    return@LaunchedEffect
+                if (status == null) {
+                    terminal = true
+                    onError("The system download was removed")
+                    continue
                 }
-                else -> if (status.totalBytes > 0) {
-                    onProgress(
-                        (status.downloadedBytes * 100.0 / status.totalBytes).roundToInt()
-                    )
+
+                when (status.state) {
+                    DownloadManager.STATUS_SUCCESSFUL -> {
+                        terminal = true
+                        val verified = withContext(Dispatchers.IO) {
+                            downloader.verify(downloadId, update.sha256)
+                        }
+                        if (verified) onReady()
+                        else onError("The downloaded APK failed its security check")
+                    }
+                    DownloadManager.STATUS_FAILED -> {
+                        terminal = true
+                        onError("Android Download Manager failed (${status.reason})")
+                    }
+                    else -> if (status.totalBytes > 0) {
+                        onProgress(
+                            (status.downloadedBytes * 100.0 / status.totalBytes).roundToInt()
+                        )
+                    }
                 }
+                if (!terminal) delay(500)
             }
-            delay(500)
         }
     }
 }
