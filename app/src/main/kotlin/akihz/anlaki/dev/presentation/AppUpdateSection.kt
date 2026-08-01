@@ -35,6 +35,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.UpdateDownloadProcessor
 import akihz.anlaki.dev.utils.UpdatePreparationResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -55,6 +56,7 @@ fun AppUpdateSection(currentVersionCode: Long) {
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var pendingDownloadRequest by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var isChecking by remember { mutableStateOf(false) }
     var statusText by remember {
         mutableStateOf(restoredDownload?.let { "Restoring update download…" })
     }
@@ -89,33 +91,37 @@ fun AppUpdateSection(currentVersionCode: Long) {
     }
 
     fun checkForUpdate() {
+        if (isChecking) return
+        isChecking = true
+        val requestedChannel = channel
         statusText = "Checking for updates…"
         scope.launch {
-            runCatching { repository.findLatest(channel) }
-                .onSuccess { update ->
-                    when (
-                        resolveUpdateAvailability(
-                            currentVersionCode = currentVersionCode,
-                            latestVersionCode = update.versionCode,
-                            channel = channel
-                        )
-                    ) {
-                        UpdateAvailability.Available -> {
-                            availableUpdate = update
-                            statusText = "Version ${update.versionName} is available"
-                        }
-                        UpdateAvailability.AheadOfStable -> {
-                            statusText = "You’re ahead of stable; the next stable will install normally"
-                        }
-                        UpdateAvailability.UpToDate -> {
-                            statusText = "You’re up to date"
-                        }
+            try {
+                val update = repository.findLatest(requestedChannel)
+                when (
+                    resolveUpdateAvailability(
+                        currentVersionCode = currentVersionCode,
+                        latestVersionCode = update.versionCode,
+                        channel = requestedChannel
+                    )
+                ) {
+                    UpdateAvailability.Available -> {
+                        availableUpdate = update
+                        statusText = "Version ${update.versionName} is available"
                     }
+                    UpdateAvailability.AheadOfStable -> {
+                        statusText = "You’re ahead of stable; the next stable will install normally"
+                    }
+                    UpdateAvailability.UpToDate -> statusText = "You’re up to date"
                 }
-                .onFailure {
-                    statusText = "Update check failed"
-                    message = it.message ?: "Unable to check for updates"
-                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                statusText = "Update check failed"
+                message = error.message ?: "Unable to check for updates"
+            } finally {
+                isChecking = false
+            }
         }
     }
 
@@ -123,13 +129,13 @@ fun AppUpdateSection(currentVersionCode: Long) {
         title = "Update channel",
         description = channel.label,
         icon = Icons.Default.NewReleases,
-        onClick = { showChannels = true }
+        onClick = if (isChecking) null else ({ showChannels = true })
     )
     PreferenceTemplate(
         title = "Check for updates",
         description = statusText,
         icon = Icons.Default.SystemUpdate,
-        onClick = ::checkForUpdate
+        onClick = if (isChecking) null else ::checkForUpdate
     )
 
     UpdateDownloadMonitor(
