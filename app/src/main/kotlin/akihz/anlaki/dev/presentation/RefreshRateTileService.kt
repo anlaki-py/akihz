@@ -27,6 +27,10 @@ class RefreshRateTileService : TileService() {
     private var currentIndex = 0
     private var isConnecting = false
     private var isSwitching = false
+    private val rateIcons = RefreshRateTileIconCache(::createRefreshRateTileIcon)
+    private val unavailableIcon by lazy(LazyThreadSafetyMode.NONE) {
+        Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+    }
 
     @Inject lateinit var refreshRateRepository: RefreshRateRepository
 
@@ -144,7 +148,7 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "${rate.roundToInt()} Hz"
-        tile.icon = createRefreshRateTileIcon(rate)
+        tile.icon = rateIcons.get(rate)
         tile.updateTile()
     }
 
@@ -153,13 +157,14 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_UNAVAILABLE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "Open app first"
-        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        tile.icon = unavailableIcon
         tile.updateTile()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
+        rateIcons.clear()
         scope.cancel()
     }
 
