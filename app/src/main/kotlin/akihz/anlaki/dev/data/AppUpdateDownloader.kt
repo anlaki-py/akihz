@@ -9,6 +9,8 @@ import android.provider.Settings
 import akihz.anlaki.dev.domain.update.AppUpdate
 import java.io.File
 import java.security.MessageDigest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Downloads update APKs through Android's system download service. */
 class AppUpdateDownloader(private val context: Context) {
@@ -47,22 +49,23 @@ class AppUpdateDownloader(private val context: Context) {
         }
     }
 
-    /** Verifies the downloaded APK against the release digest when available. */
-    fun verify(downloadId: Long, expectedSha256: String): Boolean {
-        val digest = MessageDigest.getInstance("SHA-256")
-        manager.openDownloadedFile(downloadId).use { descriptor ->
-            descriptor.fileDescriptor.let { java.io.FileInputStream(it) }.use { input ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    digest.update(buffer, 0, count)
+    /** Verifies the downloaded APK against the release digest on the IO dispatcher. */
+    suspend fun verify(downloadId: Long, expectedSha256: String): Boolean =
+        withContext(Dispatchers.IO) {
+            val digest = MessageDigest.getInstance("SHA-256")
+            manager.openDownloadedFile(downloadId).use { descriptor ->
+                descriptor.fileDescriptor.let { java.io.FileInputStream(it) }.use { input ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        digest.update(buffer, 0, count)
+                    }
                 }
             }
+            digest.digest().joinToString("") { "%02x".format(it) }
+                .equals(expectedSha256, ignoreCase = true)
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
-            .equals(expectedSha256, ignoreCase = true)
-    }
 
     /** Creates the intent for Android's per-app unknown-source permission screen. */
     fun installPermissionIntent(): Intent =

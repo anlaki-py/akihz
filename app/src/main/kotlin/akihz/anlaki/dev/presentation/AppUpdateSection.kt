@@ -232,9 +232,7 @@ private fun UpdateDownloadMonitor(
                 when (status.state) {
                     DownloadManager.STATUS_SUCCESSFUL -> {
                         terminal = true
-                        val verified = withContext(Dispatchers.IO) {
-                            downloader.verify(downloadId, update.sha256)
-                        }
+                        val verified = downloader.verify(downloadId, update.sha256)
                         if (verified) onReady()
                         else onError("The downloaded APK failed its security check")
                     }
