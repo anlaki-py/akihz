@@ -101,7 +101,7 @@ object ShizukuHelper {
             .daemon(false)
             .processNameSuffix("refresh_rate_service")
             .debuggable(false)
-            .version(2)
+            .version(3)
 
         userServiceArgs = args
 
@@ -189,26 +189,6 @@ object ShizukuHelper {
         userServiceArgs = null
     }
 
-    private fun exec(command: String): Result<String> {
-        val service = commandService
-        if (service == null) {
-            return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
-        }
-
-        return try {
-            val result = service.runCommand(command)
-            if (result.startsWith("ERROR")) {
-                Timber.w("Command failed: %s", result)
-                Result.error(ErrorType.COMMAND_EXECUTION_FAILED, result)
-            } else {
-                Result.success(result)
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Command execution exception")
-            Result.error(ErrorType.COMMAND_EXECUTION_FAILED, e.message ?: "Unknown error")
-        }
-    }
-
     private fun execSettings(arguments: List<String>): Result<String> {
         val service = commandService
             ?: return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
@@ -267,7 +247,7 @@ object ShizukuHelper {
 
         for (settingsKey in keys) {
             val ns = namespaceToString(settingsKey.namespace)
-            val result = exec("settings get $ns ${settingsKey.key}")
+            val result = execSettings(listOf("get", ns, settingsKey.key))
             if (result.isSuccess) {
                 result.getOrNull()?.let { raw ->
                     if (raw.isNotBlank() && raw != "null") {
@@ -294,8 +274,8 @@ object ShizukuHelper {
 
         strategy.writeKeys.forEach { settingsKey ->
             val ns = namespaceToString(settingsKey.namespace)
-            val value = RefreshRateSettingValue.forKey(settingsKey.key, hzInt)
-            val result = exec("settings put $ns ${settingsKey.key} $value")
+            val value = RefreshRateSettingValue.forKey(settingsKey.key, hzInt).toString()
+            val result = execSettings(listOf("put", ns, settingsKey.key, value))
             if (result.isError) {
                 failures += "$ns/${settingsKey.key}"
             }
@@ -323,7 +303,7 @@ object ShizukuHelper {
 
         strategy.writeKeys.forEach { settingsKey ->
             val ns = namespaceToString(settingsKey.namespace)
-            val result = exec("settings delete $ns ${settingsKey.key}")
+            val result = execSettings(listOf("delete", ns, settingsKey.key))
             if (result.isError) {
                 failures += "$ns/${settingsKey.key}"
             }
@@ -331,7 +311,7 @@ object ShizukuHelper {
 
         if (strategy.supportsMode && strategy.modeKey != null) {
             val ns = namespaceToString(strategy.modeKey.namespace)
-            val result = exec("settings put $ns ${strategy.modeKey.key} 0")
+            val result = execSettings(listOf("put", ns, strategy.modeKey.key, "0"))
             if (result.isError) {
                 failures += "$ns/${strategy.modeKey.key}"
             }

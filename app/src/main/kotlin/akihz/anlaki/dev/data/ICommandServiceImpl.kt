@@ -7,13 +7,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Shizuku user service implementation that executes shell commands
- * in an elevated-privilege process.
+ * Runs Android settings operations in an elevated Shizuku process.
+ *
+ * Commands are serialized so one reusable reader thread can drain process output safely.
  */
 class ICommandServiceImpl : ICommandService.Stub() {
-
-    override fun runCommand(command: String): String {
-        return execute(listOf("/system/bin/sh", "-c", command))
+    private val outputExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "settings-output-reader").apply { isDaemon = true }
     }
 
     /**
@@ -26,13 +26,13 @@ class ICommandServiceImpl : ICommandService.Stub() {
         return execute(listOf("/system/bin/settings") + arguments)
     }
 
+    @Synchronized
     private fun execute(command: List<String>): String {
-        val executor = Executors.newSingleThreadExecutor()
         return try {
             val process = ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start()
-            val outputFuture = executor.submit<String> {
+            val outputFuture = outputExecutor.submit<String> {
                 BufferedReader(InputStreamReader(process.inputStream)).use {
                     it.readText().trim()
                 }
@@ -40,6 +40,7 @@ class ICommandServiceImpl : ICommandService.Stub() {
 
             if (!process.waitFor(COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 process.destroyForcibly()
+                runCatching { process.inputStream.close() }
                 outputFuture.cancel(true)
                 return "ERROR: Command timed out"
             }
@@ -52,12 +53,11 @@ class ICommandServiceImpl : ICommandService.Stub() {
             }
         } catch (e: Exception) {
             "ERROR: ${e.message}"
-        } finally {
-            executor.shutdownNow()
         }
     }
 
     override fun destroy() {
+        outputExecutor.shutdownNow()
         System.exit(0)
     }
 
