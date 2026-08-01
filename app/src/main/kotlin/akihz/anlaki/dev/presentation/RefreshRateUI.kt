@@ -29,7 +29,6 @@ import akihz.anlaki.dev.presentation.components.RefreshRateButton
  * Shows detected refresh rates and lets the user select one.
  *
  * @param supportedRates refresh rates supported by the current display
- * @param currentRate currently active refresh rate
  * @param selectedRate refresh rate selected in the UI
  * @param isLoading whether Shizuku or refresh-rate data is still initializing
  * @param onRateSelected called when the user picks a refresh rate
@@ -38,7 +37,6 @@ import akihz.anlaki.dev.presentation.components.RefreshRateButton
 @Composable
 fun RefreshRateScreen(
     supportedRates: List<Float>,
-    currentRate: Float?,
     selectedRate: Float?,
     isLoading: Boolean,
     onRateSelected: (Float) -> Unit,

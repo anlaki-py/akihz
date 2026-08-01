@@ -119,9 +119,7 @@ class RefreshRateTileService : TileService() {
                     refreshRateRepository.setRate(newRate)
                 }
 
-                result.onSuccess {
-                    PreferencesHelper.saveState(currentIndex, newRate)
-                }.onError { _, msg ->
+                result.onError { _, msg ->
                     currentIndex = previousIndex
                     updateTile()
                     showToast(msg)

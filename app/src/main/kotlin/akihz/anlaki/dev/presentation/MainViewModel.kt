@@ -18,9 +18,7 @@ import javax.inject.Inject
 
 data class MainUiState(
     val supportedRates: List<Float> = emptyList(),
-    val currentRate: Float? = null,
     val selectedRate: Float? = null,
-    val isShizukuReady: Boolean = false,
     val isServiceBound: Boolean = false,
     val error: String? = null,
     val isLoading: Boolean = true
@@ -46,10 +44,6 @@ class MainViewModel @Inject constructor(
     /** Marks the privileged command service unavailable while the app is stopped. */
     fun onShizukuUnbound() {
         _uiState.update { it.copy(isServiceBound = false, isLoading = false) }
-    }
-
-    fun onShizukuReadyChanged(ready: Boolean) {
-        _uiState.update { it.copy(isShizukuReady = ready) }
     }
 
     fun onErrorDismissed() {
@@ -84,7 +78,7 @@ class MainViewModel @Inject constructor(
                 refreshRateRepository.getCurrentRate()
             }
             result.onSuccess { rate ->
-                _uiState.update { it.copy(currentRate = rate, selectedRate = rate) }
+                _uiState.update { it.copy(selectedRate = rate) }
             }
         }
     }
@@ -100,7 +94,7 @@ class MainViewModel @Inject constructor(
                 refreshRateRepository.setRate(hz)
             }
             result.onSuccess {
-                _uiState.update { it.copy(currentRate = hz, selectedRate = hz, isLoading = false) }
+                _uiState.update { it.copy(selectedRate = hz, isLoading = false) }
             }.onError { _, message ->
                 _uiState.update { it.copy(error = message, isLoading = false) }
                 loadCurrentRate()

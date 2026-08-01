@@ -15,7 +15,6 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
 object PreferencesHelper {
     private const val PREFS_NAME = "akihz_prefs"
 
-    private const val KEY_CURRENT_INDEX = "current_index"
     private const val KEY_LAST_RATE = "last_rate"
     private const val KEY_OEM_OVERRIDE = "oem_override"
     private const val KEY_THEME_MODE = "theme_mode"
@@ -29,10 +28,6 @@ object PreferencesHelper {
         if (::prefs.isInitialized) return
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
-
-    var currentIndex: Int
-        get() = prefs.getInt(KEY_CURRENT_INDEX, 0)
-        set(value) = prefs.edit { putInt(KEY_CURRENT_INDEX, value) }
 
     var lastRate: Float
         get() = prefs.getFloat(KEY_LAST_RATE, 60f)
@@ -69,14 +64,4 @@ object PreferencesHelper {
         }.getOrDefault(UpdateChannel.Stable)
         set(value) = prefs.edit { putString(KEY_UPDATE_CHANNEL, value.name) }
 
-    fun saveState(index: Int, rate: Float) {
-        prefs.edit {
-            putInt(KEY_CURRENT_INDEX, index)
-            putFloat(KEY_LAST_RATE, rate)
-        }
-    }
-
-    fun clear() {
-        prefs.edit { clear() }
-    }
 }

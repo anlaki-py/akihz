@@ -141,7 +141,6 @@ fun AkihzApp(
                 when (AppPage.entries[pageIndex]) {
                     AppPage.Home -> RefreshRateScreen(
                         supportedRates = uiState.supportedRates,
-                        currentRate = uiState.currentRate,
                         selectedRate = uiState.selectedRate,
                         isLoading = uiState.isLoading || !uiState.isServiceBound,
                         onRateSelected = onRateSelected,

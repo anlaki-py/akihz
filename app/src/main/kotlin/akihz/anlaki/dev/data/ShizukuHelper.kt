@@ -50,15 +50,6 @@ object ShizukuHelper {
         }
     }
 
-    fun getUid(): Int {
-        return try {
-            Shizuku.getUid()
-        } catch (e: Exception) {
-            Timber.w(e, "Failed to get Shizuku UID")
-            -1
-        }
-    }
-
     fun isUserServiceBound(): Boolean = commandService != null
 
     /**
