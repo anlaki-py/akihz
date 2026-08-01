@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import akihz.anlaki.dev.data.CustomRefreshProfile
 
@@ -53,6 +54,10 @@ fun CustomKeysScreen(
     var showRawDialog by remember { mutableStateOf(false) }
     val editingEnabled = !state.profile.enabled
 
+    LifecycleStartEffect(viewModel) {
+        viewModel.reload()
+        onStopOrDispose { viewModel.releaseTransientState() }
+    }
     BackHandler(onBack = onBack)
     LaunchedEffect(state.message) {
         state.message?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }

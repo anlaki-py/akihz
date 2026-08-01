@@ -33,6 +33,13 @@ data class CustomKeysUiState(
     val message: String? = null
 )
 
+private data class LoadedCustomKeysContent(
+    val profile: CustomRefreshProfile,
+    val detectedRates: List<Float>,
+    val snapshots: List<SettingsSnapshot>,
+    val warningAcknowledged: Boolean
+)
+
 @HiltViewModel
 class CustomKeysViewModel @Inject constructor(
     private val repository: RefreshRateRepository
@@ -41,23 +48,49 @@ class CustomKeysViewModel @Inject constructor(
     val state: StateFlow<CustomKeysUiState> = _state.asStateFlow()
     private var testOriginals: Map<String, OriginalSetting>? = null
     private var countdown: Job? = null
-
-    init {
-        reload()
-    }
+    private var reloadJob: Job? = null
+    @Volatile private var screenGeneration = 0
 
     /** Reloads persisted configuration and physical display rates. */
     fun reload() {
-        viewModelScope.launch {
-            val rates = withContext(Dispatchers.IO) { repository.getSupportedRates() }
-            _state.update {
-                it.copy(
+        val generation = screenGeneration
+        reloadJob?.cancel()
+        reloadJob = viewModelScope.launch {
+            val content = withContext(Dispatchers.IO) {
+                LoadedCustomKeysContent(
                     profile = CustomProfileManager.profile(),
-                    detectedRates = rates.getOrNull().orEmpty(),
+                    detectedRates = repository.getSupportedRates().getOrNull().orEmpty(),
                     snapshots = CustomProfileManager.snapshots(),
                     warningAcknowledged = CustomProfileManager.warningAcknowledged
                 )
             }
+            if (generation != screenGeneration) return@launch
+            _state.update {
+                it.copy(
+                    profile = content.profile,
+                    detectedRates = content.detectedRates,
+                    snapshots = content.snapshots,
+                    warningAcknowledged = content.warningAcknowledged
+                )
+            }
+        }
+    }
+
+    /** Releases scan-heavy state when the custom-key screen leaves composition. */
+    fun releaseTransientState() {
+        screenGeneration++
+        reloadJob?.cancel()
+        reloadJob = null
+        countdown?.cancel()
+        countdown = null
+        if (testOriginals != null) finishTest(success = false, showMessage = false)
+        _state.update {
+            it.copy(
+                candidates = emptyList(),
+                snapshots = emptyList(),
+                testSeconds = null,
+                message = null
+            )
         }
     }
 
@@ -112,21 +145,33 @@ class CustomKeysViewModel @Inject constructor(
     }
 
     /** Scans all settings namespaces and ranks likely candidates. */
-    fun scan() = runBusy {
-        val result = CustomProfileManager.candidates()
-        result.onSuccess { candidates ->
-            _state.update { it.copy(candidates = candidates, message = "Found ${candidates.size} candidates.") }
-        }.onError { _, message -> show(message) }
+    fun scan() {
+        val generation = screenGeneration
+        runBusy {
+            val result = CustomProfileManager.candidates()
+            result.onSuccess { candidates ->
+                if (generation == screenGeneration) {
+                    _state.update {
+                        it.copy(candidates = candidates, message = "Found ${candidates.size} candidates.")
+                    }
+                }
+            }.onError { _, message -> if (generation == screenGeneration) show(message) }
+        }
     }
 
     /** Captures a labeled settings snapshot for guided diffing. */
-    fun capture(label: String) = runBusy {
-        val result = CustomProfileManager.captureSnapshot(label)
-        result.onSuccess {
-            _state.update { state ->
-                state.copy(snapshots = CustomProfileManager.snapshots(), message = "Captured $label.")
-            }
-        }.onError { _, message -> show(message) }
+    fun capture(label: String) {
+        val generation = screenGeneration
+        runBusy {
+            val result = CustomProfileManager.captureSnapshot(label)
+            result.onSuccess {
+                if (generation == screenGeneration) {
+                    _state.update { state ->
+                        state.copy(snapshots = CustomProfileManager.snapshots(), message = "Captured $label.")
+                    }
+                }
+            }.onError { _, message -> if (generation == screenGeneration) show(message) }
+        }
     }
 
     /** Clears all discovery snapshots. */
@@ -153,7 +198,12 @@ class CustomKeysViewModel @Inject constructor(
 
     /** Confirms or rejects the active test and always restores pre-test values. */
     fun finishTest(success: Boolean) {
+        finishTest(success = success, showMessage = true)
+    }
+
+    private fun finishTest(success: Boolean, showMessage: Boolean) {
         countdown?.cancel()
+        countdown = null
         val originals = testOriginals ?: return
         testOriginals = null
         _state.update { it.copy(testSeconds = null, busy = true) }
@@ -164,8 +214,11 @@ class CustomKeysViewModel @Inject constructor(
                 it.copy(
                     profile = CustomProfileManager.profile(),
                     busy = false,
-                    message = if (success && restored.isSuccess) "Test passed. Values restored." else
+                    message = if (!showMessage) null else if (success && restored.isSuccess) {
+                        "Test passed. Values restored."
+                    } else {
                         restored.getErrorOrNull()?.message ?: "Test cancelled. Values restored."
+                    }
                 )
             }
         }
@@ -201,7 +254,7 @@ class CustomKeysViewModel @Inject constructor(
     private fun show(message: String) = _state.update { it.copy(message = message) }
 
     override fun onCleared() {
-        if (testOriginals != null) finishTest(false)
+        if (testOriginals != null) finishTest(success = false, showMessage = false)
         super.onCleared()
     }
 }
