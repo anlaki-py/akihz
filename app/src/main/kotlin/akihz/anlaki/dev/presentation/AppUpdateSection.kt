@@ -33,7 +33,8 @@ import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateNotification
+import akihz.anlaki.dev.utils.UpdateDownloadProcessor
+import akihz.anlaki.dev.utils.UpdatePreparationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,9 +53,6 @@ fun AppUpdateSection(currentVersionCode: Long) {
     var channel by remember { mutableStateOf(PreferencesHelper.updateChannel) }
     var showChannels by remember { mutableStateOf(false) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
-    var downloadingUpdate by remember {
-        mutableStateOf(restoredDownload?.update)
-    }
     var pendingDownloadRequest by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var statusText by remember {
@@ -67,7 +65,6 @@ fun AppUpdateSection(currentVersionCode: Long) {
     fun enqueueUpdate(update: AppUpdate) {
         runCatching { downloader.enqueue(update) }
             .onSuccess {
-                downloadingUpdate = update
                 downloadId = it
                 availableUpdate = null
                 pendingDownloadRequest = null
@@ -137,14 +134,10 @@ fun AppUpdateSection(currentVersionCode: Long) {
 
     UpdateDownloadMonitor(
         downloadId = downloadId,
-        update = downloadingUpdate,
         downloader = downloader,
         onProgress = { statusText = "Downloading… $it%" },
         onReady = {
             statusText = "Download complete; tap the notification to install"
-            downloadingUpdate?.let {
-                UpdateNotification.showReady(context, downloadId, it.versionName)
-            }
         },
         onError = {
             downloadStore.clear()
@@ -208,15 +201,15 @@ fun AppUpdateSection(currentVersionCode: Long) {
 @Composable
 private fun UpdateDownloadMonitor(
     downloadId: Long,
-    update: AppUpdate?,
     downloader: AppUpdateDownloader,
     onProgress: (Int) -> Unit,
     onReady: () -> Unit,
     onError: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(downloadId, update, lifecycle) {
-        if (downloadId < 0 || update == null) return@LaunchedEffect
+    LaunchedEffect(downloadId, lifecycle) {
+        if (downloadId < 0) return@LaunchedEffect
         var terminal = false
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (!terminal) {
@@ -232,9 +225,11 @@ private fun UpdateDownloadMonitor(
                 when (status.state) {
                     DownloadManager.STATUS_SUCCESSFUL -> {
                         terminal = true
-                        val verified = downloader.verify(downloadId, update.sha256)
-                        if (verified) onReady()
-                        else onError("The downloaded APK failed its security check")
+                        when (val result = UpdateDownloadProcessor.prepare(context, downloadId)) {
+                            UpdatePreparationResult.Ready -> onReady()
+                            UpdatePreparationResult.Missing -> onError("Update metadata is unavailable")
+                            is UpdatePreparationResult.Failed -> onError(result.message)
+                        }
                     }
                     DownloadManager.STATUS_FAILED -> {
                         terminal = true
