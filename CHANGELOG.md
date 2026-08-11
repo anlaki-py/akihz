@@ -7,6 +7,39 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.36] - 2026-08-11
+
+### Added
+
+- Added persistent Debug options, unlocked by tapping the version row six
+  times, with an organized category page for Home screen tuning.
+- Added controls for refresh-rate text size, button height, width, spacing,
+  and resting, selected, and pressed Material 3 Expressive corner shapes.
+- Added a reusable page surface and directional slide-and-fade transitions for
+  settings detail pages, debug categories, and floating navigation visibility.
+- Added a unit-test job to the release workflow and regression coverage for
+  update verification, custom-profile drafts, candidate detection, and
+  settings snapshot retention.
+
+### Changed
+
+- Restored large, centered Home refresh-rate buttons with 44sp labels and a
+  160dp default height while keeping oversized layouts scrollable.
+- Made custom refresh-rate profile edits save asynchronously and flush before
+  tests, activation changes, or navigation.
+- Compacted custom-key snapshots into one baseline plus bounded per-rate
+  differences, and improved candidate inference from those snapshots.
+- Moved update status checks and APK digest verification off the main thread
+  and cached repeated verification results for the same download.
+
+### Fixed
+
+- Kept Debug options unlocked across app launches and made its controls
+  readable in pitch-black AMOLED mode.
+- Preserved the latest custom-profile draft when leaving the editor and
+  prevented edited profiles from retaining stale tested or enabled state.
+- Prevented redundant APK verification work during update installation.
+
 ## [0.0.35] - 2026-08-11
 
 ### Added
