@@ -1,6 +1,8 @@
 package akihz.anlaki.dev.presentation
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -14,6 +16,7 @@ import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
+import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 
 private enum class DebugPage { Categories, HomeScreen }
 
@@ -31,18 +34,27 @@ internal fun DebugSettingsScreen(
     }
     BackHandler(onBack = navigateBack)
 
-    when (page) {
-        DebugPage.Categories -> DebugCategories(
-            onBack = navigateBack,
-            onOpenHomeScreen = { page = DebugPage.HomeScreen },
-            modifier = modifier
-        )
-        DebugPage.HomeScreen -> HomeDebugSettingsScreen(
-            settings = settings,
-            onSettingsChanged = onSettingsChanged,
-            onBack = navigateBack,
-            modifier = modifier
-        )
+    AnimatedContent(
+        targetState = page,
+        modifier = modifier.fillMaxSize(),
+        transitionSpec = {
+            horizontalPageTransition(targetState.ordinal > initialState.ordinal)
+        },
+        label = "debug page transition"
+    ) { currentPage ->
+        when (currentPage) {
+            DebugPage.Categories -> DebugCategories(
+                onBack = navigateBack,
+                onOpenHomeScreen = { page = DebugPage.HomeScreen },
+                modifier = Modifier.fillMaxSize()
+            )
+            DebugPage.HomeScreen -> HomeDebugSettingsScreen(
+                settings = settings,
+                onSettingsChanged = onSettingsChanged,
+                onBack = navigateBack,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
