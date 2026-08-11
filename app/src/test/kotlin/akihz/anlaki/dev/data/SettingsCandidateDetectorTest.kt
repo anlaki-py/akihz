@@ -21,4 +21,25 @@ class SettingsCandidateDetectorTest {
         assertEquals("secure/vendor_mode", candidates.first().id)
         assertTrue(candidates.first().reason.contains("changed across snapshots"))
     }
+
+    @Test
+    fun `sparse difference snapshots mark only changed keys`() {
+        val current = mapOf(
+            "secure/vendor_mode" to "2",
+            "secure/unrelated" to "plain"
+        )
+        val snapshots = listOf(
+            SettingsSnapshot("Baseline", current + ("secure/vendor_mode" to "1")),
+            SettingsSnapshot(
+                label = "120 Hz",
+                values = mapOf("secure/vendor_mode" to "2"),
+                isDiff = true
+            )
+        )
+
+        val candidates = SettingsCandidateDetector.detect(current, snapshots)
+
+        assertEquals(listOf("secure/vendor_mode"), candidates.map { it.id })
+        assertTrue(candidates.single().reason.contains("changed across snapshots"))
+    }
 }

@@ -31,7 +31,11 @@ class CustomProfileStore(context: Context) {
             val array = JSONArray(raw)
             List(array.length()) { index ->
                 val item = array.getJSONObject(index)
-                SettingsSnapshot(item.getString("label"), item.getJSONObject("values").toStringMap())
+                SettingsSnapshot(
+                    label = item.getString("label"),
+                    values = item.getJSONObject("values").toStringMap(),
+                    isDiff = item.optBoolean("isDiff")
+                )
             }
         }.getOrDefault(emptyList())
     }
@@ -40,7 +44,12 @@ class CustomProfileStore(context: Context) {
     fun saveSnapshots(snapshots: List<SettingsSnapshot>) {
         val array = JSONArray()
         snapshots.forEach { snapshot ->
-            array.put(JSONObject().put("label", snapshot.label).put("values", JSONObject(snapshot.values)))
+            array.put(
+                JSONObject()
+                    .put("label", snapshot.label)
+                    .put("values", JSONObject(snapshot.values))
+                    .put("isDiff", snapshot.isDiff)
+            )
         }
         prefs.edit { putString(KEY_SNAPSHOTS, array.toString()) }
     }
