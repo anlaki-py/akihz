@@ -18,9 +18,11 @@ private const val DONATION_URL = "https://ko-fi.com/unluky"
 
 /**
  * Displays app version information and project links.
+ *
+ * @param onVersionClick invoked when the version row is tapped
  */
 @Composable
-fun AboutSection() {
+fun AboutSection(onVersionClick: () -> Unit) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     val pm = context.packageManager
@@ -38,7 +40,8 @@ fun AboutSection() {
         PreferenceTemplate(
             title = "akiHz",
             description = "Version $versionName",
-            icon = Icons.Default.Info
+            icon = Icons.Default.Info,
+            onClick = onVersionClick
         )
 
         PreferenceTemplate(

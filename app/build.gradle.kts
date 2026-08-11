@@ -133,4 +133,5 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.timber)
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
 }
