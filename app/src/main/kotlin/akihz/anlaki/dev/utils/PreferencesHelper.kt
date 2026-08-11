@@ -3,6 +3,7 @@ package akihz.anlaki.dev.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
@@ -22,6 +23,13 @@ object PreferencesHelper {
     private const val KEY_AMOLED_MODE = "amoled_mode"
     private const val KEY_BLUR_ENABLED = "blur_enabled"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
+    private const val KEY_HZ_TEXT_SIZE = "debug_hz_text_size"
+    private const val KEY_BUTTON_HEIGHT = "debug_button_height"
+    private const val KEY_BUTTON_WIDTH = "debug_button_width"
+    private const val KEY_BUTTON_SPACING = "debug_button_spacing"
+    private const val KEY_RESTING_CORNER = "debug_resting_corner"
+    private const val KEY_SELECTED_CORNER = "debug_selected_corner"
+    private const val KEY_PRESSED_CORNER = "debug_pressed_corner"
 
     private lateinit var prefs: SharedPreferences
 
@@ -68,6 +76,29 @@ object PreferencesHelper {
             )
         }.getOrDefault(UpdateChannel.Stable)
         set(value) = prefs.edit { putString(KEY_UPDATE_CHANNEL, value.name) }
+
+    var homeDebugSettings: HomeDebugSettings
+        get() {
+            val defaults = HomeDebugSettings.defaults()
+            return HomeDebugSettings(
+                hzTextSizeSp = prefs.getFloat(KEY_HZ_TEXT_SIZE, defaults.hzTextSizeSp),
+                buttonHeightDp = prefs.getFloat(KEY_BUTTON_HEIGHT, defaults.buttonHeightDp),
+                buttonWidthPercent = prefs.getFloat(KEY_BUTTON_WIDTH, defaults.buttonWidthPercent),
+                buttonSpacingDp = prefs.getFloat(KEY_BUTTON_SPACING, defaults.buttonSpacingDp),
+                restingCornerDp = prefs.getFloat(KEY_RESTING_CORNER, defaults.restingCornerDp),
+                selectedCornerDp = prefs.getFloat(KEY_SELECTED_CORNER, defaults.selectedCornerDp),
+                pressedCornerDp = prefs.getFloat(KEY_PRESSED_CORNER, defaults.pressedCornerDp)
+            )
+        }
+        set(value) = prefs.edit {
+            putFloat(KEY_HZ_TEXT_SIZE, value.hzTextSizeSp)
+            putFloat(KEY_BUTTON_HEIGHT, value.buttonHeightDp)
+            putFloat(KEY_BUTTON_WIDTH, value.buttonWidthPercent)
+            putFloat(KEY_BUTTON_SPACING, value.buttonSpacingDp)
+            putFloat(KEY_RESTING_CORNER, value.restingCornerDp)
+            putFloat(KEY_SELECTED_CORNER, value.selectedCornerDp)
+            putFloat(KEY_PRESSED_CORNER, value.pressedCornerDp)
+        }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {
