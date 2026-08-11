@@ -9,6 +9,7 @@ import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.data.OriginalSetting
 import akihz.anlaki.dev.data.SettingsCandidate
 import akihz.anlaki.dev.data.SettingsSnapshot
+import akihz.anlaki.dev.data.SettingsSnapshotPolicy
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -41,6 +42,8 @@ class CustomKeysViewModel @Inject constructor(
     val state: StateFlow<CustomKeysUiState> = _state.asStateFlow()
     private var testOriginals: Map<String, OriginalSetting>? = null
     private var countdown: Job? = null
+    private val draftSaver = CustomDraftSaver(viewModelScope, CustomProfileManager::saveDraft)
+    private var leaving = false
 
     init {
         reload()
@@ -49,13 +52,20 @@ class CustomKeysViewModel @Inject constructor(
     /** Reloads persisted configuration and physical display rates. */
     fun reload() {
         viewModelScope.launch {
-            val rates = withContext(Dispatchers.IO) { repository.getSupportedRates() }
-            _state.update {
-                it.copy(
+            val loaded = withContext(Dispatchers.IO) {
+                LoadedCustomKeys(
+                    rates = repository.getSupportedRates().getOrNull().orEmpty(),
                     profile = CustomProfileManager.profile(),
-                    detectedRates = rates.getOrNull().orEmpty(),
                     snapshots = CustomProfileManager.snapshots(),
                     warningAcknowledged = CustomProfileManager.warningAcknowledged
+                )
+            }
+            _state.update {
+                it.copy(
+                    profile = loaded.profile,
+                    detectedRates = loaded.rates,
+                    snapshots = loaded.snapshots,
+                    warningAcknowledged = loaded.warningAcknowledged
                 )
             }
         }
@@ -84,7 +94,7 @@ class CustomKeysViewModel @Inject constructor(
             val id = "${namespace.name.lowercase()}/$cleanName"
             val values = profile.rates.associate { rate ->
                 val label = "${CustomRefreshProfile.rateLabel(rate)} Hz"
-                val inferred = snapshots.lastOrNull { it.label == label }?.values?.get(id)
+                val inferred = SettingsSnapshotPolicy.inferredValue(snapshots, label, id)
                 CustomRefreshProfile.rateKey(rate) to
                     (inferred ?: CustomRefreshProfile.rateLabel(rate))
             }
@@ -137,6 +147,7 @@ class CustomKeysViewModel @Inject constructor(
 
     /** Starts the guarded 15-second profile test. */
     fun beginTest(rate: Float) = runBusy {
+        flushPendingDraft()
         val result = CustomProfileManager.beginTest(rate)
         result.onSuccess { originals ->
             testOriginals = originals
@@ -173,6 +184,7 @@ class CustomKeysViewModel @Inject constructor(
 
     /** Enables or disables the tested custom profile. */
     fun setEnabled(enabled: Boolean, onChanged: () -> Unit) = runBusy {
+        flushPendingDraft()
         val result = if (enabled) CustomProfileManager.enable() else CustomProfileManager.disable()
         result.onSuccess {
             _state.update { it.copy(profile = CustomProfileManager.profile()) }
@@ -183,10 +195,36 @@ class CustomKeysViewModel @Inject constructor(
     /** Clears the transient status message. */
     fun clearMessage() = _state.update { it.copy(message = null) }
 
+    /**
+     * Persists the latest draft before navigation.
+     *
+     * @param onFlushed invoked on the main dispatcher after persistence completes
+     */
+    fun flushDraft(onFlushed: () -> Unit) {
+        if (leaving) return
+        leaving = true
+        viewModelScope.launch {
+            try {
+                flushPendingDraft()
+                onFlushed()
+            } finally {
+                leaving = false
+            }
+        }
+    }
+
     private fun edit(transform: (CustomRefreshProfile) -> CustomRefreshProfile) {
-        val profile = transform(_state.value.profile)
-        CustomProfileManager.saveDraft(profile)
-        _state.update { it.copy(profile = CustomProfileManager.profile()) }
+        val profile = transform(_state.value.profile).copy(
+            tested = false,
+            enabled = false,
+            originals = emptyMap()
+        )
+        _state.update { it.copy(profile = profile) }
+        draftSaver.schedule(profile)
+    }
+
+    private suspend fun flushPendingDraft() {
+        draftSaver.flush()
     }
 
     private fun runBusy(block: suspend () -> Unit) {
@@ -205,3 +243,10 @@ class CustomKeysViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
+private data class LoadedCustomKeys(
+    val rates: List<Float>,
+    val profile: CustomRefreshProfile,
+    val snapshots: List<SettingsSnapshot>,
+    val warningAcknowledged: Boolean
+)

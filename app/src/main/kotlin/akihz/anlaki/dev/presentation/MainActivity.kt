@@ -16,6 +16,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
@@ -78,6 +79,12 @@ class MainActivity : ComponentActivity() {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
             var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
             var blurEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.blurEnabled) }
+            var homeDebugSettings by remember {
+                mutableStateOf(PreferencesHelper.homeDebugSettings)
+            }
+            var debugOptionsUnlocked by rememberSaveable {
+                mutableStateOf(PreferencesHelper.debugOptionsUnlocked)
+            }
             val systemDarkTheme = isSystemInDarkTheme()
             val darkTheme = when (themeMode) {
                 AppThemeMode.System -> systemDarkTheme
@@ -109,6 +116,16 @@ class MainActivity : ComponentActivity() {
                     themeMode = themeMode,
                     amoledMode = amoledMode,
                     blurEnabled = blurEnabled,
+                    homeDebugSettings = homeDebugSettings,
+                    onHomeDebugSettingsChanged = { settings ->
+                        homeDebugSettings = settings
+                        PreferencesHelper.homeDebugSettings = settings
+                    },
+                    debugOptionsUnlocked = debugOptionsUnlocked,
+                    onDebugOptionsUnlocked = {
+                        debugOptionsUnlocked = true
+                        PreferencesHelper.debugOptionsUnlocked = true
+                    },
                     onThemeModeChanged = { mode ->
                         themeMode = mode
                         PreferencesHelper.themeMode = mode

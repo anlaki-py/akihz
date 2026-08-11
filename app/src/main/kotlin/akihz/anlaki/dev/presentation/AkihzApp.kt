@@ -2,14 +2,19 @@ package akihz.anlaki.dev.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -28,14 +33,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.FloatingBottomBar
 import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
-import akihz.anlaki.dev.presentation.modifiers.BlurDirection
-import akihz.anlaki.dev.presentation.modifiers.progressiveBlur
+import akihz.anlaki.dev.presentation.components.AppPageSurface
+import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,6 +53,8 @@ private enum class AppPage(
     Settings("Settings", Icons.Default.Settings)
 }
 
+private enum class DetailPage { CustomKeys, DebugOptions }
+
 /**
  * Hosts the refresh-rate and settings pages with floating tab navigation.
  *
@@ -58,6 +65,10 @@ private enum class AppPage(
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param blurEnabled whether progressive edge blur is enabled
+ * @param homeDebugSettings current home-screen tuning values
+ * @param onHomeDebugSettingsChanged persists updated home-screen tuning
+ * @param debugOptionsUnlocked whether the hidden developer entry has been unlocked
+ * @param onDebugOptionsUnlocked persists the developer entry after its unlock gesture
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
@@ -72,27 +83,20 @@ fun AkihzApp(
     themeMode: AppThemeMode,
     amoledMode: Boolean,
     blurEnabled: Boolean,
+    homeDebugSettings: HomeDebugSettings,
+    onHomeDebugSettingsChanged: (HomeDebugSettings) -> Unit,
+    debugOptionsUnlocked: Boolean,
+    onDebugOptionsUnlocked: () -> Unit,
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
     onErrorDismissed: () -> Unit = {}
 ) {
-    var showCustomKeys by remember { mutableStateOf(false) }
-    if (showCustomKeys) {
-        CustomKeysScreen(
-            onBack = { showCustomKeys = false },
-            onProfileChanged = onCustomProfileChanged
-        )
-        return
-    }
+    var detailPage by remember { mutableStateOf<DetailPage?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { AppPage.entries.size })
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
-    val density = LocalDensity.current
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val statusBarHeightPx = with(density) { statusBarHeight.toPx() }
-    val bottomBlurHeightPx = with(density) { 140.dp.toPx() }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
@@ -128,61 +132,82 @@ fun AkihzApp(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .progressiveBlur(
-                    blurRadius = if (blurEnabled) 40f else 0f,
-                    height = statusBarHeightPx * 1.15f,
-                    direction = BlurDirection.Top
-                )
         ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .progressiveBlur(
-                        blurRadius = if (blurEnabled) 40f else 0f,
-                        height = bottomBlurHeightPx,
-                        direction = BlurDirection.Bottom
-                    )
-            ) { pageIndex ->
-                when (AppPage.entries[pageIndex]) {
-                    AppPage.Home -> RefreshRateScreen(
-                        supportedRates = uiState.supportedRates,
-                        currentRate = uiState.currentRate,
-                        selectedRate = uiState.selectedRate,
-                        isLoading = uiState.isLoading || !uiState.isServiceBound,
-                        onRateSelected = onRateSelected,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    AppPage.Settings -> SettingsScreen(
-                        onResetToDefaults = onResetToDefaults,
-                        onOpenCustomKeys = { showCustomKeys = true },
-                        themeMode = themeMode,
-                        amoledMode = amoledMode,
-                        blurEnabled = blurEnabled,
-                        onThemeModeChanged = onThemeModeChanged,
-                        onAmoledModeChanged = onAmoledModeChanged,
-                        onBlurEnabledChanged = onBlurEnabledChanged,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-            FloatingBottomBar(
-                items = AppPage.entries.mapIndexed { index, page ->
-                    FloatingNavigationItem(
-                        label = page.label,
-                        icon = page.icon,
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(index)
+            AppPageSurface(blurEnabled = blurEnabled) {
+                AnimatedContent(
+                    targetState = detailPage,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = {
+                        horizontalPageTransition(targetState != null)
+                    },
+                    label = "app page transition"
+                ) { activeDetailPage ->
+                    when (activeDetailPage) {
+                        DetailPage.CustomKeys -> CustomKeysScreen(
+                            onBack = { detailPage = null },
+                            onProfileChanged = onCustomProfileChanged
+                        )
+                        DetailPage.DebugOptions -> DebugSettingsScreen(
+                            settings = homeDebugSettings,
+                            onSettingsChanged = onHomeDebugSettingsChanged,
+                            onBack = { detailPage = null },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        null -> HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize()
+                        ) { pageIndex ->
+                            when (AppPage.entries[pageIndex]) {
+                                AppPage.Home -> RefreshRateScreen(
+                                    supportedRates = uiState.supportedRates,
+                                    currentRate = uiState.currentRate,
+                                    selectedRate = uiState.selectedRate,
+                                    isLoading = uiState.isLoading || !uiState.isServiceBound,
+                                    debugSettings = homeDebugSettings,
+                                    onRateSelected = onRateSelected,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                AppPage.Settings -> SettingsScreen(
+                                    onResetToDefaults = onResetToDefaults,
+                                    onOpenCustomKeys = { detailPage = DetailPage.CustomKeys },
+                                    themeMode = themeMode,
+                                    amoledMode = amoledMode,
+                                    blurEnabled = blurEnabled,
+                                    onThemeModeChanged = onThemeModeChanged,
+                                    onAmoledModeChanged = onAmoledModeChanged,
+                                    onBlurEnabledChanged = onBlurEnabledChanged,
+                                    debugOptionsUnlocked = debugOptionsUnlocked,
+                                    onDebugOptionsUnlocked = onDebugOptionsUnlocked,
+                                    onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
+                                    modifier = Modifier.fillMaxSize()
+                                )
                             }
                         }
-                    )
-                },
-                selectedIndex = pagerState.currentPage,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .zIndex(1f)
-            )
+                    }
+                }
+            }
+            AnimatedVisibility(
+                visible = detailPage == null,
+                enter = fadeIn(tween(220)) + slideInVertically(tween(280)) { it / 2 },
+                exit = fadeOut(tween(160)) + slideOutVertically(tween(240)) { it / 2 },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                FloatingBottomBar(
+                    items = AppPage.entries.mapIndexed { index, page ->
+                        FloatingNavigationItem(
+                            label = page.label,
+                            icon = page.icon,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                        )
+                    },
+                    selectedIndex = pagerState.currentPage,
+                    modifier = Modifier.zIndex(1f)
+                )
+            }
         }
     }
 }
