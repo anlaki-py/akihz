@@ -7,6 +7,20 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.35] - 2026-08-11
+
+### Added
+
+- Restored the foreground keep-alive service so Quick Settings refresh-rate
+  controls remain ready while the app is closed.
+- Added an Advanced settings shortcut that requests an Android battery-
+  optimization exemption, with a fallback to the system optimization list.
+
+### Fixed
+
+- Made Pitch-black AMOLED mode use true `#000000` for every Material surface
+  role instead of near-black container colors.
+
 ## [0.0.34] - 2026-07-29
 
 ### Added
