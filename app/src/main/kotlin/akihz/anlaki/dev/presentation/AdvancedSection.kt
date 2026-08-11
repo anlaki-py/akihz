@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -23,11 +24,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
+import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 import akihz.anlaki.dev.utils.PreferencesHelper
 
 /**
@@ -41,12 +44,20 @@ fun AdvancedSection(
     onResetToDefaults: () -> Unit,
     onOpenCustomKeys: () -> Unit
 ) {
+    val context = LocalContext.current
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
     var selectedOem by remember { mutableStateOf(PreferencesHelper.oemOverride.ifBlank { "Auto-detect" }) }
     var showDebug by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
 
     PreferenceGroup(heading = "Advanced") {
+        PreferenceTemplate(
+            title = "Allow background running",
+            description = "Exclude akiHz from Android battery optimization",
+            icon = Icons.Default.BatterySaver,
+            onClick = { BatteryOptimizationHelper.requestExemption(context) }
+        )
+
         PreferenceTemplate(
             title = "Custom refresh-rate keys",
             description = "Experimental discovery and manual key mappings",

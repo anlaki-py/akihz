@@ -32,9 +32,11 @@
 
 - **Dynamic detection:** automatically reads your display's supported refresh rates instead of using hardcoded values
 - **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
+- **Reliable background access:** a foreground service keeps tile controls ready, with a settings shortcut for disabling battery optimization
 - **Multi-OEM support:** targets the correct system settings keys per manufacturer
 - **Instant switching:** no artificial delays; the rate changes as soon as you tap
 - **OEM override:** manually pick a device profile in Settings if auto-detection does not match your phone
+- **True-black AMOLED mode:** uses pure `#000000` surfaces when dark mode is active
 
 ## Supported devices
 
@@ -74,6 +76,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 1. Open Shizuku and start it (wireless debugging or ADB)
 2. Open akiHz and grant Shizuku permission
 3. Select a refresh rate from the buttons, or add the **akiHz** tile to your Quick Settings panel and tap it to cycle
+4. For more reliable background operation, open **Settings → Advanced → Allow background running** and approve the Android prompt
 
 ## FAQ
 
@@ -81,7 +84,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 Android blocks normal apps from changing refresh-rate settings directly. Shizuku grants akiHz the privileged access needed to update the correct OEM-specific keys.
 
 **Does the Quick Settings tile work when the app is closed?**  
-Yes. Android starts the Quick Settings tile service when you tap the tile, so akiHz does not need to run a permanent keep-alive service.
+Yes. akiHz uses an ongoing foreground service to keep its Quick Settings controls ready. Android displays a persistent notification while it runs. If your device still restricts it, use **Settings → Advanced → Allow background running** to request a battery-optimization exemption.
 
 **My phone is not switching rates correctly? What should I try?**
 1. Confirm Shizuku is running and akiHz has permission  
