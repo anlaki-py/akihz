@@ -34,7 +34,7 @@ internal fun HomeDebugSettingsScreen(
             ) { onSettingsChanged(settings.copy(hzTextSizeSp = it)) }
             HomeDebugSlider(
                 "Button height", "Sets each fixed height; the list scrolls if it no longer fits.",
-                settings.buttonHeightDp, "dp", 48f..140f, defaults.buttonHeightDp, 45, 2f
+                settings.buttonHeightDp, "dp", 48f..160f, defaults.buttonHeightDp, 55, 2f
             ) { onSettingsChanged(settings.copy(buttonHeightDp = it)) }
             HomeDebugSlider(
                 "Button width", "Controls how much of the available width each button uses.",

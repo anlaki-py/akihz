@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,15 +77,17 @@ fun RefreshRateScreen(
         } else if (supportedRates.isEmpty()) {
             EmptyState()
         } else {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(debugSettings.buttonSpacingDp.dp)
+                verticalArrangement = Arrangement.spacedBy(
+                    space = debugSettings.buttonSpacingDp.dp,
+                    alignment = Alignment.CenterVertically
+                )
             ) {
-                supportedRates.forEach { hz ->
+                items(supportedRates, key = { it }) { hz ->
                     RefreshRateButton(
                         hz = hz,
                         isSelected = selectedRate?.let { kotlin.math.abs(hz - it) < 1f } == true,
