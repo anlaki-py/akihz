@@ -8,6 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -33,6 +40,7 @@ import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.FloatingBottomBar
 import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
 import akihz.anlaki.dev.presentation.components.AppPageSurface
+import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -126,50 +134,64 @@ fun AkihzApp(
                 .padding(padding)
         ) {
             AppPageSurface(blurEnabled = blurEnabled) {
-                when (detailPage) {
-                    DetailPage.CustomKeys -> CustomKeysScreen(
-                        onBack = { detailPage = null },
-                        onProfileChanged = onCustomProfileChanged
-                    )
-                    DetailPage.DebugOptions -> DebugSettingsScreen(
-                        settings = homeDebugSettings,
-                        onSettingsChanged = onHomeDebugSettingsChanged,
-                        onBack = { detailPage = null },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    null -> HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize()
-                    ) { pageIndex ->
-                        when (AppPage.entries[pageIndex]) {
-                            AppPage.Home -> RefreshRateScreen(
-                                supportedRates = uiState.supportedRates,
-                                currentRate = uiState.currentRate,
-                                selectedRate = uiState.selectedRate,
-                                isLoading = uiState.isLoading || !uiState.isServiceBound,
-                                debugSettings = homeDebugSettings,
-                                onRateSelected = onRateSelected,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            AppPage.Settings -> SettingsScreen(
-                                onResetToDefaults = onResetToDefaults,
-                                onOpenCustomKeys = { detailPage = DetailPage.CustomKeys },
-                                themeMode = themeMode,
-                                amoledMode = amoledMode,
-                                blurEnabled = blurEnabled,
-                                onThemeModeChanged = onThemeModeChanged,
-                                onAmoledModeChanged = onAmoledModeChanged,
-                                onBlurEnabledChanged = onBlurEnabledChanged,
-                                debugOptionsUnlocked = debugOptionsUnlocked,
-                                onDebugOptionsUnlocked = onDebugOptionsUnlocked,
-                                onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
-                                modifier = Modifier.fillMaxSize()
-                            )
+                AnimatedContent(
+                    targetState = detailPage,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = {
+                        horizontalPageTransition(targetState != null)
+                    },
+                    label = "app page transition"
+                ) { activeDetailPage ->
+                    when (activeDetailPage) {
+                        DetailPage.CustomKeys -> CustomKeysScreen(
+                            onBack = { detailPage = null },
+                            onProfileChanged = onCustomProfileChanged
+                        )
+                        DetailPage.DebugOptions -> DebugSettingsScreen(
+                            settings = homeDebugSettings,
+                            onSettingsChanged = onHomeDebugSettingsChanged,
+                            onBack = { detailPage = null },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        null -> HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize()
+                        ) { pageIndex ->
+                            when (AppPage.entries[pageIndex]) {
+                                AppPage.Home -> RefreshRateScreen(
+                                    supportedRates = uiState.supportedRates,
+                                    currentRate = uiState.currentRate,
+                                    selectedRate = uiState.selectedRate,
+                                    isLoading = uiState.isLoading || !uiState.isServiceBound,
+                                    debugSettings = homeDebugSettings,
+                                    onRateSelected = onRateSelected,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                AppPage.Settings -> SettingsScreen(
+                                    onResetToDefaults = onResetToDefaults,
+                                    onOpenCustomKeys = { detailPage = DetailPage.CustomKeys },
+                                    themeMode = themeMode,
+                                    amoledMode = amoledMode,
+                                    blurEnabled = blurEnabled,
+                                    onThemeModeChanged = onThemeModeChanged,
+                                    onAmoledModeChanged = onAmoledModeChanged,
+                                    onBlurEnabledChanged = onBlurEnabledChanged,
+                                    debugOptionsUnlocked = debugOptionsUnlocked,
+                                    onDebugOptionsUnlocked = onDebugOptionsUnlocked,
+                                    onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
             }
-            if (detailPage == null) {
+            AnimatedVisibility(
+                visible = detailPage == null,
+                enter = fadeIn(tween(220)) + slideInVertically(tween(280)) { it / 2 },
+                exit = fadeOut(tween(160)) + slideOutVertically(tween(240)) { it / 2 },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
                 FloatingBottomBar(
                     items = AppPage.entries.mapIndexed { index, page ->
                         FloatingNavigationItem(
@@ -183,9 +205,7 @@ fun AkihzApp(
                         )
                     },
                     selectedIndex = pagerState.currentPage,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .zIndex(1f)
+                    modifier = Modifier.zIndex(1f)
                 )
             }
         }
