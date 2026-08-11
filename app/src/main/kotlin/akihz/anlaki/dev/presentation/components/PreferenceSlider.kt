@@ -24,6 +24,7 @@ internal fun PreferenceSlider(
     title: String,
     value: Float,
     valueLabel: String,
+    description: String,
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
@@ -41,13 +42,23 @@ internal fun PreferenceSlider(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Text(
                 text = valueLabel,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
         }
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp)
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = {
@@ -56,7 +67,11 @@ internal fun PreferenceSlider(
                     onValueChangeFinished(newValue)
                 }
             ) {
-                Icon(Icons.Default.Remove, contentDescription = "Decrease $title")
+                Icon(
+                    Icons.Default.Remove,
+                    contentDescription = "Decrease $title",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
             Slider(
                 value = value,
@@ -73,7 +88,11 @@ internal fun PreferenceSlider(
                     onValueChangeFinished(newValue)
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Increase $title")
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Increase $title",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }

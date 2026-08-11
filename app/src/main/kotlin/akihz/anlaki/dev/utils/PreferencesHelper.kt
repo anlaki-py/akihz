@@ -30,6 +30,7 @@ object PreferencesHelper {
     private const val KEY_RESTING_CORNER = "debug_resting_corner"
     private const val KEY_SELECTED_CORNER = "debug_selected_corner"
     private const val KEY_PRESSED_CORNER = "debug_pressed_corner"
+    private const val KEY_DEBUG_OPTIONS_UNLOCKED = "debug_options_unlocked"
 
     private lateinit var prefs: SharedPreferences
 
@@ -90,6 +91,7 @@ object PreferencesHelper {
                 pressedCornerDp = prefs.getFloat(KEY_PRESSED_CORNER, defaults.pressedCornerDp)
             )
         }
+
         set(value) = prefs.edit {
             putFloat(KEY_HZ_TEXT_SIZE, value.hzTextSizeSp)
             putFloat(KEY_BUTTON_HEIGHT, value.buttonHeightDp)
@@ -99,6 +101,10 @@ object PreferencesHelper {
             putFloat(KEY_SELECTED_CORNER, value.selectedCornerDp)
             putFloat(KEY_PRESSED_CORNER, value.pressedCornerDp)
         }
+
+    var debugOptionsUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_DEBUG_OPTIONS_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_DEBUG_OPTIONS_UNLOCKED, value) }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {
