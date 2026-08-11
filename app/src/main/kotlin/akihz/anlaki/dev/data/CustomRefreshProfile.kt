@@ -49,10 +49,11 @@ data class CustomSettingsKey(
 /** Value captured before a custom profile was enabled. */
 data class OriginalSetting(val existed: Boolean, val value: String?)
 
-/** One complete settings snapshot used for candidate discovery. */
+/** A complete baseline or sparse rate difference used for candidate discovery. */
 data class SettingsSnapshot(
     val label: String,
-    val values: Map<String, String>
+    val values: Map<String, String>,
+    val isDiff: Boolean = false
 )
 
 /** A ranked setting found during scanning or snapshot comparison. */

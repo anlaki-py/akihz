@@ -29,15 +29,28 @@ object CustomProfileManager {
     }
 
     /** Returns stored discovery snapshots. */
-    fun snapshots(): List<SettingsSnapshot> = store.loadSnapshots()
+    fun snapshots(): List<SettingsSnapshot> = loadCompactedSnapshots()
 
-    /** Captures and stores a complete settings snapshot. */
+    /** Captures a baseline or a bounded difference snapshot for one display rate. */
     fun captureSnapshot(label: String): Result<SettingsSnapshot> {
+        val existing = loadCompactedSnapshots()
+        if (label != SettingsSnapshotPolicy.BASELINE_LABEL &&
+            existing.none { it.label == SettingsSnapshotPolicy.BASELINE_LABEL }
+        ) {
+            return Result.error(
+                ErrorType.COMMAND_EXECUTION_FAILED,
+                "Capture a baseline before capturing a refresh rate."
+            )
+        }
         val scan = scanAll()
         if (scan.isError) return scan.map { SettingsSnapshot(label, it) }
-        val snapshot = SettingsSnapshot(label, scan.getOrNull().orEmpty())
-        store.saveSnapshots(store.loadSnapshots() + snapshot)
-        return Result.success(snapshot)
+        val merge = SettingsSnapshotPolicy.merge(
+            existing = existing,
+            label = label,
+            current = scan.getOrNull().orEmpty()
+        ) ?: return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Baseline is unavailable.")
+        store.saveSnapshots(merge.retained)
+        return Result.success(merge.captured)
     }
 
     /** Clears all discovery snapshots. */
@@ -45,7 +58,7 @@ object CustomProfileManager {
 
     /** Scans settings and returns ranked refresh-rate candidates. */
     fun candidates(): Result<List<SettingsCandidate>> =
-        scanAll().map { SettingsCandidateDetector.detect(it, store.loadSnapshots()) }
+        scanAll().map { SettingsCandidateDetector.detect(it, loadCompactedSnapshots()) }
 
     /** Applies a rate through the enabled custom profile. */
     fun applyRate(rate: Float): Result<Unit> {
@@ -169,6 +182,13 @@ object CustomProfileManager {
             }
         }
         return Result.success(values)
+    }
+
+    private fun loadCompactedSnapshots(): List<SettingsSnapshot> {
+        val stored = store.loadSnapshots()
+        val compacted = SettingsSnapshotPolicy.compact(stored)
+        if (compacted != stored) store.saveSnapshots(compacted)
+        return compacted
     }
 
     private fun keyFromId(id: String): CustomSettingsKey? {

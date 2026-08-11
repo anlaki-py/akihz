@@ -7,9 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.utils.UpdateNotification
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** Bridges an update notification to Android's permission and package installer screens. */
 class UpdateInstallActivity : ComponentActivity() {
@@ -32,9 +30,8 @@ class UpdateInstallActivity : ComponentActivity() {
         lifecycleScope.launch {
             val pending = UpdateDownloadStore(this@UpdateInstallActivity).load()
                 ?.takeIf { it.downloadId == downloadId }
-            val verified = pending != null && withContext(Dispatchers.IO) {
+            val verified = pending != null &&
                 downloader.verify(downloadId, pending.update.sha256)
-            }
             if (!verified) {
                 UpdateNotification.showFailure(
                     this@UpdateInstallActivity,

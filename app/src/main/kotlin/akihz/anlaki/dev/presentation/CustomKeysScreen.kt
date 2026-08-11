@@ -52,13 +52,14 @@ fun CustomKeysScreen(
     var search by remember { mutableStateOf("") }
     var showRawDialog by remember { mutableStateOf(false) }
     val editingEnabled = !state.profile.enabled
+    val leaveScreen: () -> Unit = { viewModel.flushDraft(onBack) }
 
-    BackHandler(onBack = onBack)
+    BackHandler(onBack = leaveScreen)
     LaunchedEffect(state.message) {
         state.message?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
     }
     if (!state.warningAcknowledged) {
-        CustomKeysWarning(onAccept = viewModel::acknowledgeWarning, onLeave = onBack)
+        CustomKeysWarning(onAccept = viewModel::acknowledgeWarning, onLeave = leaveScreen)
     }
     state.testSeconds?.let { seconds ->
         TestCountdownDialog(seconds, { viewModel.finishTest(true) }, { viewModel.finishTest(false) })
@@ -74,7 +75,7 @@ fun CustomKeysScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Custom refresh-rate keys") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }
+                navigationIcon = { TextButton(onClick = leaveScreen) { Text("Back") } }
             )
         },
         snackbarHost = { SnackbarHost(snackbar) }
