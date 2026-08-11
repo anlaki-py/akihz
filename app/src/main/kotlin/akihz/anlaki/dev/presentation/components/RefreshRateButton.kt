@@ -6,7 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,6 +20,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import akihz.anlaki.dev.data.HomeDebugSettings
 
 /**
  * Displays a large refresh-rate selection button.
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.dp
  * @param hz refresh rate represented by this button
  * @param isSelected whether this rate is currently selected
  * @param onClick invoked when the button is selected
+ * @param debugSettings adjustable size and shape values
  * @param modifier layout modifier supplied by the parent
  */
 @Composable
@@ -34,6 +37,7 @@ fun RefreshRateButton(
     hz: Float,
     isSelected: Boolean,
     onClick: () -> Unit,
+    debugSettings: HomeDebugSettings,
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalHapticFeedback.current
@@ -41,9 +45,9 @@ fun RefreshRateButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius by animateDpAsState(
         targetValue = when {
-            isPressed -> 16.dp
-            isSelected -> 20.dp
-            else -> 32.dp
+            isPressed -> debugSettings.pressedCornerDp.dp
+            isSelected -> debugSettings.selectedCornerDp.dp
+            else -> debugSettings.restingCornerDp.dp
         },
         animationSpec = spring(),
         label = "refresh rate button shape"
@@ -71,8 +75,8 @@ fun RefreshRateButton(
             onClick()
         },
         modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp),
+            .fillMaxWidth(debugSettings.buttonWidthPercent / 100f)
+            .height(debugSettings.buttonHeightDp.dp),
         shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -82,7 +86,7 @@ fun RefreshRateButton(
     ) {
         Text(
             text = "${hz.toInt()} Hz",
-            style = MaterialTheme.typography.headlineSmall,
+            fontSize = debugSettings.hzTextSizeSp.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 
 /**
@@ -33,6 +36,7 @@ import akihz.anlaki.dev.presentation.components.RefreshRateButton
  * @param selectedRate refresh rate selected in the UI
  * @param isLoading whether Shizuku or refresh-rate data is still initializing
  * @param onRateSelected called when the user picks a refresh rate
+ * @param debugSettings adjustable home-screen presentation values
  * @param modifier layout modifier supplied by the parent screen
  */
 @Composable
@@ -42,6 +46,7 @@ fun RefreshRateScreen(
     selectedRate: Float?,
     isLoading: Boolean,
     onRateSelected: (Float) -> Unit,
+    debugSettings: HomeDebugSettings,
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -73,15 +78,19 @@ fun RefreshRateScreen(
             EmptyState()
         } else {
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(debugSettings.buttonSpacingDp.dp)
             ) {
                 supportedRates.forEach { hz ->
                     RefreshRateButton(
                         hz = hz,
                         isSelected = selectedRate?.let { kotlin.math.abs(hz - it) < 1f } == true,
                         onClick = { onRateSelected(hz) },
-                        modifier = Modifier.weight(1f)
+                        debugSettings = debugSettings
                     )
                 }
             }

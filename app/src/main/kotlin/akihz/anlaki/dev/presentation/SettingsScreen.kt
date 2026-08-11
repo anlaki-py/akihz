@@ -1,6 +1,10 @@
 package akihz.anlaki.dev.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
@@ -16,6 +20,7 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
+ * @param onOpenDebugSettings opens the hidden home-screen tuning page
  * @param modifier layout modifier supplied by the app shell
  */
 @Composable
@@ -28,8 +33,10 @@ fun SettingsScreen(
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
+    onOpenDebugSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var versionTapCount by remember { mutableIntStateOf(0) }
     PreferenceLayout(
         label = "Settings",
         modifier = modifier
@@ -46,6 +53,14 @@ fun SettingsScreen(
             onResetToDefaults = onResetToDefaults,
             onOpenCustomKeys = onOpenCustomKeys
         )
-        AboutSection()
+        AboutSection(
+            onVersionClick = {
+                versionTapCount++
+                if (versionTapCount >= 6) {
+                    versionTapCount = 0
+                    onOpenDebugSettings()
+                }
+            }
+        )
     }
 }

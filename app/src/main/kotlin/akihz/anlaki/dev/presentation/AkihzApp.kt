@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.FloatingBottomBar
 import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
 import akihz.anlaki.dev.presentation.modifiers.BlurDirection
@@ -58,6 +59,8 @@ private enum class AppPage(
  * @param themeMode currently selected appearance mode
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param blurEnabled whether progressive edge blur is enabled
+ * @param homeDebugSettings current home-screen tuning values
+ * @param onHomeDebugSettingsChanged persists updated home-screen tuning
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
@@ -72,16 +75,27 @@ fun AkihzApp(
     themeMode: AppThemeMode,
     amoledMode: Boolean,
     blurEnabled: Boolean,
+    homeDebugSettings: HomeDebugSettings,
+    onHomeDebugSettingsChanged: (HomeDebugSettings) -> Unit,
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
     onErrorDismissed: () -> Unit = {}
 ) {
     var showCustomKeys by remember { mutableStateOf(false) }
+    var showDebugSettings by remember { mutableStateOf(false) }
     if (showCustomKeys) {
         CustomKeysScreen(
             onBack = { showCustomKeys = false },
             onProfileChanged = onCustomProfileChanged
+        )
+        return
+    }
+    if (showDebugSettings) {
+        DebugSettingsScreen(
+            settings = homeDebugSettings,
+            onSettingsChanged = onHomeDebugSettingsChanged,
+            onBack = { showDebugSettings = false }
         )
         return
     }
@@ -150,6 +164,7 @@ fun AkihzApp(
                         currentRate = uiState.currentRate,
                         selectedRate = uiState.selectedRate,
                         isLoading = uiState.isLoading || !uiState.isServiceBound,
+                        debugSettings = homeDebugSettings,
                         onRateSelected = onRateSelected,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -162,6 +177,7 @@ fun AkihzApp(
                         onThemeModeChanged = onThemeModeChanged,
                         onAmoledModeChanged = onAmoledModeChanged,
                         onBlurEnabledChanged = onBlurEnabledChanged,
+                        onOpenDebugSettings = { showDebugSettings = true },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
