@@ -82,6 +82,9 @@ class MainActivity : ComponentActivity() {
             var homeDebugSettings by remember {
                 mutableStateOf(PreferencesHelper.homeDebugSettings)
             }
+            var debugOptionsUnlocked by rememberSaveable {
+                mutableStateOf(PreferencesHelper.debugOptionsUnlocked)
+            }
             val systemDarkTheme = isSystemInDarkTheme()
             val darkTheme = when (themeMode) {
                 AppThemeMode.System -> systemDarkTheme
@@ -117,6 +120,11 @@ class MainActivity : ComponentActivity() {
                     onHomeDebugSettingsChanged = { settings ->
                         homeDebugSettings = settings
                         PreferencesHelper.homeDebugSettings = settings
+                    },
+                    debugOptionsUnlocked = debugOptionsUnlocked,
+                    onDebugOptionsUnlocked = {
+                        debugOptionsUnlocked = true
+                        PreferencesHelper.debugOptionsUnlocked = true
                     },
                     onThemeModeChanged = { mode ->
                         themeMode = mode
