@@ -77,10 +77,10 @@ private fun androidx.compose.material3.ColorScheme.withPitchBlackSurfaces() = co
     background = androidx.compose.ui.graphics.Color.Black,
     surface = androidx.compose.ui.graphics.Color.Black,
     surfaceDim = androidx.compose.ui.graphics.Color.Black,
-    surfaceBright = androidx.compose.ui.graphics.Color(0xFF101010),
+    surfaceBright = androidx.compose.ui.graphics.Color.Black,
     surfaceContainerLowest = androidx.compose.ui.graphics.Color.Black,
     surfaceContainerLow = androidx.compose.ui.graphics.Color.Black,
-    surfaceContainer = androidx.compose.ui.graphics.Color(0xFF080808),
-    surfaceContainerHigh = androidx.compose.ui.graphics.Color(0xFF101010),
-    surfaceContainerHighest = androidx.compose.ui.graphics.Color(0xFF181818)
+    surfaceContainer = androidx.compose.ui.graphics.Color.Black,
+    surfaceContainerHigh = androidx.compose.ui.graphics.Color.Black,
+    surfaceContainerHighest = androidx.compose.ui.graphics.Color.Black
 )
