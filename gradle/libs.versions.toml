@@ -9,6 +9,7 @@ hilt = "2.57.1"
 hiltNavigationCompose = "1.2.0"
 coroutines = "1.9.0"
 timber = "5.0.1"
+work = "2.11.1"
 junit = "4.13.2"
 mockk = "1.13.12"
 turbine = "1.2.0"
@@ -32,6 +33,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.r
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+work-runtime = { group = "androidx.work", name = "work-runtime", version.ref = "work" }
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version = "13.1.5" }
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version = "13.1.5" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

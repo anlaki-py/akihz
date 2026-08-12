@@ -7,6 +7,13 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Added
+
+- Added automatic GitHub update checks using battery-conscious WorkManager
+  scheduling, with daily, three-day, weekly, and disabled frequency options.
+- Added deduplicated update-available notifications that open the existing secure
+  in-app download flow.
+
 ## [0.0.37] - 2026-08-12
 
 ### Added

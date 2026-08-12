@@ -20,9 +20,10 @@ private const val DONATION_URL = "https://ko-fi.com/unluky"
  * Displays app version information and project links.
  *
  * @param onVersionClick invoked when the version row is tapped
+ * @param autoCheckRequest changes when an update notification requests a fresh check
  */
 @Composable
-fun AboutSection(onVersionClick: () -> Unit) {
+fun AboutSection(onVersionClick: () -> Unit, autoCheckRequest: Int = 0) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     val pm = context.packageManager
@@ -58,6 +59,9 @@ fun AboutSection(onVersionClick: () -> Unit) {
             onClick = { uriHandler.openUri(DONATION_URL) }
         )
 
-        AppUpdateSection(currentVersionCode = versionCode)
+        AppUpdateSection(
+            currentVersionCode = versionCode,
+            autoCheckRequest = autoCheckRequest
+        )
     }
 }
