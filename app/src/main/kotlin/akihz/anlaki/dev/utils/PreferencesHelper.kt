@@ -37,6 +37,7 @@ object PreferencesHelper {
     private const val KEY_SELECTED_CORNER = "debug_selected_corner"
     private const val KEY_PRESSED_CORNER = "debug_pressed_corner"
     private const val KEY_DEBUG_OPTIONS_UNLOCKED = "debug_options_unlocked"
+    private const val KEY_WELCOME_NOTICE_ACCEPTED = "welcome_notice_accepted"
 
     private lateinit var prefs: SharedPreferences
 
@@ -141,6 +142,11 @@ object PreferencesHelper {
     var debugOptionsUnlocked: Boolean
         get() = prefs.getBoolean(KEY_DEBUG_OPTIONS_UNLOCKED, false)
         set(value) = prefs.edit { putBoolean(KEY_DEBUG_OPTIONS_UNLOCKED, value) }
+
+    /** Whether the user has acknowledged the first-run project notice. */
+    var welcomeNoticeAccepted: Boolean
+        get() = prefs.getBoolean(KEY_WELCOME_NOTICE_ACCEPTED, false)
+        set(value) = prefs.edit { putBoolean(KEY_WELCOME_NOTICE_ACCEPTED, value) }
 
     fun saveState(index: Int, rate: Float) {
         prefs.edit {

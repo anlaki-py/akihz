@@ -7,6 +7,11 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Added
+
+- Added a friendly first-run project notice that users acknowledge before
+  akiHz starts Shizuku setup or its background service.
+
 ## [0.0.40] - 2026-08-12
 
 ### Changed
