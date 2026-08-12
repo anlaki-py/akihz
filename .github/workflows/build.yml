@@ -11,7 +11,10 @@ on:
       - 'settings.gradle.kts'
       - 'gradle/**'
       - 'gradle.properties'
-      - '.github/workflows/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - '.github/workflows/build.yml'
+      - '.github/actions/**'
   workflow_dispatch:
 
 concurrency:
