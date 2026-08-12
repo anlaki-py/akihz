@@ -216,8 +216,8 @@ jobs:
             printf '%s\n' "$VERIFY_OUTPUT"
             APK_CERTIFICATE_SHA256=""
             while IFS= read -r LINE; do
-              if [[ "$LINE" == "Signer #1 certificate SHA-256 digest: "* ]]; then
-                APK_CERTIFICATE_SHA256=${LINE#Signer #1 certificate SHA-256 digest: }
+              if [[ "$LINE" == *Signer*"certificate SHA-256 digest: "* ]]; then
+                APK_CERTIFICATE_SHA256=${LINE##*: }
                 break
               fi
             done <<< "$VERIFY_OUTPUT"
