@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.update.UpdateChannel
+import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
@@ -23,6 +24,11 @@ object PreferencesHelper {
     private const val KEY_AMOLED_MODE = "amoled_mode"
     private const val KEY_BLUR_ENABLED = "blur_enabled"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
+    private const val KEY_UPDATE_CHECK_FREQUENCY = "update_check_frequency"
+    private const val KEY_LAST_UPDATE_CHECK_AT = "last_update_check_at"
+    private const val KEY_LATEST_UPDATE_CODE = "latest_update_code"
+    private const val KEY_LATEST_UPDATE_NAME = "latest_update_name"
+    private const val KEY_LAST_NOTIFIED_UPDATE_CODE = "last_notified_update_code"
     private const val KEY_HZ_TEXT_SIZE = "debug_hz_text_size"
     private const val KEY_BUTTON_HEIGHT = "debug_button_height"
     private const val KEY_BUTTON_WIDTH = "debug_button_width"
@@ -77,6 +83,36 @@ object PreferencesHelper {
             )
         }.getOrDefault(UpdateChannel.Stable)
         set(value) = prefs.edit { putString(KEY_UPDATE_CHANNEL, value.name) }
+
+    var updateCheckFrequency: UpdateCheckFrequency
+        get() = UpdateCheckFrequency.fromStoredValue(
+            prefs.getString(KEY_UPDATE_CHECK_FREQUENCY, null)
+        )
+        set(value) = prefs.edit { putString(KEY_UPDATE_CHECK_FREQUENCY, value.name) }
+
+    var lastUpdateCheckAt: Long
+        get() = prefs.getLong(KEY_LAST_UPDATE_CHECK_AT, 0L)
+        set(value) = prefs.edit { putLong(KEY_LAST_UPDATE_CHECK_AT, value) }
+
+    var latestAvailableVersionCode: Long
+        get() = prefs.getLong(KEY_LATEST_UPDATE_CODE, -1L)
+        set(value) = prefs.edit { putLong(KEY_LATEST_UPDATE_CODE, value) }
+
+    var latestAvailableVersionName: String
+        get() = prefs.getString(KEY_LATEST_UPDATE_NAME, "") ?: ""
+        set(value) = prefs.edit { putString(KEY_LATEST_UPDATE_NAME, value) }
+
+    var lastNotifiedVersionCode: Long
+        get() = prefs.getLong(KEY_LAST_NOTIFIED_UPDATE_CODE, -1L)
+        set(value) = prefs.edit { putLong(KEY_LAST_NOTIFIED_UPDATE_CODE, value) }
+
+    /** Clears cached information about an update that is no longer newer. */
+    fun clearAvailableUpdate() {
+        prefs.edit {
+            remove(KEY_LATEST_UPDATE_CODE)
+            remove(KEY_LATEST_UPDATE_NAME)
+        }
+    }
 
     var homeDebugSettings: HomeDebugSettings
         get() {

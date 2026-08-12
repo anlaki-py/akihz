@@ -27,6 +27,7 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * @param onOpenDebugSettings opens the hidden home-screen tuning page
  * @param debugOptionsUnlocked whether the persistent developer entry is visible
  * @param onDebugOptionsUnlocked persists the developer entry after six version taps
+ * @param autoCheckRequest changes when an update notification opens this screen
  * @param modifier layout modifier supplied by the app shell
  */
 @Composable
@@ -42,6 +43,7 @@ fun SettingsScreen(
     debugOptionsUnlocked: Boolean,
     onDebugOptionsUnlocked: () -> Unit,
     onOpenDebugSettings: () -> Unit,
+    autoCheckRequest: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var versionTapCount by remember { mutableIntStateOf(0) }
@@ -72,6 +74,7 @@ fun SettingsScreen(
             }
         }
         AboutSection(
+            autoCheckRequest = autoCheckRequest,
             onVersionClick = {
                 if (!debugOptionsUnlocked) {
                     versionTapCount++

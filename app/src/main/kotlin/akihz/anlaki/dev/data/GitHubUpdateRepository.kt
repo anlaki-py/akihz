@@ -9,12 +9,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
 private const val RELEASES_API = "https://api.github.com/repos/anlaki-py/akihz/releases?per_page=20"
 private const val METADATA_FILE = "release-metadata.json"
 private const val PACKAGE_NAME = "akihz.anlaki.dev"
+
+/** HTTP failure returned by the GitHub update service. */
+internal class UpdateHttpException(val statusCode: Int) :
+    IOException("Update server returned HTTP $statusCode")
 
 /** Resolves published GitHub releases into an APK suitable for this device. */
 class GitHubUpdateRepository {
@@ -76,7 +81,7 @@ class GitHubUpdateRepository {
             connection.setRequestProperty("Accept", "application/vnd.github+json")
             connection.setRequestProperty("User-Agent", "akiHz-Android")
             if (connection.responseCode !in 200..299) {
-                error("Update server returned HTTP ${connection.responseCode}")
+                throw UpdateHttpException(connection.responseCode)
             }
             connection.inputStream.bufferedReader().use { it.readText() }
         } finally {
