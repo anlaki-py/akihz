@@ -73,6 +73,7 @@ private enum class DetailPage { CustomKeys, DebugOptions }
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
  * @param onErrorDismissed clears an error after it is shown
+ * @param openUpdatesRequest changes when Settings should open from an update alert
  */
 @Composable
 fun AkihzApp(
@@ -90,6 +91,7 @@ fun AkihzApp(
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
+    openUpdatesRequest: Int = 0,
     onErrorDismissed: () -> Unit = {}
 ) {
     var detailPage by remember { mutableStateOf<DetailPage?>(null) }
@@ -113,6 +115,12 @@ fun AkihzApp(
             } else {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
+        }
+    }
+
+    LaunchedEffect(openUpdatesRequest) {
+        if (openUpdatesRequest > 0) {
+            pagerState.animateScrollToPage(AppPage.Settings.ordinal)
         }
     }
 
@@ -179,6 +187,7 @@ fun AkihzApp(
                                     debugOptionsUnlocked = debugOptionsUnlocked,
                                     onDebugOptionsUnlocked = onDebugOptionsUnlocked,
                                     onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
+                                    autoCheckRequest = openUpdatesRequest,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }
