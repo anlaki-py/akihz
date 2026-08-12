@@ -42,8 +42,13 @@ object UpdateAvailableNotification {
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-        return true
+        return try {
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+            true
+        } catch (_: SecurityException) {
+            // Permission can be revoked after canNotify() and before this call.
+            false
+        }
     }
 
     /** Returns whether the app and update-alert channel may post notifications. */
