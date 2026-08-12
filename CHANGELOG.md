@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.41] - 2026-08-12
+
 ### Added
 
 - Added a friendly first-run project notice that users acknowledge before
