@@ -353,7 +353,11 @@ jobs:
           fi
 
           awk -v heading="## [$SECTION]" '
-            $0 == heading { found = 1; next }
+            index($0, heading) == 1 &&
+              (length($0) == length(heading) || substr($0, length(heading) + 1, 1) == " ") {
+                found = 1
+                next
+              }
             found && /^## \[/ { exit }
             found { print }
             END { if (!found) exit 2 }
