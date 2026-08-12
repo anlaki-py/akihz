@@ -11,6 +11,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 - Added a friendly first-run project notice that users acknowledge before
   akiHz starts Shizuku setup or its background service.
+- Added the developer name and profile to machine-readable release metadata.
 
 ## [0.0.40] - 2026-08-12
 
