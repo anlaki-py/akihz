@@ -202,12 +202,35 @@ jobs:
           mkdir -p release-assets
           BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
           ABIS=(arm64-v8a armeabi-v7a x86 x86_64 universal)
+          RELEASE_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          REPOSITORY_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          RELEASE_URL="$REPOSITORY_URL/releases/tag/$RELEASE_TAG"
+          CHANGELOG_URL="$REPOSITORY_URL/blob/$RELEASE_TAG/CHANGELOG.md"
+          SIGNING_CERTIFICATE_SHA256=""
 
           for ABI in "${ABIS[@]}"; do
             SOURCE="app/build/outputs/apk/release/app-${ABI}-release.apk"
             TARGET="release-assets/akihz-${RELEASE_TAG}-${ABI}.apk"
             test -s "$SOURCE" || { echo "::error::Missing APK for $ABI"; exit 1; }
-            "$BUILD_TOOLS/apksigner" verify --print-certs "$SOURCE"
+            VERIFY_OUTPUT=$("$BUILD_TOOLS/apksigner" verify --print-certs "$SOURCE")
+            printf '%s\n' "$VERIFY_OUTPUT"
+            APK_CERTIFICATE_SHA256=""
+            while IFS= read -r LINE; do
+              if [[ "$LINE" == "Signer #1 certificate SHA-256 digest: "* ]]; then
+                APK_CERTIFICATE_SHA256=${LINE#Signer #1 certificate SHA-256 digest: }
+                break
+              fi
+            done <<< "$VERIFY_OUTPUT"
+            [[ "$APK_CERTIFICATE_SHA256" =~ ^[0-9a-fA-F]{64}$ ]] || {
+              echo "::error::Could not read the signing certificate SHA-256 for $ABI"
+              exit 1
+            }
+            if [[ -z "$SIGNING_CERTIFICATE_SHA256" ]]; then
+              SIGNING_CERTIFICATE_SHA256="${APK_CERTIFICATE_SHA256,,}"
+            elif [[ "$SIGNING_CERTIFICATE_SHA256" != "${APK_CERTIFICATE_SHA256,,}" ]]; then
+              echo "::error::Release APKs do not share the same signing certificate"
+              exit 1
+            fi
             mv "$SOURCE" "$TARGET"
           done
 
@@ -221,12 +244,14 @@ jobs:
               FILE="akihz-${RELEASE_TAG}-${ABI}.apk"
               SHA=$(sha256sum "release-assets/$FILE" | cut -d' ' -f1)
               SIZE=$(stat -c%s "release-assets/$FILE")
+              URL="$REPOSITORY_URL/releases/download/$RELEASE_TAG/$FILE"
               jq -n \
                 --arg abi "$ABI" \
                 --arg file "$FILE" \
+                --arg url "$URL" \
                 --arg sha256 "$SHA" \
                 --argjson size "$SIZE" \
-                '{abi: $abi, file: $file, sha256: $sha256, size: $size}'
+                '{abi: $abi, file: $file, url: $url, sha256: $sha256, size: $size}'
             done | jq -s .
           )
 
@@ -238,6 +263,11 @@ jobs:
             --arg channel "$RELEASE_CHANNEL" \
             --argjson prerelease "$IS_BETA" \
             --arg commit "$GITHUB_SHA" \
+            --arg release_date "$RELEASE_DATE" \
+            --arg repository "$REPOSITORY_URL" \
+            --arg release_url "$RELEASE_URL" \
+            --arg changelog "$CHANGELOG_URL" \
+            --arg signing_certificate_sha256 "$SIGNING_CERTIFICATE_SHA256" \
             --arg min_sdk "30" \
             --arg target_sdk "36" \
             --argjson assets "$ASSETS_JSON" \
@@ -249,8 +279,21 @@ jobs:
               channel: $channel,
               prerelease: $prerelease,
               commit: $commit,
+              releaseDate: $release_date,
+              repository: $repository,
+              releaseUrl: $release_url,
+              changelog: $changelog,
               minSdk: ($min_sdk | tonumber),
               targetSdk: ($target_sdk | tonumber),
+              requirements: {
+                shizuku: {
+                  required: true,
+                  url: "https://shizuku.rikka.app/"
+                }
+              },
+              signingCertificate: {
+                sha256: $signing_certificate_sha256
+              },
               assets: $assets
             }' > release-assets/release-metadata.json
 

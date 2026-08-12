@@ -67,7 +67,9 @@ stable release without uninstalling it.
 
 GitHub release assets use predictable names and include SHA-256 checksums and a
 machine-readable `release-metadata.json` file for release indexers and Android
-update clients.
+update clients. The metadata includes canonical project and release links,
+release date, Shizuku requirement, APK download URLs, and the signing
+certificate fingerprint shared by every APK variant.
 
 See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 
