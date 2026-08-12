@@ -1,0 +1,1 @@
+Switch Android display refresh rates with Shizuku and no root
