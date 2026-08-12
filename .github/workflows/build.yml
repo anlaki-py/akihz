@@ -1,20 +1,6 @@
 name: Build & Release
 
 on:
-  push:
-    branches:
-      - main
-      - beta
-    paths:
-      - 'app/**'
-      - 'build.gradle.kts'
-      - 'settings.gradle.kts'
-      - 'gradle/**'
-      - 'gradle.properties'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - '.github/workflows/build.yml'
-      - '.github/actions/**'
   workflow_dispatch:
 
 concurrency:
