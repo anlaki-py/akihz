@@ -15,6 +15,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
   release notes instead of GitHub-generated commit summaries.
 - Made release publication stop when the expected changelog section is missing
   or empty, preventing releases with incorrect notes.
+- Added the matching changelog notes to machine-readable release metadata.
 
 ## [0.0.39] - 2026-08-12
 

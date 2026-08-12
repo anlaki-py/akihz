@@ -211,6 +211,31 @@ jobs:
           CHANGELOG_URL="$REPOSITORY_URL/blob/$RELEASE_TAG/CHANGELOG.md"
           SIGNING_CERTIFICATE_SHA256=""
 
+          if [[ "$IS_BETA" == "true" ]]; then
+            CHANGELOG_SECTION="Unreleased"
+          else
+            CHANGELOG_SECTION="$VERSION_NAME"
+          fi
+          CHANGELOG_HEADING="## [$CHANGELOG_SECTION]"
+          awk -v heading="$CHANGELOG_HEADING" '
+            index($0, heading) == 1 &&
+              (length($0) == length(heading) || substr($0, length(heading) + 1, 1) == " ") {
+                found = 1
+                next
+              }
+            found && /^## \[/ { exit }
+            found { print }
+            END { if (!found) exit 2 }
+          ' CHANGELOG.md > release-assets/release-notes.md || {
+            echo "::error::CHANGELOG.md has no section for $CHANGELOG_SECTION"
+            exit 1
+          }
+          if ! grep -q '[^[:space:]]' release-assets/release-notes.md; then
+            echo "::error::The $CHANGELOG_SECTION changelog section is empty"
+            exit 1
+          fi
+          RELEASE_NOTES=$(cat release-assets/release-notes.md)
+
           for ABI in "${ABIS[@]}"; do
             SOURCE="app/build/outputs/apk/release/app-${ABI}-release.apk"
             TARGET="release-assets/akihz-${RELEASE_TAG}-${ABI}.apk"
@@ -270,6 +295,7 @@ jobs:
             --arg repository "$REPOSITORY_URL" \
             --arg release_url "$RELEASE_URL" \
             --arg changelog "$CHANGELOG_URL" \
+            --arg release_notes "$RELEASE_NOTES" \
             --arg signing_certificate_sha256 "$SIGNING_CERTIFICATE_SHA256" \
             --arg min_sdk "30" \
             --arg target_sdk "36" \
@@ -286,6 +312,7 @@ jobs:
               repository: $repository,
               releaseUrl: $release_url,
               changelog: $changelog,
+              releaseNotes: $release_notes,
               minSdk: ($min_sdk | tonumber),
               targetSdk: ($target_sdk | tonumber),
               requirements: {
@@ -299,6 +326,11 @@ jobs:
               },
               assets: $assets
             }' > release-assets/release-metadata.json
+
+          {
+            echo
+            echo "[Full changelog]($CHANGELOG_URL)"
+          } >> release-assets/release-notes.md
 
           {
             echo "## Release assets"
@@ -338,44 +370,6 @@ jobs:
           name: release-assets-${{ needs.version.outputs.tag }}
           path: artifacts/
 
-      - name: Extract release notes from changelog
-        shell: bash
-        env:
-          IS_BETA: ${{ needs.version.outputs.is_beta }}
-          RELEASE_TAG: ${{ needs.version.outputs.tag }}
-          VERSION_NAME: ${{ needs.version.outputs.version_name }}
-        run: |
-          set -euo pipefail
-          if [[ "$IS_BETA" == "true" ]]; then
-            SECTION="Unreleased"
-          else
-            SECTION="$VERSION_NAME"
-          fi
-
-          awk -v heading="## [$SECTION]" '
-            index($0, heading) == 1 &&
-              (length($0) == length(heading) || substr($0, length(heading) + 1, 1) == " ") {
-                found = 1
-                next
-              }
-            found && /^## \[/ { exit }
-            found { print }
-            END { if (!found) exit 2 }
-          ' CHANGELOG.md > release-notes.md || {
-            echo "::error::CHANGELOG.md has no section for $SECTION"
-            exit 1
-          }
-
-          if ! grep -q '[^[:space:]]' release-notes.md; then
-            echo "::error::The $SECTION changelog section is empty"
-            exit 1
-          fi
-
-          {
-            echo
-            echo "[Full changelog]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/CHANGELOG.md)"
-          } >> release-notes.md
-
       - name: Create and push tag
         shell: bash
         run: |
@@ -386,9 +380,12 @@ jobs:
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: ${{ needs.version.outputs.tag }}
-          files: artifacts/*
+          files: |
+            artifacts/*.apk
+            artifacts/checksums-sha256.txt
+            artifacts/release-metadata.json
           name: akihz ${{ needs.version.outputs.tag }}
-          body_path: release-notes.md
+          body_path: artifacts/release-notes.md
           generate_release_notes: false
           draft: false
           prerelease: ${{ needs.version.outputs.is_beta == 'true' }}
