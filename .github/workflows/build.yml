@@ -338,6 +338,40 @@ jobs:
           name: release-assets-${{ needs.version.outputs.tag }}
           path: artifacts/
 
+      - name: Extract release notes from changelog
+        shell: bash
+        env:
+          IS_BETA: ${{ needs.version.outputs.is_beta }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          VERSION_NAME: ${{ needs.version.outputs.version_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$IS_BETA" == "true" ]]; then
+            SECTION="Unreleased"
+          else
+            SECTION="$VERSION_NAME"
+          fi
+
+          awk -v heading="## [$SECTION]" '
+            $0 == heading { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+            END { if (!found) exit 2 }
+          ' CHANGELOG.md > release-notes.md || {
+            echo "::error::CHANGELOG.md has no section for $SECTION"
+            exit 1
+          }
+
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::The $SECTION changelog section is empty"
+            exit 1
+          fi
+
+          {
+            echo
+            echo "[Full changelog]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/CHANGELOG.md)"
+          } >> release-notes.md
+
       - name: Create and push tag
         shell: bash
         run: |
@@ -350,10 +384,8 @@ jobs:
           tag_name: ${{ needs.version.outputs.tag }}
           files: artifacts/*
           name: akihz ${{ needs.version.outputs.tag }}
-          body: >-
-            See the [full changelog](${{ github.server_url }}/${{ github.repository }}/blob/${{ needs.version.outputs.tag }}/CHANGELOG.md)
-            for release history and upgrade details.
-          generate_release_notes: true
+          body_path: release-notes.md
+          generate_release_notes: false
           draft: false
           prerelease: ${{ needs.version.outputs.is_beta == 'true' }}
         env:
