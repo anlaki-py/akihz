@@ -7,6 +7,15 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.40] - 2026-08-12
+
+### Changed
+
+- Made GitHub releases use the matching section of this changelog as their
+  release notes instead of GitHub-generated commit summaries.
+- Made release publication stop when the expected changelog section is missing
+  or empty, preventing releases with incorrect notes.
+
 ## [0.0.39] - 2026-08-12
 
 ### Added
