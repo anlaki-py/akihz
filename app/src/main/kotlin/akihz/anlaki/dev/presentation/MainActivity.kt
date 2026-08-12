@@ -179,8 +179,7 @@ class MainActivity : ComponentActivity() {
                             showWelcomeNotice = false
                             KeepAliveService.start(this@MainActivity)
                             checkShizukuPermission()
-                        },
-                        onDecline = { finish() }
+                        }
                     )
                 }
             }

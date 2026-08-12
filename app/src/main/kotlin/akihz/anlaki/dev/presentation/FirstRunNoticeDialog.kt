@@ -12,12 +12,10 @@ import androidx.compose.ui.unit.dp
  * Introduces the app's independent-project status before first use.
  *
  * @param onAccept called when the user acknowledges the notice and wants to continue
- * @param onDecline called when the user chooses not to use the app yet
  */
 @Composable
 fun FirstRunNoticeDialog(
-    onAccept: () -> Unit,
-    onDecline: () -> Unit
+    onAccept: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = {},
@@ -43,11 +41,6 @@ fun FirstRunNoticeDialog(
         confirmButton = {
             TextButton(onClick = onAccept) {
                 Text("Continue")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDecline) {
-                Text("Not now")
             }
         }
     )
