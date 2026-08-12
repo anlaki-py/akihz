@@ -7,6 +7,27 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.37] - 2026-08-12
+
+### Added
+
+- Added upstream Fastlane store metadata with the app icon, descriptions, and
+  light and dark screenshots for app catalogs and alternative stores.
+- Added a repository social-preview image and moved download, requirements,
+  and supported Android version details near the top of the README.
+- Added canonical project and release links, release date, Shizuku dependency,
+  direct APK URLs, and the APK signing-certificate fingerprint to generated
+  release metadata.
+
+### Changed
+
+- Documented the universal-only Gradle task used for debug APK builds.
+
+### Fixed
+
+- Made release signing-certificate extraction support both current `V2 Signer`
+  and older `Signer #1` output formats from Android's `apksigner` tool.
+
 ## [0.0.36] - 2026-08-11
 
 ### Added
