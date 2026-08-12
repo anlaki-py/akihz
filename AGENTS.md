@@ -15,3 +15,7 @@
 - Explain complex business logic (why, not what)
 - Comment non-obvious edge cases and workarounds
 - Don't comment obvious code (e.g., `val name = "John"`)
+
+## Debug APK Builds
+- When asked to build a debug app/APK, build only the universal APK using `./gradlew :app:packageDebugUniversalApk` rather than assembling every ABI split.
+- The universal debug APK is written to `app/build/outputs/apk_from_bundle/debug/app-debug-universal.apk`.
