@@ -18,6 +18,22 @@
 
 ---
 
+## Download
+
+Download the latest APK from [GitHub Releases](https://github.com/anlaki-py/akihz/releases/latest).
+Most modern phones use the `arm64-v8a` APK; choose the `universal` APK if you
+are unsure which architecture your device uses.
+
+## Requirements
+
+- [Shizuku](https://shizuku.rikka.app/) installed, running, and authorized
+- A display that supports more than one refresh rate
+- No root access required
+
+## Supported Android versions
+
+akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
+
 ## Screenshots
 
 | Home (light) | Home (dark) |
@@ -47,14 +63,7 @@ tested or guaranteed.
 If auto-detection fails, try **Settings → Advanced → OEM override** and select
 your manufacturer manually.
 
-## Requirements
-
-- Android 11+ (API 30)
-- [Shizuku](https://shizuku.rikka.app/) installed and running
-
 ## Install
-
-Download the latest APK from [Releases](https://github.com/anlaki-py/akihz/releases).
 
 Each release provides standalone APKs for `arm64-v8a`, `armeabi-v7a`, `x86`,
 and `x86_64`, plus a `universal` APK. Most modern phones use `arm64-v8a`;
@@ -67,7 +76,9 @@ stable release without uninstalling it.
 
 GitHub release assets use predictable names and include SHA-256 checksums and a
 machine-readable `release-metadata.json` file for release indexers and Android
-update clients.
+update clients. The metadata includes canonical project and release links,
+release date, Shizuku requirement, APK download URLs, and the signing
+certificate fingerprint shared by every APK variant.
 
 See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 

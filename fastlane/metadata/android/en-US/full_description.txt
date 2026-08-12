@@ -1,0 +1,15 @@
+akiHz is a lightweight, open-source Android app for switching your device's display refresh rate without root access.
+
+It automatically detects the refresh rates supported by your display and lets you switch between values such as 60 Hz, 90 Hz, and 120 Hz. A Quick Settings tile provides one-tap cycling without opening the app.
+
+Features:
+* Automatic detection of supported refresh rates
+* Quick Settings tile for fast switching
+* OEM-specific support for popular Android manufacturers
+* Manual OEM override and custom settings profiles
+* Light, dark, and true-black AMOLED themes
+* Stable and prerelease update channels
+
+akiHz requires Android 11 or newer and Shizuku to be installed, running, and authorized. Shizuku provides the privileged access needed to change Android's protected refresh-rate settings; root is not required.
+
+Device compatibility depends on the settings exposed by each manufacturer. Xiaomi is the primary tested platform, while support for other manufacturers is provided on a best-effort basis.
