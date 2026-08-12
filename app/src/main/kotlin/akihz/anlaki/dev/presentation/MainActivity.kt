@@ -48,16 +48,21 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
     private var isServiceBound = false
+    private var hasAcceptedWelcomeNotice = false
     private val dialogState = MutableStateFlow<AppDialog?>(null)
     private val openUpdatesRequest = MutableStateFlow(0)
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
-        checkShizukuPermission()
+        if (hasAcceptedWelcomeNotice) {
+            checkShizukuPermission()
+        }
     }
 
     private val binderDeadListener = Shizuku.OnBinderDeadListener {
         isServiceBound = false
-        showError("Shizuku service died. Please restart Shizuku.")
+        if (hasAcceptedWelcomeNotice) {
+            showError("Shizuku service died. Please restart Shizuku.")
+        }
     }
 
     private val permissionResultListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
@@ -76,7 +81,10 @@ class MainActivity : ComponentActivity() {
         }
 
         PreferencesHelper.init(this)
-        KeepAliveService.start(this)
+        hasAcceptedWelcomeNotice = PreferencesHelper.welcomeNoticeAccepted
+        if (hasAcceptedWelcomeNotice) {
+            KeepAliveService.start(this)
+        }
         handleUpdateIntent(intent)
 
         setContent {
@@ -88,6 +96,9 @@ class MainActivity : ComponentActivity() {
             }
             var debugOptionsUnlocked by rememberSaveable {
                 mutableStateOf(PreferencesHelper.debugOptionsUnlocked)
+            }
+            var showWelcomeNotice by rememberSaveable {
+                mutableStateOf(!PreferencesHelper.welcomeNoticeAccepted)
             }
             val systemDarkTheme = isSystemInDarkTheme()
             val darkTheme = when (themeMode) {
@@ -160,6 +171,17 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+                if (showWelcomeNotice) {
+                    FirstRunNoticeDialog(
+                        onAccept = {
+                            PreferencesHelper.welcomeNoticeAccepted = true
+                            hasAcceptedWelcomeNotice = true
+                            showWelcomeNotice = false
+                            KeepAliveService.start(this@MainActivity)
+                            checkShizukuPermission()
+                        }
+                    )
+                }
             }
         }
     }
@@ -175,7 +197,9 @@ class MainActivity : ComponentActivity() {
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         Shizuku.addBinderDeadListener(binderDeadListener)
         Shizuku.addRequestPermissionResultListener(permissionResultListener)
-        checkShizukuPermission()
+        if (hasAcceptedWelcomeNotice) {
+            checkShizukuPermission()
+        }
     }
 
     override fun onPause() {

@@ -275,6 +275,8 @@ jobs:
           jq -n \
             --arg schema_version "1" \
             --arg package_name "akihz.anlaki.dev" \
+            --arg developer_name "anlaki" \
+            --arg developer_url "https://github.com/anlaki-py" \
             --arg version_name "$VERSION_NAME" \
             --argjson version_code "$VERSION_CODE" \
             --arg channel "$RELEASE_CHANNEL" \
@@ -292,6 +294,10 @@ jobs:
             '{
               schemaVersion: ($schema_version | tonumber),
               packageName: $package_name,
+              developer: {
+                name: $developer_name,
+                url: $developer_url
+              },
               versionName: $version_name,
               versionCode: $version_code,
               channel: $channel,
