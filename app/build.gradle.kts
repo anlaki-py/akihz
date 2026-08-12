@@ -132,6 +132,7 @@ dependencies {
     implementation(libs.shizuku.provider)
     implementation(libs.coroutines.android)
     implementation(libs.timber)
+    implementation(libs.work.runtime)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
 }

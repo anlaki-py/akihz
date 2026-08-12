@@ -3,6 +3,7 @@ package akihz.anlaki.dev.presentation
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,6 +41,7 @@ private data class AppDialog(
 class MainActivity : ComponentActivity() {
 
     companion object {
+        const val EXTRA_OPEN_UPDATES = "akihz.extra.OPEN_UPDATES"
         private const val REQUEST_CODE_SHIZUKU = 1001
         private const val SHIZUKU_OWNER = "main_activity"
     }
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
     private var isServiceBound = false
     private val dialogState = MutableStateFlow<AppDialog?>(null)
+    private val openUpdatesRequest = MutableStateFlow(0)
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
@@ -74,6 +77,7 @@ class MainActivity : ComponentActivity() {
 
         PreferencesHelper.init(this)
         KeepAliveService.start(this)
+        handleUpdateIntent(intent)
 
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
@@ -107,6 +111,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val uiState by viewModel.uiState.collectAsState()
                 val appDialog by dialogState.collectAsState()
+                val updateRequest by openUpdatesRequest.collectAsState()
 
                 AkihzApp(
                     uiState = uiState,
@@ -138,6 +143,7 @@ class MainActivity : ComponentActivity() {
                         blurEnabled = enabled
                         PreferencesHelper.blurEnabled = enabled
                     },
+                    openUpdatesRequest = updateRequest,
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
                 appDialog?.let { dialog ->
@@ -156,6 +162,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleUpdateIntent(intent)
     }
 
     override fun onResume() {
@@ -211,6 +223,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showError(message: String) = showDialog("Error", message)
+
+    private fun handleUpdateIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_OPEN_UPDATES, false) == true) {
+            openUpdatesRequest.value += 1
+            intent.removeExtra(EXTRA_OPEN_UPDATES)
+        }
+    }
 
     private fun showDialog(title: String, message: String, cancelable: Boolean = true) {
         dialogState.value = AppDialog(

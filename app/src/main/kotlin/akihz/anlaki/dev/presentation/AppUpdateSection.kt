@@ -31,13 +31,19 @@ import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.UpdateNotification
+import akihz.anlaki.dev.utils.UpdateAvailableNotification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-/** Displays update channel selection and the in-app update action. */
+/**
+ * Displays automatic checks, channel selection, and the in-app update action.
+ *
+ * @param currentVersionCode installed application version code
+ * @param autoCheckRequest changes when an update notification requests a fresh check
+ */
 @Composable
-fun AppUpdateSection(currentVersionCode: Long) {
+fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
     val context = LocalContext.current
     val repository = remember { GitHubUpdateRepository() }
     val downloader = remember { AppUpdateDownloader(context) }
@@ -53,7 +59,12 @@ fun AppUpdateSection(currentVersionCode: Long) {
     var pendingDownloadRequest by remember { mutableStateOf<AppUpdate?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var statusText by remember {
-        mutableStateOf(restoredDownload?.let { "Restoring update download…" })
+        mutableStateOf(
+            restoredDownload?.let { "Restoring update download…" }
+                ?: PreferencesHelper.latestAvailableVersionName
+                    .takeIf { PreferencesHelper.latestAvailableVersionCode > currentVersionCode }
+                    ?.let { "Version $it is available" }
+        )
     }
     var downloadId by remember {
         mutableLongStateOf(restoredDownload?.downloadId ?: -1L)
@@ -67,6 +78,7 @@ fun AppUpdateSection(currentVersionCode: Long) {
                 availableUpdate = null
                 pendingDownloadRequest = null
                 statusText = "Starting download…"
+                UpdateAvailableNotification.cancel(context)
             }
             .onFailure {
                 statusText = "Download failed"
@@ -101,12 +113,21 @@ fun AppUpdateSection(currentVersionCode: Long) {
                         UpdateAvailability.Available -> {
                             availableUpdate = update
                             statusText = "Version ${update.versionName} is available"
+                            PreferencesHelper.latestAvailableVersionCode = update.versionCode
+                            PreferencesHelper.latestAvailableVersionName = update.versionName
+                            PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
                         }
                         UpdateAvailability.AheadOfStable -> {
                             statusText = "You’re ahead of stable; the next stable will install normally"
+                            PreferencesHelper.clearAvailableUpdate()
+                            PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
+                            UpdateAvailableNotification.cancel(context)
                         }
                         UpdateAvailability.UpToDate -> {
                             statusText = "You’re up to date"
+                            PreferencesHelper.clearAvailableUpdate()
+                            PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
+                            UpdateAvailableNotification.cancel(context)
                         }
                     }
                 }
@@ -117,6 +138,11 @@ fun AppUpdateSection(currentVersionCode: Long) {
         }
     }
 
+    LaunchedEffect(autoCheckRequest) {
+        if (autoCheckRequest > 0) checkForUpdate()
+    }
+
+    AutomaticUpdateCheckPreference()
     PreferenceTemplate(
         title = "Update channel",
         description = channel.label,
