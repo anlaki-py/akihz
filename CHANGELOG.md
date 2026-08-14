@@ -7,10 +7,17 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Fixed
+
+- Kept the Home screen's selected refresh rate synchronized with successful
+  changes made from the Quick Settings tile.
+
 ### Added
 
 - Added a friendly first-run project notice that users acknowledge before
   akiHz starts Shizuku setup or its background service.
+- Added per-rate Home screen toggles for choosing which refresh rates the
+  Quick Settings tile cycles through.
 
 ## [0.0.40] - 2026-08-12
 
