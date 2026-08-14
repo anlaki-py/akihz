@@ -25,6 +25,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
+import akihz.anlaki.dev.presentation.modifiers.BlurDirection
+import akihz.anlaki.dev.presentation.modifiers.progressiveBlur
 import kotlin.math.abs
 
 /**
@@ -61,6 +64,7 @@ fun RefreshRateScreen(
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val listFadeHeightPx = with(LocalDensity.current) { 56.dp.toPx() }
     val displayedRates = if (debugSettings.showFakeRefreshRates) {
         HomeDebugSettings.previewRates(supportedRates)
     } else {
@@ -87,7 +91,12 @@ fun RefreshRateScreen(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .progressiveBlur(
+                        blurRadius = 0f,
+                        height = listFadeHeightPx,
+                        direction = BlurDirection.Top
+                    ),
                 contentPadding = PaddingValues(bottom = 150.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(
