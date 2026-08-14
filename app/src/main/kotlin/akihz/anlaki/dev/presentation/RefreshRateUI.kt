@@ -3,6 +3,7 @@ package akihz.anlaki.dev.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -59,84 +60,98 @@ fun RefreshRateScreen(
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
+    if (isLoading && supportedRates.isEmpty()) {
+        HomeStateContainer(modifier, statusBarHeight) {
+            LoadingState()
+        }
+    } else if (supportedRates.isEmpty()) {
+        HomeStateContainer(modifier, statusBarHeight) {
+            EmptyState()
+        }
+    } else {
+        val includedCount = TileRateSelection.includedRates(supportedRates, excludedTileRates).size
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
                 start = 16.dp,
                 top = statusBarHeight + 16.dp,
                 end = 16.dp,
-                bottom = 128.dp
+                bottom = 150.dp
             ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "akiHz",
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (isLoading && supportedRates.isEmpty()) {
-            LoadingState()
-        } else if (supportedRates.isEmpty()) {
-            EmptyState()
-        } else {
-            val includedCount = TileRateSelection.includedRates(
-                supportedRates,
-                excludedTileRates
-            ).size
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(
-                    space = debugSettings.buttonSpacingDp.dp,
-                    alignment = Alignment.CenterVertically
-                )
-            ) {
-                items(supportedRates, key = { it }) { hz ->
-                    val isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        RefreshRateButton(
-                            hz = hz,
-                            isSelected = selectedRate?.let { kotlin.math.abs(hz - it) < 1f } == true,
-                            onClick = { onRateSelected(hz) },
-                            debugSettings = debugSettings,
-                            modifier = Modifier.weight(1f)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(debugSettings.buttonSpacingDp.dp)
+        ) {
+            item(key = "home-title") {
+                HomeTitle()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            items(supportedRates, key = { it }) { hz ->
+                val isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
+                Row(
+                    modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    RefreshRateButton(
+                        hz = hz,
+                        isSelected = selectedRate?.let { kotlin.math.abs(hz - it) < 1f } == true,
+                        onClick = { onRateSelected(hz) },
+                        debugSettings = debugSettings,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Tile",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Tile",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Switch(
-                                checked = isTileIncluded,
-                                enabled = !isTileIncluded || includedCount > 1,
-                                modifier = Modifier.semantics {
-                                    contentDescription =
-                                        "Include ${hz.toInt()} Hz in Quick Settings tile"
-                                },
-                                onCheckedChange = { included ->
-                                    onTileRateIncludedChanged(hz, included)
-                                }
-                            )
-                        }
+                        Switch(
+                            checked = isTileIncluded,
+                            enabled = !isTileIncluded || includedCount > 1,
+                            modifier = Modifier.semantics {
+                                contentDescription =
+                                    "Include ${hz.toInt()} Hz in Quick Settings tile"
+                            },
+                            onCheckedChange = { included ->
+                                onTileRateIncludedChanged(hz, included)
+                            }
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun HomeStateContainer(
+    modifier: Modifier,
+    statusBarHeight: androidx.compose.ui.unit.Dp,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .padding(top = statusBarHeight, bottom = 134.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HomeTitle()
+        Spacer(modifier = Modifier.height(16.dp))
+        content()
+    }
+}
+
+@Composable
+private fun HomeTitle() {
+    Text(
+        text = "akiHz",
+        style = MaterialTheme.typography.displayMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
