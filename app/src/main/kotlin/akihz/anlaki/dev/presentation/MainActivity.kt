@@ -127,6 +127,7 @@ class MainActivity : ComponentActivity() {
                 AkihzApp(
                     uiState = uiState,
                     onRateSelected = viewModel::selectRate,
+                    onTileRateIncludedChanged = viewModel::setTileRateIncluded,
                     onResetToDefaults = viewModel::resetToDefaults,
                     onCustomProfileChanged = viewModel::onCustomProfileChanged,
                     themeMode = themeMode,

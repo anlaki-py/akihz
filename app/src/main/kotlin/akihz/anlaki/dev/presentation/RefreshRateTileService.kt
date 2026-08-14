@@ -8,6 +8,7 @@ import android.widget.Toast
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.R
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
@@ -24,8 +25,8 @@ import javax.inject.Inject
 class RefreshRateTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var supportedRates: List<Float> = emptyList()
-    private var currentIndex = 0
+    private var tileRates: List<Float> = emptyList()
+    private var displayedRate: Float? = null
     private var isConnecting = false
     private var isSwitching = false
 
@@ -45,10 +46,15 @@ class RefreshRateTileService : TileService() {
             }
 
             result.onSuccess { rates ->
-                supportedRates = rates
+                val excludedRates = TileRateSelection.recoverEmptySelection(
+                    rates,
+                    PreferencesHelper.excludedTileRates
+                )
+                tileRates = TileRateSelection.includedRates(rates, excludedRates)
                 val savedRate = PreferencesHelper.lastRate
-                currentIndex = rates.indexOfFirst { kotlin.math.abs(it - savedRate) < 1f }
-                    .takeIf { it >= 0 } ?: 0
+                displayedRate = tileRates.firstOrNull {
+                    kotlin.math.abs(it - savedRate) < 0.01f
+                }
                 updateTile()
             }.onError { _, _ ->
                 updateTileUnavailable()
@@ -107,14 +113,15 @@ class RefreshRateTileService : TileService() {
     }
 
     private fun cycleRate() {
-        if (supportedRates.isEmpty()) {
+        if (tileRates.isEmpty()) {
             showToast("No supported refresh rates detected")
             return
         }
 
-        val previousIndex = currentIndex
-        currentIndex = (currentIndex + 1) % supportedRates.size
-        val newRate = supportedRates[currentIndex]
+        val previousRate = displayedRate
+        val cycleAnchor = displayedRate ?: PreferencesHelper.lastRate
+        val newRate = TileRateSelection.nextRate(tileRates, cycleAnchor) ?: return
+        displayedRate = newRate
         isSwitching = true
         updateTileWithRate(newRate)
 
@@ -124,10 +131,9 @@ class RefreshRateTileService : TileService() {
             }
 
             result.onSuccess {
-                PreferencesHelper.saveState(currentIndex, newRate)
                 isSwitching = false
             }.onError { _, msg ->
-                currentIndex = previousIndex
+                displayedRate = previousRate
                 isSwitching = false
                 updateTile()
                 showToast(msg)
@@ -136,12 +142,23 @@ class RefreshRateTileService : TileService() {
     }
 
     private fun updateTile() {
-        val rate = supportedRates.getOrNull(currentIndex)
+        val rate = displayedRate
         if (rate != null) {
             updateTileWithRate(rate)
+        } else if (tileRates.isNotEmpty()) {
+            updateTileReady()
         } else {
             updateTileUnavailable()
         }
+    }
+
+    private fun updateTileReady() {
+        val tile = qsTile ?: return
+        tile.state = Tile.STATE_ACTIVE
+        tile.label = getString(R.string.app_name)
+        tile.subtitle = "Tap to switch"
+        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        tile.updateTile()
     }
 
     private fun updateTileWithRate(rate: Float) {
