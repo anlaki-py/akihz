@@ -48,6 +48,7 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 
 - **Dynamic detection:** automatically reads your display's supported refresh rates instead of using hardcoded values
 - **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
+- **Custom tile cycle:** include or exclude each detected rate from the Quick Settings tile on Home
 - **Automatic update alerts:** checks GitHub on a daily, three-day, or weekly schedule and notifies once per release
 - **Reliable background access:** a foreground service keeps tile controls ready, with a settings shortcut for disabling battery optimization
 - **Multi-OEM support:** targets the correct system settings keys per manufacturer

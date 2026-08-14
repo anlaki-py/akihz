@@ -7,6 +7,18 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.42] - 2026-08-14
+
+### Fixed
+
+- Kept the Home screen's selected refresh rate synchronized with successful
+  changes made from the Quick Settings tile.
+
+### Added
+
+- Added per-rate Home screen toggles for choosing which refresh rates the
+  Quick Settings tile cycles through.
+
 ## [0.0.41] - 2026-08-12
 
 ### Added

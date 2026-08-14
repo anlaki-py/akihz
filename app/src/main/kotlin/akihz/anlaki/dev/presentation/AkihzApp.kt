@@ -60,6 +60,7 @@ private enum class DetailPage { CustomKeys, DebugOptions }
  *
  * @param uiState current refresh-rate screen state
  * @param onRateSelected invoked when the user selects a refresh rate
+ * @param onTileRateIncludedChanged updates whether a rate appears in tile cycling
  * @param onResetToDefaults restores the system refresh-rate defaults
  * @param onCustomProfileChanged refreshes rates after custom profile activation changes
  * @param themeMode currently selected appearance mode
@@ -79,6 +80,7 @@ private enum class DetailPage { CustomKeys, DebugOptions }
 fun AkihzApp(
     uiState: MainUiState,
     onRateSelected: (Float) -> Unit,
+    onTileRateIncludedChanged: (Float, Boolean) -> Unit,
     onResetToDefaults: () -> Unit,
     onCustomProfileChanged: () -> Unit,
     themeMode: AppThemeMode,
@@ -170,9 +172,11 @@ fun AkihzApp(
                                     supportedRates = uiState.supportedRates,
                                     currentRate = uiState.currentRate,
                                     selectedRate = uiState.selectedRate,
+                                    excludedTileRates = uiState.excludedTileRates,
                                     isLoading = uiState.isLoading || !uiState.isServiceBound,
                                     debugSettings = homeDebugSettings,
                                     onRateSelected = onRateSelected,
+                                    onTileRateIncludedChanged = onTileRateIncludedChanged,
                                     modifier = Modifier.fillMaxSize()
                                 )
                                 AppPage.Settings -> SettingsScreen(

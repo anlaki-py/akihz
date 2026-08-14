@@ -27,6 +27,16 @@ internal fun HomeDebugSettingsScreen(
         navigationContentDescription = "Back to debug options",
         onNavigationClick = onBack
     ) {
+        PreferenceGroup(heading = "Preview data") {
+            PreferenceTemplate(
+                title = "Show fake refresh rates",
+                description = "Fill Home with preview-only rates to test scrolling and layout.",
+                checked = settings.showFakeRefreshRates,
+                onCheckedChange = {
+                    onSettingsChanged(settings.copy(showFakeRefreshRates = it))
+                }
+            )
+        }
         PreferenceGroup(heading = "Refresh-rate buttons") {
             HomeDebugSlider(
                 "Hz text size", "Changes the refresh-rate label size inside every button.",

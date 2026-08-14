@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -75,7 +74,6 @@ fun RefreshRateButton(
             onClick()
         },
         modifier = modifier
-            .fillMaxWidth(debugSettings.buttonWidthPercent / 100f)
             .height(debugSettings.buttonHeightDp.dp),
         shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
