@@ -79,7 +79,10 @@ fun RefreshRateScreen(
                 bottom = 150.dp
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(debugSettings.buttonSpacingDp.dp)
+            verticalArrangement = Arrangement.spacedBy(
+                space = debugSettings.buttonSpacingDp.dp,
+                alignment = Alignment.CenterVertically
+            )
         ) {
             item(key = "home-title") {
                 HomeTitle()
