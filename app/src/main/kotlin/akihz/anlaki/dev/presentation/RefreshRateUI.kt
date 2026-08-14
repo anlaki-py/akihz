@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
+import kotlin.math.abs
 
 /**
  * Shows detected refresh rates and lets the user select one.
@@ -60,11 +61,16 @@ fun RefreshRateScreen(
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    if (isLoading && supportedRates.isEmpty()) {
+    val displayedRates = if (debugSettings.showFakeRefreshRates) {
+        HomeDebugSettings.previewRates(supportedRates)
+    } else {
+        supportedRates
+    }
+    if (isLoading && displayedRates.isEmpty()) {
         HomeStateContainer(modifier, statusBarHeight) {
             LoadingState()
         }
-    } else if (supportedRates.isEmpty()) {
+    } else if (displayedRates.isEmpty()) {
         HomeStateContainer(modifier, statusBarHeight) {
             EmptyState()
         }
@@ -89,7 +95,8 @@ fun RefreshRateScreen(
                     alignment = Alignment.CenterVertically
                 )
             ) {
-                items(supportedRates, key = { it }) { hz ->
+                items(displayedRates, key = { it }) { hz ->
+                    val isSupported = supportedRates.any { abs(hz - it) < 0.01f }
                     val isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
                     Row(
                         modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
@@ -98,8 +105,10 @@ fun RefreshRateScreen(
                     ) {
                         RefreshRateButton(
                             hz = hz,
-                            isSelected = selectedRate?.let { kotlin.math.abs(hz - it) < 1f } == true,
-                            onClick = { onRateSelected(hz) },
+                            isSelected = isSupported && selectedRate?.let {
+                                abs(hz - it) < 1f
+                            } == true,
+                            onClick = { if (isSupported) onRateSelected(hz) },
                             debugSettings = debugSettings,
                             modifier = Modifier.weight(1f)
                         )
@@ -111,7 +120,7 @@ fun RefreshRateScreen(
                             )
                             Switch(
                                 checked = isTileIncluded,
-                                enabled = !isTileIncluded || includedCount > 1,
+                                enabled = isSupported && (!isTileIncluded || includedCount > 1),
                                 modifier = Modifier.semantics {
                                     contentDescription =
                                         "Include ${hz.toInt()} Hz in Quick Settings tile"

@@ -32,6 +32,7 @@ object PreferencesHelper {
     private const val KEY_LATEST_UPDATE_CODE = "latest_update_code"
     private const val KEY_LATEST_UPDATE_NAME = "latest_update_name"
     private const val KEY_LAST_NOTIFIED_UPDATE_CODE = "last_notified_update_code"
+    private const val KEY_SHOW_FAKE_REFRESH_RATES = "debug_show_fake_refresh_rates"
     private const val KEY_HZ_TEXT_SIZE = "debug_hz_text_size"
     private const val KEY_BUTTON_HEIGHT = "debug_button_height"
     private const val KEY_BUTTON_WIDTH = "debug_button_width"
@@ -140,6 +141,10 @@ object PreferencesHelper {
         get() {
             val defaults = HomeDebugSettings.defaults()
             return HomeDebugSettings(
+                showFakeRefreshRates = prefs.getBoolean(
+                    KEY_SHOW_FAKE_REFRESH_RATES,
+                    defaults.showFakeRefreshRates
+                ),
                 hzTextSizeSp = prefs.getFloat(KEY_HZ_TEXT_SIZE, defaults.hzTextSizeSp),
                 buttonHeightDp = prefs.getFloat(KEY_BUTTON_HEIGHT, defaults.buttonHeightDp),
                 buttonWidthPercent = prefs.getFloat(KEY_BUTTON_WIDTH, defaults.buttonWidthPercent),
@@ -151,6 +156,7 @@ object PreferencesHelper {
         }
 
         set(value) = prefs.edit {
+            putBoolean(KEY_SHOW_FAKE_REFRESH_RATES, value.showFakeRefreshRates)
             putFloat(KEY_HZ_TEXT_SIZE, value.hzTextSizeSp)
             putFloat(KEY_BUTTON_HEIGHT, value.buttonHeightDp)
             putFloat(KEY_BUTTON_WIDTH, value.buttonWidthPercent)
