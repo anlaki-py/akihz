@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.data.CustomProfileManager
+import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.PreferencesHelper
 import javax.inject.Inject
@@ -20,6 +21,7 @@ data class MainUiState(
     val supportedRates: List<Float> = emptyList(),
     val currentRate: Float? = null,
     val selectedRate: Float? = null,
+    val excludedTileRates: Set<Float> = emptySet(),
     val isShizukuReady: Boolean = false,
     val isServiceBound: Boolean = false,
     val error: String? = null,
@@ -33,6 +35,20 @@ class MainViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            PreferencesHelper.lastRateFlow.collect { rate ->
+                _uiState.update { state ->
+                    if (state.isServiceBound) {
+                        state.copy(currentRate = rate, selectedRate = rate)
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
+    }
 
     fun onShizukuBound() {
         _uiState.update { it.copy(isServiceBound = true, isLoading = true) }
@@ -58,7 +74,20 @@ class MainViewModel @Inject constructor(
                 refreshRateRepository.getSupportedRates()
             }
             result.onSuccess { rates ->
-                _uiState.update { it.copy(supportedRates = rates, isLoading = false) }
+                val excludedRates = TileRateSelection.recoverEmptySelection(
+                    rates,
+                    PreferencesHelper.excludedTileRates
+                )
+                if (excludedRates != PreferencesHelper.excludedTileRates) {
+                    PreferencesHelper.excludedTileRates = excludedRates
+                }
+                _uiState.update {
+                    it.copy(
+                        supportedRates = rates,
+                        excludedTileRates = excludedRates,
+                        isLoading = false
+                    )
+                }
             }.onError { _, message ->
                 _uiState.update { it.copy(error = "Failed to detect supported rates: $message", isLoading = false) }
             }
@@ -101,6 +130,20 @@ class MainViewModel @Inject constructor(
                 loadCurrentRate()
             }
         }
+    }
+
+    /** Includes or excludes a refresh rate from Quick Settings tile cycling. */
+    fun setTileRateIncluded(hz: Float, included: Boolean) {
+        val state = _uiState.value
+        val excludedRates = TileRateSelection.setIncluded(
+            state.supportedRates,
+            state.excludedTileRates,
+            hz,
+            included
+        )
+        if (excludedRates == state.excludedTileRates) return
+        PreferencesHelper.excludedTileRates = excludedRates
+        _uiState.update { it.copy(excludedTileRates = excludedRates) }
     }
 
     fun resetToDefaults() {

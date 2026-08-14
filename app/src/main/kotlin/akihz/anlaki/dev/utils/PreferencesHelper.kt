@@ -7,6 +7,9 @@ import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * SharedPreferences wrapper for all app configuration.
@@ -17,8 +20,8 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
 object PreferencesHelper {
     private const val PREFS_NAME = "akihz_prefs"
 
-    private const val KEY_CURRENT_INDEX = "current_index"
     private const val KEY_LAST_RATE = "last_rate"
+    private const val KEY_EXCLUDED_TILE_RATES = "excluded_tile_rates"
     private const val KEY_OEM_OVERRIDE = "oem_override"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_AMOLED_MODE = "amoled_mode"
@@ -40,19 +43,37 @@ object PreferencesHelper {
     private const val KEY_WELCOME_NOTICE_ACCEPTED = "welcome_notice_accepted"
 
     private lateinit var prefs: SharedPreferences
+    private val _lastRateFlow = MutableStateFlow(60f)
+
+    /** Last successfully selected rate, observed across app and tile components. */
+    val lastRateFlow: StateFlow<Float> = _lastRateFlow.asStateFlow()
 
     fun init(context: Context) {
         if (::prefs.isInitialized) return
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        _lastRateFlow.value = prefs.getFloat(KEY_LAST_RATE, 60f)
     }
-
-    var currentIndex: Int
-        get() = prefs.getInt(KEY_CURRENT_INDEX, 0)
-        set(value) = prefs.edit { putInt(KEY_CURRENT_INDEX, value) }
 
     var lastRate: Float
         get() = prefs.getFloat(KEY_LAST_RATE, 60f)
-        set(value) = prefs.edit { putFloat(KEY_LAST_RATE, value) }
+        set(value) {
+            prefs.edit { putFloat(KEY_LAST_RATE, value) }
+            _lastRateFlow.value = value
+        }
+
+    /** Refresh rates the user has removed from Quick Settings tile cycling. */
+    var excludedTileRates: Set<Float>
+        get() = prefs.getStringSet(KEY_EXCLUDED_TILE_RATES, emptySet())
+            .orEmpty()
+            .mapNotNull(String::toFloatOrNull)
+            .filter { it.isFinite() && it > 0f }
+            .toSet()
+        set(value) = prefs.edit {
+            putStringSet(
+                KEY_EXCLUDED_TILE_RATES,
+                value.filter { it.isFinite() && it > 0f }.map(Float::toString).toSet()
+            )
+        }
 
     // OEM override
     var oemOverride: String
@@ -147,13 +168,6 @@ object PreferencesHelper {
     var welcomeNoticeAccepted: Boolean
         get() = prefs.getBoolean(KEY_WELCOME_NOTICE_ACCEPTED, false)
         set(value) = prefs.edit { putBoolean(KEY_WELCOME_NOTICE_ACCEPTED, value) }
-
-    fun saveState(index: Int, rate: Float) {
-        prefs.edit {
-            putInt(KEY_CURRENT_INDEX, index)
-            putFloat(KEY_LAST_RATE, rate)
-        }
-    }
 
     fun clear() {
         prefs.edit { clear() }
