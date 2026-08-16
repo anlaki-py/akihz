@@ -112,6 +112,8 @@ The app is MIT-licensed and fully open source. It only changes display refresh-r
 This project does not provide support and is not accepting bug reports or
 feature requests. You are welcome to fork it and make your own changes.
 
+More projects by the developer are available at [anlaki.dev](https://anlaki.dev/).
+
 ## Build
 
 ```bash
