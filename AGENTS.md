@@ -27,10 +27,10 @@
 ## GitHub CI and Release Rules
 - The `CI` workflow runs lint and unit tests for pushes to `main` and `beta`, for pull requests targeting either branch, and when manually dispatched.
 - A push to `main` must never create a tag or GitHub release. It runs the `CI` workflow only.
-- A push to `beta` automatically runs `Build & Release` and publishes a GitHub prerelease with a `-beta.N` tag. It also runs the normal `CI` workflow.
-- Stable releases from `main` are manual-only. Trigger `.github/workflows/build.yml` on `main` only when the user explicitly asks to publish a release (for example, `gh workflow run build.yml --ref main`).
+- A push to `beta` must never create a tag or GitHub release. It runs the `CI` workflow only.
+- Releases from both `main` and `beta` are manual-only. Trigger `.github/workflows/build.yml` only when the user explicitly asks to publish a release (for example, `gh workflow run build.yml --ref main`). Choose the ref that matches the intended channel.
 - `Build & Release` must continue running its own lint and unit-test gates before signing or publishing, even though the separate CI workflow exists.
-- Stable GitHub releases must have `prerelease: false`; beta-branch releases must have `prerelease: true`.
+- Stable GitHub releases must have `prerelease: false`; beta-channel releases must have `prerelease: true`.
 
 ## Changelog and Release Metadata
 - Before a stable release, add a non-empty `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` matching the version that the workflow will publish.
