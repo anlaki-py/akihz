@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,7 +19,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 
-private enum class DebugPage { Categories, HomeScreen }
+private enum class DebugPage { Categories, HomeScreen, Performance }
 
 /** Displays organized debug categories and their detail pages. */
 @Composable
@@ -46,11 +47,16 @@ internal fun DebugSettingsScreen(
             DebugPage.Categories -> DebugCategories(
                 onBack = navigateBack,
                 onOpenHomeScreen = { page = DebugPage.HomeScreen },
+                onOpenPerformance = { page = DebugPage.Performance },
                 modifier = Modifier.fillMaxSize()
             )
             DebugPage.HomeScreen -> HomeDebugSettingsScreen(
                 settings = settings,
                 onSettingsChanged = onSettingsChanged,
+                onBack = navigateBack,
+                modifier = Modifier.fillMaxSize()
+            )
+            DebugPage.Performance -> PerformanceMonitorScreen(
                 onBack = navigateBack,
                 modifier = Modifier.fillMaxSize()
             )
@@ -62,6 +68,7 @@ internal fun DebugSettingsScreen(
 private fun DebugCategories(
     onBack: () -> Unit,
     onOpenHomeScreen: () -> Unit,
+    onOpenPerformance: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     PreferenceLayout(
@@ -77,6 +84,14 @@ private fun DebugCategories(
                 description = "Refresh-rate text, button sizing, spacing, and expressive shapes",
                 icon = Icons.Default.Home,
                 onClick = onOpenHomeScreen
+            )
+        }
+        PreferenceGroup(heading = "Diagnostics") {
+            PreferenceTemplate(
+                title = "Performance monitoring",
+                description = "Record CPU, memory, threads, and refresh rate to a log file",
+                icon = Icons.Default.Speed,
+                onClick = onOpenPerformance
             )
         }
     }
