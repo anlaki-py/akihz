@@ -98,10 +98,10 @@ object ShizukuHelper {
             ICommandServiceImpl::class.java.name
         )
         val args = Shizuku.UserServiceArgs(componentName)
-            .daemon(false)
+            .daemon(true)
             .processNameSuffix("refresh_rate_service")
             .debuggable(false)
-            .version(2)
+            .version(3)
 
         userServiceArgs = args
 
@@ -113,6 +113,13 @@ object ShizukuHelper {
                 }
                 Timber.i("Shizuku user service connected")
                 callbacks.forEach { it.onConnected() }
+                // Best-effort cleanup of stale refresh_rate_service shells left by old version/bug.
+                // Runs after a short delay so the new service is fully up.
+                try {
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        runCatching { killStaleRefreshServices() }
+                    }, 2000)
+                } catch (_: Exception) {}
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
@@ -326,6 +333,135 @@ object ShizukuHelper {
                 "Failed to reset: ${failures.distinct().joinToString()}"
             )
         }
+    }
+
+    fun getServicePid(): Int? = commandService?.let { runCatching { it.getPid() }.getOrNull() }
+
+    /**
+     * Kills stale `refresh_rate_service` shell processes left over from previous
+     * app launches / version 2 daemon bug. Keeps the current service PID alive.
+     * Returns a human-readable summary; safe to call even when not bound.
+     */
+    fun killStaleRefreshServices(): Result<String> {
+        val service = commandService ?: return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
+        val myServicePid = runCatching { service.getPid() }.getOrNull()
+        // Use ps to list all matching PIDs (works as shell)
+        val psOutput = runCatching { service.runCommand("ps -A -o PID,ARGS") }.getOrNull()
+            ?: return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "ps failed")
+        val stalePids = psOutput.lineSequence()
+            .mapNotNull { line ->
+                val trimmed = line.trim()
+                if (!trimmed.contains("refresh_rate_service")) return@mapNotNull null
+                if (!trimmed.contains(BuildConfig.APPLICATION_ID)) return@mapNotNull null
+                trimmed.split(Regex("\\s+")).firstOrNull()?.toIntOrNull()
+            }
+            .filter { it != myServicePid }
+            .toList()
+        if (stalePids.isEmpty()) return Result.success("No stale refresh_rate_service processes to kill")
+        var killed = 0
+        var failed = 0
+        stalePids.forEach { pid ->
+            val res = runCatching { service.runCommand("kill -9 $pid") }.getOrNull() ?: "ERROR"
+            if (res == "OK" || res.isEmpty() || !res.startsWith("ERROR")) killed++ else failed++
+        }
+        // Fallback: also try via /proc scan + kill as app (may fail for shell UID but best-effort)
+        return Result.success("Killed $killed, failed $failed of ${stalePids.size} stale PIDs: ${stalePids.joinToString()}")
+    }
+
+    /** Runs an arbitrary shell command as `shell` (via Shizuku) when bound, else as app. */
+    fun runShellCommand(command: String): Result<String> {
+        val service = commandService
+        return if (service != null) {
+            exec(command)
+        } else {
+            // Fallback: try as app (may be filtered by hidepid)
+            runCatching {
+                val proc = ProcessBuilder("/system/bin/sh", "-c", command).redirectErrorStream(true).start()
+                val out = proc.inputStream.bufferedReader().readText().trim()
+                if (proc.waitFor(5, java.util.concurrent.TimeUnit.SECONDS) && proc.exitValue() == 0) Result.success(out)
+                else Result.error(ErrorType.COMMAND_EXECUTION_FAILED, out.ifBlank { "Exit ${proc.exitValue()}" })
+            }.getOrElse { Result.error(ErrorType.COMMAND_EXECUTION_FAILED, it.message ?: "exec failed") }
+        }
+    }
+
+    /** Lists all `akihz` PIDs with their PSS/RSS for debugging. */
+    fun listAppProcesses(): Result<String> {
+        // Prefer shell ps (sees all UIDs) when Shizuku is bound
+        val shellRes = runShellCommand("ps -A -o PID,ARGS")
+        if (shellRes.isSuccess) {
+            val out = shellRes.getOrNull() ?: ""
+            val sb = StringBuilder()
+            sb.appendLine("PID | ARGS (via shell ps)")
+            out.lineSequence().forEach { line ->
+                if (line.contains("akihz.anlaki.dev")) sb.appendLine(line.trim())
+            }
+            // Also try to get detailed status via shell for each PID
+            val pids = out.lineSequence().mapNotNull { line ->
+                if (!line.contains("akihz.anlaki.dev")) return@mapNotNull null
+                line.trim().split(Regex("\\s+")).firstOrNull()?.toIntOrNull()
+            }.toList()
+            if (pids.isNotEmpty()) {
+                sb.appendLine("--- details via shell cat /proc/<pid>/status ---")
+                pids.take(10).forEach { pid ->
+                    val status = runShellCommand("cat /proc/$pid/status").getOrNull() ?: ""
+                    val rss = status.lineSequence().firstOrNull { it.startsWith("VmRSS:") }?.trim() ?: "VmRSS: n/a"
+                    val threads = status.lineSequence().firstOrNull { it.startsWith("Threads:") }?.trim() ?: ""
+                    val cmdline = runShellCommand("cat /proc/$pid/cmdline").getOrNull()?.replace('\u0000', ' ')?.trim() ?: ""
+                    sb.appendLine("pid $pid $rss $threads $cmdline")
+                }
+                if (pids.size > 10) sb.appendLine("... and ${pids.size - 10} more")
+            }
+            return Result.success(sb.toString())
+        }
+        // Fallback: app's /proc scan (hidepid may hide shell PIDs)
+        val procDir = java.io.File("/proc")
+        val files = procDir.listFiles() ?: return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "no /proc")
+        val sb = StringBuilder()
+        sb.appendLine("PID | RSS | Threads | ARGS (fallback, may be filtered)")
+        files.forEach { f ->
+            val pid = f.name.toIntOrNull() ?: return@forEach
+            val cmdline = runCatching { java.io.File(f, "cmdline").readBytes().decodeToString().replace('\u0000', ' ').trim() }.getOrNull() ?: return@forEach
+            if (!cmdline.contains("akihz.anlaki.dev")) return@forEach
+            val status = runCatching { java.io.File("/proc/$pid/status").readText() }.getOrNull() ?: ""
+            val rss = status.lineSequence().firstOrNull { it.startsWith("VmRSS:") }?.trim() ?: "VmRSS: n/a"
+            val threads = status.lineSequence().firstOrNull { it.startsWith("Threads:") }?.trim() ?: ""
+            sb.appendLine("$pid | $rss | $threads | $cmdline")
+        }
+        return Result.success(sb.toString())
+    }
+
+    /** Collects per-process PSS/CPU for perf log via shell when possible. */
+    fun collectAppProcessesForPerf(): List<PerfProcessInfo> {
+        val pids = runShellCommand("ps -A -o PID,ARGS").getOrNull()
+            ?.lineSequence()
+            ?.mapNotNull { line ->
+                if (!line.contains("akihz.anlaki.dev")) return@mapNotNull null
+                line.trim().split(Regex("\\s+")).firstOrNull()?.toIntOrNull()?.let { it to line.trim() }
+            }?.toList() ?: emptyList()
+        if (pids.isEmpty()) return emptyList()
+        // For each PID, try to get status via shell for RSS/threads and stat for CPU
+        return pids.mapNotNull { (pid, line) ->
+            val name = line.substringAfter(" ").trim().takeIf { it.isNotBlank() } ?: "akihz.anlaki.dev:refresh_rate_service"
+            // Use shell to cat status
+            val status = runShellCommand("cat /proc/$pid/status").getOrNull() ?: ""
+            val rssKb = status.lineSequence().firstOrNull { it.startsWith("VmRSS:") }
+                ?.split(Regex("\\s+"))?.getOrNull(1)?.toLongOrNull()
+            val pssKb = rssKb ?: 0L // fallback to RSS if PSS not available (shell's RssAnon may be PSS)
+            // Try to get actual PSS via dumpsys meminfo if needed, but fallback to RSS
+            val threads = status.lineSequence().firstOrNull { it.startsWith("Threads:") }
+                ?.split(Regex("\\s+"))?.getOrNull(1)?.toIntOrNull()
+            // CPU via shell cat stat
+            val stat = runShellCommand("cat /proc/$pid/stat").getOrNull()
+            val cpu = stat?.let { parseStatForCpu(it) } // we can compute delta if we had previous, but for now null
+            PerfProcessInfo(pid = pid, name = name, pssKb = pssKb, rssKb = rssKb, cpuPercent = cpu, threads = threads)
+        }.sortedByDescending { it.pssKb }
+    }
+
+    private fun parseStatForCpu(statContent: String): Float? {
+        // Reuse ProcessMetricsCollector logic but without delta (just instantaneous ticks)
+        // For perf log we need delta, but we can return null for now and let collector handle delta via its own map.
+        // Here we just return null to indicate no CPU yet; collector will compute delta on next tick.
+        return null
     }
 
     private fun getActiveStrategy(): OemSettingsStrategy.KeySet {

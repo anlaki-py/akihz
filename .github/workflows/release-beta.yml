@@ -1,9 +1,6 @@
-name: Build & Release
+name: Release Beta
 
 on:
-  push:
-    branches:
-      - beta
   workflow_dispatch:
 
 concurrency:
@@ -39,6 +36,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "$GITHUB_REF_NAME" != "beta" ]]; then
+            echo "::error::release-beta.yml must be triggered from the beta branch (got $GITHUB_REF_NAME)"
+            exit 1
+          fi
           BASE_VERSION=$(sed -n 's/.*val baseVersion = "\(.*\)"/\1/p' app/build.gradle.kts)
           LATEST_PATCH=$(
             git tag -l "v${BASE_VERSION}.*" |
@@ -47,26 +48,16 @@ jobs:
               tail -1
           )
           NEXT_PATCH=$(( ${LATEST_PATCH:--1} + 1 ))
-
-          if [[ "$GITHUB_REF_NAME" == "beta" ]]; then
-            LATEST_BETA=$(
-              git tag -l "v${BASE_VERSION}.${NEXT_PATCH}-beta.*" |
-                sed -n "s/^v${BASE_VERSION}\.${NEXT_PATCH}-beta\.\([0-9][0-9]*\)$/\1/p" |
-                sort -n |
-                tail -1
-            )
-            NEXT_BETA=$(( ${LATEST_BETA:-0} + 1 ))
-            TAG="v${BASE_VERSION}.${NEXT_PATCH}-beta.${NEXT_BETA}"
-            IS_BETA=true
-            CHANNEL=beta
-          elif [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            TAG="v${BASE_VERSION}.${NEXT_PATCH}"
-            IS_BETA=false
-            CHANNEL=stable
-          else
-            echo "::error::Releases are only supported from main or beta"
-            exit 1
-          fi
+          LATEST_BETA=$(
+            git tag -l "v${BASE_VERSION}.${NEXT_PATCH}-beta.*" |
+              sed -n "s/^v${BASE_VERSION}\.${NEXT_PATCH}-beta\.\([0-9][0-9]*\)$/\1/p" |
+              sort -n |
+              tail -1
+          )
+          NEXT_BETA=$(( ${LATEST_BETA:-0} + 1 ))
+          TAG="v${BASE_VERSION}.${NEXT_PATCH}-beta.${NEXT_BETA}"
+          IS_BETA=true
+          CHANNEL=beta
 
           # Seconds since 2024-01-01 remain below Android's versionCode limit
           # for decades and ensure later beta/stable builds are upgrades.
@@ -403,7 +394,7 @@ jobs:
         run: |
           gh issue create \
             --repo "$GITHUB_REPOSITORY" \
-            --title "CI failure on ${GITHUB_REF_NAME} ($(date +%Y-%m-%d))" \
+            --title "Beta release failure ($(date +%Y-%m-%d))" \
             --body "Pipeline failed for commit [\`${GITHUB_SHA::7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}).
 
           **Run:** [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})
