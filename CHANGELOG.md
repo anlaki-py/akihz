@@ -7,26 +7,22 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.43] - 2026-08-28
+
 ### Added
 
-- Added Performance monitoring debug page with live CPU/PSS/threads/heap/refresh-rate readout, JSON-line recording to `cache/perf/perf-active.log` (`PerfLogJson` with `Locale.US`), session header, and export/share via FileProvider.
-- Added Crash logs screen under Debug options (unlocked by tapping the version row six times) with stored reports in `filesDir/crash_logs`, detail view, copy, save, and share actions backed by synchronous `CrashLogStore.saveSync()`.
-- Added ADB debug CLI via `akihz.anlaki.dev.DebugCliReceiver` (`android:exported="true"`, `ACTION=akihz.anlaki.dev.DEBUG_CLI`) and helper `scripts/debug-cli.sh` (`list_crashes|cat_crash|create_test_crash|clear_crashes|trigger_crash|perf_status|perf_start|perf_stop|perf_cat|ps|kill_stale`, `open-crash|open-performance`, `pull-*`, `logcat`), with explicit broadcast `adb shell am broadcast -n $PKG/akihz.anlaki.dev.DebugCliReceiver -a akihz.anlaki.dev.DEBUG_CLI --es cmd <cmd>` and output to `filesDir/debug_cli_output.txt`.
-- Added direct debug activities `CrashLogActivity` and `PerformanceMonitorActivity` plus `MainActivity` deep link `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.MainActivity --es akihz.extra.DEBUG_PAGE crash_logs|performance` (auto-unlocks `debugOptionsUnlocked` via `openDebugRequest`).
-- Extended performance samples with per-process metrics (`processCount`, `totalPssKb`, `processes[]` with `pid`/`name`/`pssKb`/`rssKb`/`cpuPercent`/`threads`) and top-5 display in `PerformanceMonitorScreen`, collected via `ShizukuHelper.runShellCommand("ps -A -o PID,ARGS")` and `cat /proc/<pid>/status` fallback to bypass hidepid, plus `ICommandService.getPid()` (`TRANSACTION_getPid`) for stale-process detection.
-- Added developer website link to `README.md`.
+- Added a Performance screen to see how the app is doing.
+- Added a Crash logs screen to view and share problems.
+- Added a simple ADB helper to check the app without tapping the screen.
 
 ### Fixed
 
-- Fixed RAM hog where `ShizukuHelper` with `daemon(false)` and `version(2)` leaked 50+ `shell` `refresh_rate_service` processes (~70 MB RSS, ~50 MB PSS each) — changed to `daemon(true)` `version(3)`, added delayed `killStaleRefreshServices()` in `onServiceConnected` and `kill_stale` CLI that keeps the current service PID alive.
-- Fixed `IllegalStateException: Vertically scrollable component was measured with infinity` from nested `verticalScroll` inside already-scrollable `PreferenceLayout` in Performance and Crash screens.
-- Fixed `String.format` locale bug (`PerfLogModels.kt:103` `Locale.US` for `\u%04x`) that produced comma decimals in perf JSON, and removed dead `pendingCopyUri` / `SavedStateHandle` state from `PerformanceMonitorViewModel`.
-- Fixed hidepid visibility: `ProcessMetricsCollector` now prefers `ps` via Shizuku shell and falls back to `/proc` + `cat` via shell for `cmdline`/`status`/`stat`, with per-PID CPU delta map and RSS/PSS fallback via `ActivityManager` or `VmRSS`/`RssAnon`.
+- Fixed the app using too much memory in the background.
+- Fixed crashes when opening the debug screens.
 
 ### Changed
 
-- Split the former `Build & Release` workflow into channel-locked manual-only workflows `release-beta.yml` (publishes `-beta.N` prerelease from `beta`) and `release-main.yml` (stable from `main`), each with its own lint and unit-test gates and branch guards (`GITHUB_REF_NAME` check).
-- Made `Build & Release` manual-only on both branches before the split and documented the universal-only debug APK task and debug CLI in `AGENTS.md`.
+- Improved how the app is built and released.
 
 ## [0.0.42] - 2026-08-14
 
