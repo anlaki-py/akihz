@@ -1,9 +1,6 @@
 name: Build & Release
 
 on:
-  push:
-    branches:
-      - beta
   workflow_dispatch:
 
 concurrency:
