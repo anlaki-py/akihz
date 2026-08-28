@@ -12,7 +12,7 @@ import java.io.File
  * Collects per-process metric samples for the performance recorder.
  *
  * All Android-specific reads are isolated here so the surrounding recorder and
- * tests can reason about plain numbers. CPU% is computed from `/proc/self/stat`
+ * tests can reason about plain numbers. CPU% is computed from `/proc/<pid>/stat`
  * because Android does not expose a direct API; everything else is pulled from
  * platform sources that need no permissions on API 30+.
  */
@@ -24,6 +24,7 @@ class ProcessMetricsCollector(
 ) {
 
     private var lastSnapshot: ProcStatSnapshot? = null
+    private val perPidSnapshots = mutableMapOf<Int, ProcStatSnapshot>()
 
     /** Snapshot of process state needed to compute the next CPU delta. */
     data class ProcStatSnapshot(val uptimeMs: Long, val cpuTicks: Long, val elapsedRealtimeMs: Long)
@@ -34,6 +35,8 @@ class ProcessMetricsCollector(
         val procStat = procStatReader(myPid)
         val (processCpu, appCpu) = computeCpu(procStat, uptime)
         val memoryInfo = readPss()
+        val processes = collectAppProcesses(uptime)
+        val totalPss = processes.sumOf { it.pssKb }
         return PerfSample(
             uptimeMs = uptime,
             processCpuPercent = processCpu,
@@ -43,8 +46,118 @@ class ProcessMetricsCollector(
             javaHeapMaxBytes = Runtime.getRuntime().maxMemory(),
             nativeHeapBytes = Debug.getNativeHeapAllocatedSize(),
             pssTotalKb = memoryInfo?.totalPss?.toLong() ?: 0L,
-            currentRefreshRateHz = currentRefreshRateHz
+            currentRefreshRateHz = currentRefreshRateHz,
+            processCount = processes.size,
+            totalPssKb = totalPss,
+            processes = processes
         )
+    }
+
+    private fun collectAppProcesses(uptime: Long): List<PerfProcessInfo> {
+        val pids = listAkihzPids()
+        return pids.mapNotNull { pid ->
+            val name = readProcessName(pid) ?: return@mapNotNull null
+            val (pssKb, rssKb) = readPssForPid(pid)
+            val threads = readThreadCount(pid)
+            val cpu = computeCpuForPid(pid, readProcStatWithFallback(pid), uptime)
+            PerfProcessInfo(
+                pid = pid,
+                name = name,
+                pssKb = pssKb,
+                rssKb = rssKb,
+                cpuPercent = cpu,
+                threads = threads
+            )
+        }.sortedByDescending { it.pssKb }
+    }
+
+    private fun listAkihzPids(): List<Int> {
+        // Prefer shell ps (sees shell UID's refresh_rate_service) when Shizuku is bound
+        if (ShizukuHelper.isUserServiceBound()) {
+            val res = ShizukuHelper.runShellCommand("ps -A -o PID,ARGS")
+            if (res.isSuccess) {
+                val out = res.getOrNull() ?: ""
+                val pids = out.lineSequence().mapNotNull { line ->
+                    if (!line.contains("akihz.anlaki.dev")) return@mapNotNull null
+                    line.trim().split(Regex("\\s+")).firstOrNull()?.toIntOrNull()
+                }.toList()
+                if (pids.isNotEmpty()) return pids
+            }
+        }
+        val procDir = File("/proc")
+        val files = procDir.listFiles() ?: return emptyList()
+        return files.mapNotNull { f ->
+            val pid = f.name.toIntOrNull() ?: return@mapNotNull null
+            val cmdline = readFileContent(File(f, "cmdline").path) ?: runCatching { File(f, "comm").readText().trim() }.getOrNull()
+            val name = cmdline?.replace('\u0000', ' ')?.trim()
+            if (!name.isNullOrBlank() && name.contains("akihz.anlaki.dev")) pid else null
+        }
+    }
+
+    private fun readFileContent(path: String): String? {
+        // Try direct read first (works for own UID)
+        runCatching { File(path).readBytes().decodeToString() } .getOrNull()?.let { return it }
+        // Fallback via Shizuku shell (can read shell UID's /proc)
+        if (ShizukuHelper.isUserServiceBound()) {
+            val res = ShizukuHelper.runShellCommand("cat $path")
+            if (res.isSuccess) return res.getOrNull()
+        }
+        return null
+    }
+
+    private fun readProcessName(pid: Int): String? {
+        val raw = readFileContent("/proc/$pid/cmdline")?.replace('\u0000', ' ')?.trim()
+        if (!raw.isNullOrBlank()) return raw.substringBefore(' ').trim().takeIf { it.isNotBlank() }
+        return readFileContent("/proc/$pid/comm")?.trim()
+    }
+
+    private fun readPssForPid(pid: Int): Pair<Long, Long?> {
+        // Try ActivityManager first (works for app UID, may fail for shell UID)
+        runCatching {
+            val am = appContext.getSystemService<ActivityManager>() ?: return@runCatching null
+            val infos = am.getProcessMemoryInfo(intArrayOf(pid))
+            val info = infos.firstOrNull()
+            if (info != null && info.totalPss > 0) {
+                return@runCatching Pair(info.totalPss.toLong(), null)
+            }
+        }
+        // Fallback to /proc/<pid>/status VmRSS via shell if needed
+        val status = readFileContent("/proc/$pid/status") ?: return 0L to null
+        var rssKb: Long? = null
+        var pssKb: Long? = null
+        status.lineSequence().forEach { line ->
+            when {
+                line.startsWith("VmRSS:") -> rssKb = line.split(Regex("\\s+")).getOrNull(1)?.toLongOrNull()
+                line.startsWith("RssAnon:") -> pssKb = line.split(Regex("\\s+")).getOrNull(1)?.toLongOrNull()
+            }
+        }
+        val pss = pssKb ?: rssKb ?: 0L
+        return pss to rssKb
+    }
+
+    private fun readThreadCount(pid: Int): Int? {
+        val status = readFileContent("/proc/$pid/status") ?: return null
+        status.lineSequence().forEach { line ->
+            if (line.startsWith("Threads:")) {
+                return line.split(Regex("\\s+")).getOrNull(1)?.toIntOrNull()
+            }
+        }
+        return null
+    }
+
+    private fun readProcStatWithFallback(pid: Int): ProcStat? {
+        procStatReader(pid)?.let { return it }
+        if (ShizukuHelper.isUserServiceBound()) {
+            val content = ShizukuHelper.runShellCommand("cat /proc/$pid/stat").getOrNull() ?: return null
+            val closeParen = content.lastIndexOf(')')
+            if (closeParen <= 0 || closeParen >= content.length - 1) return null
+            val after = content.substring(closeParen + 1).trimStart()
+            val tokens = after.split(Regex("\\s+")).filter { it.isNotEmpty() }
+            val utime = tokens.getOrNull(11)?.toLongOrNull() ?: return null
+            val stime = tokens.getOrNull(12)?.toLongOrNull() ?: 0L
+            return ProcStat(totalTicks = utime + stime)
+        }
+        return null
     }
 
     private fun computeCpu(procStat: ProcStat?, uptime: Long): Pair<Float?, Float?> {
@@ -65,6 +178,19 @@ class ProcessMetricsCollector(
         val cpuCores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
         val appCpu = (processCpu / cpuCores).coerceIn(0f, 100f)
         return processCpu to appCpu
+    }
+
+    private fun computeCpuForPid(pid: Int, procStat: ProcStat?, uptime: Long): Float? {
+        val current = procStat ?: return null
+        val previous = perPidSnapshots[pid]
+        val snapshot = ProcStatSnapshot(uptime, current.totalTicks, uptime)
+        perPidSnapshots[pid] = snapshot
+        if (previous == null) return null
+        val elapsedMs = (snapshot.elapsedRealtimeMs - previous.elapsedRealtimeMs).coerceAtLeast(1L)
+        val tickDelta = (snapshot.cpuTicks - previous.cpuTicks).coerceAtLeast(0L)
+        val clockTicksPerSec = 100L
+        return (tickDelta.toDouble() / clockTicksPerSec.toDouble() / (elapsedMs.toDouble() / 1000.0) * 100.0)
+            .toFloat().coerceIn(0f, 100f)
     }
 
     private fun readPss(): Debug.MemoryInfo? {

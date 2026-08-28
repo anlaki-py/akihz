@@ -9,6 +9,7 @@ interface ICommandService : IInterface {
     fun runCommand(command: String): String
     fun runSettingsCommand(arguments: List<String>): String
     fun destroy()
+    fun getPid(): Int
 
     abstract class Stub : Binder(), ICommandService {
         init {
@@ -46,6 +47,12 @@ interface ICommandService : IInterface {
                     reply?.writeNoException()
                     true
                 }
+                TRANSACTION_getPid -> {
+                    val result = this.getPid()
+                    reply?.writeNoException()
+                    reply?.writeInt(result)
+                    true
+                }
                 else -> super.onTransact(code, data, reply, flags)
             }
         }
@@ -55,6 +62,7 @@ interface ICommandService : IInterface {
             const val TRANSACTION_runCommand = IBinder.FIRST_CALL_TRANSACTION + 0
             const val TRANSACTION_runSettingsCommand = IBinder.FIRST_CALL_TRANSACTION + 1
             const val TRANSACTION_destroy = IBinder.FIRST_CALL_TRANSACTION + 2
+            const val TRANSACTION_getPid = IBinder.FIRST_CALL_TRANSACTION + 3
 
             @JvmStatic
             fun asInterface(obj: IBinder?): ICommandService? {
@@ -109,6 +117,20 @@ interface ICommandService : IInterface {
                     data.writeInterfaceToken(DESCRIPTOR)
                     mRemote.transact(TRANSACTION_destroy, data, reply, 0)
                     reply.readException()
+                } finally {
+                    reply.recycle()
+                    data.recycle()
+                }
+            }
+
+            override fun getPid(): Int {
+                val data = Parcel.obtain()
+                val reply = Parcel.obtain()
+                return try {
+                    data.writeInterfaceToken(DESCRIPTOR)
+                    mRemote.transact(TRANSACTION_getPid, data, reply, 0)
+                    reply.readException()
+                    reply.readInt()
                 } finally {
                     reply.recycle()
                     data.recycle()

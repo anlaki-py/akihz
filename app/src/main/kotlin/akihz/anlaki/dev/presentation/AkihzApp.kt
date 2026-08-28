@@ -94,9 +94,12 @@ fun AkihzApp(
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
     openUpdatesRequest: Int = 0,
+    openDebugRequest: Int = 0,
+    debugPage: String? = null,
     onErrorDismissed: () -> Unit = {}
 ) {
     var detailPage by remember { mutableStateOf<DetailPage?>(null) }
+    var debugInitialPage by remember { mutableStateOf(DebugPage.Categories) }
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { AppPage.entries.size })
     val scope = rememberCoroutineScope()
@@ -123,6 +126,15 @@ fun AkihzApp(
     LaunchedEffect(openUpdatesRequest) {
         if (openUpdatesRequest > 0) {
             pagerState.animateScrollToPage(AppPage.Settings.ordinal)
+        }
+    }
+
+    LaunchedEffect(openDebugRequest) {
+        if (openDebugRequest > 0) {
+            debugInitialPage = DebugPage.fromString(debugPage)
+            detailPage = DetailPage.DebugOptions
+            // Ensure debug entry is unlocked when opened via CLI.
+            if (!debugOptionsUnlocked) onDebugOptionsUnlocked()
         }
     }
 
@@ -161,7 +173,8 @@ fun AkihzApp(
                             settings = homeDebugSettings,
                             onSettingsChanged = onHomeDebugSettingsChanged,
                             onBack = { detailPage = null },
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            initialPage = debugInitialPage
                         )
                         null -> HorizontalPager(
                             state = pagerState,

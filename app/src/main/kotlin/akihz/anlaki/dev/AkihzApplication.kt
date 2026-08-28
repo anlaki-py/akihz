@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import akihz.anlaki.dev.data.CrashLogStore
 import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.data.PerformanceMonitor
 import akihz.anlaki.dev.data.UpdateDownloadStore
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class AkihzApplication : Application() {
 
     @Inject lateinit var performanceMonitor: PerformanceMonitor
+    @Inject lateinit var crashLogStore: CrashLogStore
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -51,15 +53,23 @@ class AkihzApplication : Application() {
     private fun installCrashLogger() {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            applicationScope.launch {
-                performanceMonitor.log(
-                    tag = "uncaught_exception",
-                    message = throwable.javaClass.name + ": " + (throwable.message ?: ""),
-                    data = mapOf(
-                        "thread" to thread.name,
-                        "stack" to throwable.stackTraceToString().take(2_000)
+            // Synchronous write: process may die before coroutines run.
+            runCatching { crashLogStore.saveSync(thread, throwable) }
+                .onFailure { Timber.e(it, "saveSync failed") }
+            // Best-effort also log to perf recorder if a session is active.
+            runCatching {
+                // Use blocking check via scope is not reliable here; fire-and-forget is ok
+                // since we already persisted the crash to crash_logs.
+                applicationScope.launch {
+                    performanceMonitor.log(
+                        tag = "uncaught_exception",
+                        message = throwable.javaClass.name + ": " + (throwable.message ?: ""),
+                        data = mapOf(
+                            "thread" to thread.name,
+                            "stack" to throwable.stackTraceToString().take(2_000)
+                        )
                     )
-                )
+                }
             }
             previous?.uncaughtException(thread, throwable)
         }
