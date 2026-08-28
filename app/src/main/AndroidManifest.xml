@@ -46,6 +46,16 @@
             android:noHistory="true"
             android:theme="@style/AppTheme" />
 
+        <activity
+            android:name=".presentation.CrashLogActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".presentation.PerformanceMonitorActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
+
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
@@ -81,6 +91,24 @@
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".DebugCliReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="akihz.anlaki.dev.DEBUG_CLI" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 
