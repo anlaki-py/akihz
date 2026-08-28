@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -58,10 +56,7 @@ internal fun PerformanceMonitorScreen(
         onNavigationClick = onBack
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             RecordingStatus(state = state)
@@ -152,15 +147,25 @@ private fun LiveReadout(state: PerformanceMonitorUiState) {
     val rows: List<Pair<String, String>> = if (sample == null) {
         listOf("Status" to "No samples yet \u2014 start a recording to see live values.")
     } else {
-        listOf(
-            "Process CPU" to (sample.processCpuPercent?.let { "%.1f %%".format(it) } ?: "n/a"),
-            "App CPU" to (sample.appCpuPercent?.let { "%.1f %%".format(it) } ?: "n/a"),
+        val base = mutableListOf(
+            "Process CPU" to (sample.processCpuPercent?.let { String.format(java.util.Locale.US, "%.1f %%", it) } ?: "n/a"),
+            "App CPU" to (sample.appCpuPercent?.let { String.format(java.util.Locale.US, "%.1f %%", it) } ?: "n/a"),
             "Threads" to sample.threads.toString(),
             "Java heap" to "${formatBytes(sample.javaHeapUsedBytes)} / ${formatBytes(sample.javaHeapMaxBytes)}",
             "Native heap" to formatBytes(sample.nativeHeapBytes),
             "PSS total" to "${sample.pssTotalKb / 1024} MiB",
-            "Refresh rate" to (sample.currentRefreshRateHz?.let { "%.1f Hz".format(it) } ?: "n/a")
+            "App processes" to "${sample.processCount} (total PSS ${sample.totalPssKb / 1024} MiB)",
+            "Refresh rate" to (sample.currentRefreshRateHz?.let { String.format(java.util.Locale.US, "%.1f Hz", it) } ?: "n/a")
         )
+        if (sample.processes.isNotEmpty()) {
+            val top = sample.processes.take(5).joinToString("\n") { p ->
+                val cpu = p.cpuPercent?.let { String.format(java.util.Locale.US, "%.1f%%", it) } ?: "n/a"
+                val th = p.threads?.toString() ?: "?"
+                "  pid ${p.pid} ${p.name.substringAfterLast(':').take(18)} ${p.pssKb / 1024}MiB cpu $cpu th $th"
+            }
+            base += "Top processes" to top
+        }
+        base
     }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(text = "Live readings", style = MaterialTheme.typography.titleMedium)
@@ -176,14 +181,14 @@ private fun LiveReadout(state: PerformanceMonitorUiState) {
 private fun formatBytes(bytes: Long): String {
     if (bytes < 1024) return "${bytes}B"
     val kib = bytes / 1024.0
-    if (kib < 1024) return "%.1fKiB".format(kib)
+    if (kib < 1024) return String.format(java.util.Locale.US, "%.1fKiB", kib)
     val mib = kib / 1024.0
-    return "%.1fMiB".format(mib)
+    return String.format(java.util.Locale.US, "%.1fMiB", mib)
 }
 
 private fun formatDuration(ms: Long): String {
     val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(ms)
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return "%02d:%02d".format(minutes, seconds)
+    return String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
 }

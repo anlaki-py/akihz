@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import akihz.anlaki.dev.data.PerfRecorderState
@@ -36,7 +35,6 @@ data class PerformanceMonitorUiState(
     val recorder: PerfRecorderState = PerfRecorderState.Idle,
     val lastSample: akihz.anlaki.dev.data.PerfSample? = null,
     val savedLocation: String? = null,
-    val pendingCopyUri: Uri? = null,
     val message: String? = null
 )
 
@@ -50,26 +48,23 @@ data class PerformanceMonitorUiState(
 @HiltViewModel
 class PerformanceMonitorViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
-    private val performanceMonitor: PerformanceMonitor,
-    savedStateHandle: SavedStateHandle
+    private val performanceMonitor: PerformanceMonitor
 ) : ViewModel() {
 
     private val lastSample = MutableStateFlow<akihz.anlaki.dev.data.PerfSample?>(null)
     private val savedLocation = MutableStateFlow<String?>(null)
-    private val pendingCopyUri = MutableStateFlow<Uri?>(null)
     private val message = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<PerformanceMonitorUiState> = combine(
         performanceMonitor.state,
         lastSample,
         savedLocation,
-        combine(pendingCopyUri, message) { uri, msg -> uri to msg }
-    ) { recorder, sample, saved, (uri, msg) ->
+        message
+    ) { recorder, sample, saved, msg ->
         PerformanceMonitorUiState(
             recorder = recorder,
             lastSample = sample,
             savedLocation = saved,
-            pendingCopyUri = uri,
             message = msg
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, PerformanceMonitorUiState())
@@ -106,7 +101,6 @@ class PerformanceMonitorViewModel @Inject constructor(
         viewModelScope.launch {
             performanceMonitor.discardActive()
             savedLocation.value = null
-            pendingCopyUri.value = null
             message.value = "Recording discarded"
         }
     }
@@ -130,7 +124,6 @@ class PerformanceMonitorViewModel @Inject constructor(
                     return@launch
                 }
             savedLocation.value = saved
-            pendingCopyUri.value = saved.toUri()
             message.value = "Saved"
         }
     }
@@ -226,6 +219,4 @@ class PerformanceMonitorViewModel @Inject constructor(
         val safeVersion = session.appVersionName.replace(Regex("[^A-Za-z0-9._-]"), "-")
         return "akihz-perf-v$safeVersion-$stamp.log"
     }
-
-    private fun String.toUri(): Uri = Uri.parse(this)
 }

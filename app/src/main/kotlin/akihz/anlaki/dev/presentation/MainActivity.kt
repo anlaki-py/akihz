@@ -42,6 +42,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_OPEN_UPDATES = "akihz.extra.OPEN_UPDATES"
+        const val EXTRA_OPEN_DEBUG = "akihz.extra.OPEN_DEBUG"
+        const val EXTRA_DEBUG_PAGE = "akihz.extra.DEBUG_PAGE"
         private const val REQUEST_CODE_SHIZUKU = 1001
         private const val SHIZUKU_OWNER = "main_activity"
     }
@@ -51,6 +53,8 @@ class MainActivity : ComponentActivity() {
     private var hasAcceptedWelcomeNotice = false
     private val dialogState = MutableStateFlow<AppDialog?>(null)
     private val openUpdatesRequest = MutableStateFlow(0)
+    private val openDebugRequest = MutableStateFlow(0)
+    private var pendingDebugPage: String? = null
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         if (hasAcceptedWelcomeNotice) {
@@ -123,6 +127,7 @@ class MainActivity : ComponentActivity() {
                 val uiState by viewModel.uiState.collectAsState()
                 val appDialog by dialogState.collectAsState()
                 val updateRequest by openUpdatesRequest.collectAsState()
+                val debugRequest by openDebugRequest.collectAsState()
 
                 AkihzApp(
                     uiState = uiState,
@@ -156,6 +161,8 @@ class MainActivity : ComponentActivity() {
                         PreferencesHelper.blurEnabled = enabled
                     },
                     openUpdatesRequest = updateRequest,
+                    openDebugRequest = debugRequest,
+                    debugPage = pendingDebugPage,
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
                 appDialog?.let { dialog ->
@@ -253,6 +260,17 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra(EXTRA_OPEN_UPDATES, false) == true) {
             openUpdatesRequest.value += 1
             intent.removeExtra(EXTRA_OPEN_UPDATES)
+        }
+        val debugPageExtra = intent?.getStringExtra(EXTRA_DEBUG_PAGE)
+        val openDebug = intent?.getBooleanExtra(EXTRA_OPEN_DEBUG, false) == true || debugPageExtra != null
+        if (openDebug) {
+            pendingDebugPage = debugPageExtra ?: "categories"
+            if (pendingDebugPage.isNullOrBlank()) pendingDebugPage = "categories"
+            // Auto-unlock debug options for CLI access.
+            runCatching { PreferencesHelper.debugOptionsUnlocked = true }
+            openDebugRequest.value += 1
+            intent?.removeExtra(EXTRA_OPEN_DEBUG)
+            intent?.removeExtra(EXTRA_DEBUG_PAGE)
         }
     }
 

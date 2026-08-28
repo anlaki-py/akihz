@@ -9,6 +9,16 @@ package akihz.anlaki.dev.data
  * when the user stops it.
  */
 
+/** One entry for a single OS process belonging to this app (main + any :refresh_rate_service shells). */
+data class PerfProcessInfo(
+    val pid: Int,
+    val name: String,
+    val pssKb: Long,
+    val rssKb: Long?,
+    val cpuPercent: Float?,
+    val threads: Int?
+)
+
 /** Periodic process metric sample written once per [PerformanceMonitor] tick. */
 data class PerfSample(
     val uptimeMs: Long,
@@ -19,7 +29,10 @@ data class PerfSample(
     val javaHeapMaxBytes: Long,
     val nativeHeapBytes: Long,
     val pssTotalKb: Long,
-    val currentRefreshRateHz: Float?
+    val currentRefreshRateHz: Float?,
+    val processCount: Int = 0,
+    val totalPssKb: Long = 0,
+    val processes: List<PerfProcessInfo> = emptyList()
 )
 
 /** One-shot event written into the log (lifecycle, error, manual marker). */
@@ -87,7 +100,7 @@ internal object PerfLogJson {
                 '\b' -> sb.append("\\b")
                 '\u000c' -> sb.append("\\f")
                 else -> if (ch.code < 0x20) {
-                    sb.append("\\u%04x".format(ch.code))
+                    sb.append(String.format(java.util.Locale.US, "\\u%04x", ch.code))
                 } else {
                     sb.append(ch)
                 }
@@ -100,7 +113,7 @@ internal object PerfLogJson {
     fun number(value: Number?): String = value?.toString() ?: "null"
 
     fun numberOrNull(value: Float?, decimals: Int = 2): String =
-        value?.let { "%.${decimals}f".format(it) } ?: "null"
+        value?.let { String.format(java.util.Locale.US, "%.${decimals}f", it) } ?: "null"
 
     fun session(line: PerfSessionInfo): String = buildString {
         append('{')
@@ -130,6 +143,21 @@ internal object PerfLogJson {
         append("\"javaHeapMaxBytes\":${line.javaHeapMaxBytes},")
         append("\"nativeHeapBytes\":${line.nativeHeapBytes},")
         append("\"pssTotalKb\":${line.pssTotalKb},")
+        append("\"processCount\":${line.processCount},")
+        append("\"totalPssKb\":${line.totalPssKb},")
+        append("\"processes\":[")
+        line.processes.forEachIndexed { i, p ->
+            if (i > 0) append(',')
+            append('{')
+            append("\"pid\":${p.pid},")
+            append("\"name\":${escape(p.name)},")
+            append("\"pssKb\":${p.pssKb},")
+            append("\"rssKb\":${p.rssKb?.toString() ?: "null"},")
+            append("\"cpuPercent\":${numberOrNull(p.cpuPercent)},")
+            append("\"threads\":${p.threads?.toString() ?: "null"}")
+            append('}')
+        }
+        append("],")
         append("\"currentRefreshRateHz\":${numberOrNull(line.currentRefreshRateHz)}")
         append('}')
     }

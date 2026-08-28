@@ -61,6 +61,8 @@ class ICommandServiceImpl : ICommandService.Stub() {
         System.exit(0)
     }
 
+    override fun getPid(): Int = android.os.Process.myPid()
+
     private companion object {
         const val COMMAND_TIMEOUT_SECONDS = 10L
         const val OUTPUT_TIMEOUT_SECONDS = 1L
