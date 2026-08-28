@@ -7,6 +7,23 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.43] - 2026-08-28
+
+### Added
+
+- Added a Performance screen to see how the app is doing.
+- Added a Crash logs screen to view and share problems.
+- Added a simple ADB helper to check the app without tapping the screen.
+
+### Fixed
+
+- Fixed the app using too much memory in the background.
+- Fixed crashes when opening the debug screens.
+
+### Changed
+
+- Improved how the app is built and released.
+
 ## [0.0.42] - 2026-08-14
 
 ### Fixed
