@@ -90,7 +90,7 @@ fun SettingsScreen(
             PreferenceGroup(heading = "Developer") {
                 PreferenceTemplate(
                     title = "Debug options",
-                    description = "Tune home-screen sizing and Material 3 Expressive shapes",
+                    description = "Home screen tuning, performance monitoring, and crash logs",
                     icon = Icons.Default.DeveloperMode,
                     onClick = onOpenDebugSettings
                 )

@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import akihz.anlaki.dev.data.CustomRefreshProfile
 import akihz.anlaki.dev.data.OemSettingsStrategy
 
 /** Displays the one-time warning before custom-key discovery is opened. */
@@ -29,7 +30,7 @@ fun CustomKeysWarning(onAccept: () -> Unit, onLeave: () -> Unit) {
     )
 }
 
-/** Collects a manually entered namespace and key name. */
+/** Collects a manually entered namespace and key name. Only refresh_rate keys are allowed. */
 @Composable
 fun AddRawKeyDialog(
     onDismiss: () -> Unit,
@@ -37,9 +38,10 @@ fun AddRawKeyDialog(
 ) {
     var namespace by remember { mutableStateOf(OemSettingsStrategy.Namespace.SYSTEM) }
     var name by remember { mutableStateOf("") }
+    val isRefreshRateKey = CustomRefreshProfile.isRefreshRateKey(name)
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add raw settings key") },
+        title = { Text("Add refresh_rate key") },
         text = {
             androidx.compose.foundation.layout.Column {
                 Text("Namespace")
@@ -54,13 +56,26 @@ fun AddRawKeyDialog(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    label = { Text("Key name") }
+                    label = { Text("Key name") },
+                    supportingText = {
+                        if (name.isNotBlank() && !isRefreshRateKey) {
+                            Text("Key must contain \"refresh_rate\"")
+                        }
+                    },
+                    isError = name.isNotBlank() && !isRefreshRateKey
                 )
+                if (name.isBlank()) {
+                    androidx.compose.material3.Text(
+                        "Example: peak_refresh_rate, min_refresh_rate",
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.outline
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() && isRefreshRateKey,
                 onClick = { onAdd(namespace, name); onDismiss() }
             ) { Text("Add") }
         },

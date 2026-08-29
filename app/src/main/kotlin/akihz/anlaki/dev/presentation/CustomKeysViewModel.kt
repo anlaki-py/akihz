@@ -60,9 +60,12 @@ class CustomKeysViewModel @Inject constructor(
                     warningAcknowledged = CustomProfileManager.warningAcknowledged
                 )
             }
+            val filteredProfile = loaded.profile.copy(
+                keys = loaded.profile.keys.filter { CustomRefreshProfile.isRefreshRateKey(it.name) }
+            )
             _state.update {
                 it.copy(
-                    profile = loaded.profile,
+                    profile = filteredProfile,
                     detectedRates = loaded.rates,
                     snapshots = loaded.snapshots,
                     warningAcknowledged = loaded.warningAcknowledged
@@ -83,10 +86,15 @@ class CustomKeysViewModel @Inject constructor(
         profile.copy(rates = rates.sorted())
     }
 
-    /** Adds a discovered or manually entered key. */
+    /** Adds a discovered or manually entered key. Only refresh_rate keys are allowed. */
     fun addKey(namespace: OemSettingsStrategy.Namespace, name: String) {
         val cleanName = name.trim()
-        if (cleanName.isBlank() || _state.value.profile.keys.any {
+        if (cleanName.isBlank()) return
+        if (!CustomRefreshProfile.isRefreshRateKey(cleanName)) {
+            show("Only keys containing \"refresh_rate\" can be added.")
+            return
+        }
+        if (_state.value.profile.keys.any {
                 it.namespace == namespace && it.name == cleanName
             }) return
         val snapshots = _state.value.snapshots
@@ -121,11 +129,17 @@ class CustomKeysViewModel @Inject constructor(
         })
     }
 
-    /** Scans all settings namespaces and ranks likely candidates. */
+    /** Scans all settings namespaces and ranks likely refresh_rate candidates. */
     fun scan() = runBusy {
         val result = CustomProfileManager.candidates()
         result.onSuccess { candidates ->
-            _state.update { it.copy(candidates = candidates, message = "Found ${candidates.size} candidates.") }
+            val filtered = candidates.filter { CustomRefreshProfile.isRefreshRateKey(it.name) }
+            _state.update {
+                it.copy(
+                    candidates = filtered,
+                    message = if (filtered.isEmpty()) "No refresh_rate keys found." else "Found ${filtered.size} refresh_rate keys."
+                )
+            }
         }.onError { _, message -> show(message) }
     }
 
