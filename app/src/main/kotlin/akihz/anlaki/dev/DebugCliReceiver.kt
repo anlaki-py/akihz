@@ -78,6 +78,7 @@ class DebugCliReceiver : BroadcastReceiver() {
         "trigger_crash" -> triggerCrash(arg)
         "list_processes", "ps", "list_ps" -> listProcesses()
         "kill_stale", "cleanup" -> killStale()
+        "test_tile" -> testTile(context, arg)
         "help" -> helpText()
         else -> "Unknown cmd: $cmd\n${helpText()}"
     }
@@ -192,6 +193,18 @@ class DebugCliReceiver : BroadcastReceiver() {
             res.isSuccess -> res.getOrNull() ?: "Killed"
             else -> "Failed: ${res.getErrorOrNull()?.message ?: "unknown"} (is Shizuku bound? ${akihz.anlaki.dev.data.ShizukuHelper.isUserServiceBound()})"
         }
+    }
+
+    private fun testTile(context: Context, arg: String?): String {
+        val rate = arg?.toFloatOrNull() ?: 90f
+        // Test both connecting and switching notifications
+        akihz.anlaki.dev.utils.TileFeedbackNotification.showConnecting(context)
+        // Small delay then switching to simulate real flow
+        Thread.sleep(400)
+        akihz.anlaki.dev.utils.TileFeedbackNotification.showSwitching(context, rate)
+        Thread.sleep(400)
+        akihz.anlaki.dev.utils.TileFeedbackNotification.showSwitched(context, rate)
+        return "Posted tile feedback notifications: Connecting -> Switching to ${rate}Hz -> Switched. Check shade or toast fallback if blocked.\nChannel importance=${context.getSystemService(android.app.NotificationManager::class.java).getNotificationChannel("akihz_tile_feedback")?.importance} areNotificationsEnabled=${androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()}"
     }
 
     private fun helpText(): String = """
