@@ -34,8 +34,10 @@ class RefreshRateTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
-        KeepAliveService.start(applicationContext)
         PreferencesHelper.init(applicationContext)
+        if (PreferencesHelper.keepAliveEnabled) {
+            KeepAliveService.start(applicationContext)
+        }
         loadSupportedRatesAndRestore()
     }
 

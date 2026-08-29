@@ -73,6 +73,8 @@ private enum class DetailPage { CustomKeys, DebugOptions }
  * @param onThemeModeChanged invoked when the appearance mode changes
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
+ * @param keepAliveEnabled whether the keep-alive notification is enabled
+ * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  * @param onErrorDismissed clears an error after it is shown
  * @param openUpdatesRequest changes when Settings should open from an update alert
  */
@@ -93,6 +95,8 @@ fun AkihzApp(
     onThemeModeChanged: (AppThemeMode) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
+    keepAliveEnabled: Boolean = true,
+    onKeepAliveEnabledChanged: (Boolean) -> Unit = {},
     openUpdatesRequest: Int = 0,
     openDebugRequest: Int = 0,
     debugPage: String? = null,
@@ -205,6 +209,8 @@ fun AkihzApp(
                                     onDebugOptionsUnlocked = onDebugOptionsUnlocked,
                                     onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
                                     autoCheckRequest = openUpdatesRequest,
+                                    keepAliveEnabled = keepAliveEnabled,
+                                    onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }

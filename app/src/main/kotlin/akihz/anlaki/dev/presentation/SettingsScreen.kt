@@ -28,6 +28,8 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * @param debugOptionsUnlocked whether the persistent developer entry is visible
  * @param onDebugOptionsUnlocked persists the developer entry after six version taps
  * @param autoCheckRequest changes when an update notification opens this screen
+ * @param keepAliveEnabled whether the keep-alive notification is enabled
+ * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  * @param modifier layout modifier supplied by the app shell
  */
 @Composable
@@ -43,8 +45,10 @@ fun SettingsScreen(
     debugOptionsUnlocked: Boolean,
     onDebugOptionsUnlocked: () -> Unit,
     onOpenDebugSettings: () -> Unit,
+    modifier: Modifier = Modifier,
     autoCheckRequest: Int = 0,
-    modifier: Modifier = Modifier
+    keepAliveEnabled: Boolean = true,
+    onKeepAliveEnabledChanged: (Boolean) -> Unit = {}
 ) {
     var versionTapCount by remember { mutableIntStateOf(0) }
     PreferenceLayout(
@@ -61,7 +65,9 @@ fun SettingsScreen(
         )
         AdvancedSection(
             onResetToDefaults = onResetToDefaults,
-            onOpenCustomKeys = onOpenCustomKeys
+            onOpenCustomKeys = onOpenCustomKeys,
+            keepAliveEnabled = keepAliveEnabled,
+            onKeepAliveEnabledChanged = onKeepAliveEnabledChanged
         )
         if (debugOptionsUnlocked) {
             PreferenceGroup(heading = "Developer") {

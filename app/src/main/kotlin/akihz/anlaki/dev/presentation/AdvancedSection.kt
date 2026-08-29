@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.BatterySaver
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -38,11 +39,15 @@ import akihz.anlaki.dev.utils.PreferencesHelper
  *
  * @param onResetToDefaults restores adaptive system refresh-rate settings
  * @param onOpenCustomKeys opens experimental custom-key configuration
+ * @param keepAliveEnabled whether the persistent keep-alive notification/service is enabled
+ * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  */
 @Composable
 fun AdvancedSection(
     onResetToDefaults: () -> Unit,
-    onOpenCustomKeys: () -> Unit
+    onOpenCustomKeys: () -> Unit,
+    keepAliveEnabled: Boolean,
+    onKeepAliveEnabledChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val oemNames = OemSettingsStrategy.getSupportedOemNames()
@@ -51,6 +56,14 @@ fun AdvancedSection(
     var showResetConfirm by remember { mutableStateOf(false) }
 
     PreferenceGroup(heading = "Advanced") {
+        PreferenceTemplate(
+            title = "Keep alive notification",
+            description = "Keep foreground notification for reliable tile switching",
+            icon = Icons.Default.Notifications,
+            checked = keepAliveEnabled,
+            onCheckedChange = onKeepAliveEnabledChanged
+        )
+
         PreferenceTemplate(
             title = "Allow background running",
             description = "Exclude akiHz from Android battery optimization",
