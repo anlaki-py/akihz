@@ -13,7 +13,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
-- Reorganized Settings into balanced semantic groups: Appearance, Background, Refresh rate, Updates, About, Diagnostics, and Developer — replacing the oversized Advanced card and promoting Updates from inside About to its own top-level section.
+- Reorganized Settings into balanced semantic groups: Appearance, Background, Refresh rate, Updates, About, Diagnostics, and Developer, replacing the oversized Advanced card and promoting Updates from inside About to its own top-level section.
 
 ## [0.0.43] - 2026-08-28
 
