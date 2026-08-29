@@ -9,7 +9,11 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
-- Added a toggle in Settings > Advanced to enable or disable the keep-alive foreground notification (enabled by default).
+- Added a toggle in Settings > Background to enable or disable the keep-alive foreground notification (enabled by default).
+
+### Changed
+
+- Reorganized Settings into balanced semantic groups: Appearance, Background, Refresh rate, Updates, About, Diagnostics, and Developer — replacing the oversized Advanced card and promoting Updates from inside About to its own top-level section.
 
 ## [0.0.43] - 2026-08-28
 

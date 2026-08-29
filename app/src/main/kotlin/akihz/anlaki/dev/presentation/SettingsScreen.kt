@@ -14,7 +14,9 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
- * Displays advanced and app information preferences.
+ * Displays appearance, background, engine, update and about preferences.
+ *
+ * Layout follows semantic grouping for balanced card sizes.
  *
  * @param onResetToDefaults restores system refresh-rate settings
  * @param onOpenCustomKeys opens custom refresh-rate key configuration
@@ -63,24 +65,16 @@ fun SettingsScreen(
             onAmoledModeChanged = onAmoledModeChanged,
             onBlurEnabledChanged = onBlurEnabledChanged
         )
-        AdvancedSection(
-            onResetToDefaults = onResetToDefaults,
-            onOpenCustomKeys = onOpenCustomKeys,
+        BackgroundSection(
             keepAliveEnabled = keepAliveEnabled,
             onKeepAliveEnabledChanged = onKeepAliveEnabledChanged
         )
-        if (debugOptionsUnlocked) {
-            PreferenceGroup(heading = "Developer") {
-                PreferenceTemplate(
-                    title = "Debug options",
-                    description = "Tune home-screen sizing and Material 3 Expressive shapes",
-                    icon = Icons.Default.DeveloperMode,
-                    onClick = onOpenDebugSettings
-                )
-            }
-        }
+        RefreshRateEngineSection(
+            onResetToDefaults = onResetToDefaults,
+            onOpenCustomKeys = onOpenCustomKeys
+        )
+        UpdatesSection(autoCheckRequest = autoCheckRequest)
         AboutSection(
-            autoCheckRequest = autoCheckRequest,
             onVersionClick = {
                 if (!debugOptionsUnlocked) {
                     versionTapCount++
@@ -91,5 +85,16 @@ fun SettingsScreen(
                 }
             }
         )
+        DiagnosticsSection()
+        if (debugOptionsUnlocked) {
+            PreferenceGroup(heading = "Developer") {
+                PreferenceTemplate(
+                    title = "Debug options",
+                    description = "Tune home-screen sizing and Material 3 Expressive shapes",
+                    icon = Icons.Default.DeveloperMode,
+                    onClick = onOpenDebugSettings
+                )
+            }
+        }
     }
 }
