@@ -1,3 +1,5 @@
+
+
 <div align="center">
   <img src="app/src/main/ic_launcher-playstore.png" alt="akiHz app icon" width="160">
 
@@ -70,6 +72,10 @@ your manufacturer manually.
 Each release provides standalone APKs for `arm64-v8a`, `armeabi-v7a`, `x86`,
 and `x86_64`, plus a `universal` APK. Most modern phones use `arm64-v8a`;
 use `universal` if you are unsure.
+
+akiHz also includes an in-app updater. When installing an update downloaded
+inside the app, grant the **Install unknown apps** permission for akiHz when
+prompted by your device settings.
 
 Releases from `main` are stable. Releases from `beta` are marked as GitHub
 prereleases. Both channels use the same application ID and signing key, and
