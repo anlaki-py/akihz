@@ -16,6 +16,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Reorganized Settings into balanced semantic groups: Appearance, Background, Refresh rate, Updates, About, Diagnostics, and Developer, replacing the oversized Advanced card and promoting Updates from inside About to its own top-level section.
 - Simplified custom refresh-rate keys to manual refresh_rate selection with Material 3 groups, scanning only refresh_rate keys and removing the guided snapshots flow.
 
+### Fixed
+
+- Fixed Quick Settings tile to keep title `akiHz` static and show rate/status in subtitle (no title change), matching ShizuWall's pattern where `Firewall` stays static and `is on/off` is state-driven — was incorrectly swapping title to `Hz`.
+
 ## [0.0.43] - 2026-08-28
 
 ### Added
