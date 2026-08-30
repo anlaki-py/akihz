@@ -11,17 +11,22 @@ import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.KeepAliveService
 import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.TileFeedbackNotification
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import kotlin.math.roundToInt
 import javax.inject.Inject
 
+/**
+ * Quick Settings tile for cycling refresh rate.
+ *
+ * No banner API — HyperOS shows Tile.label as "X is on" when ACTIVE. So label must hold
+ * the visible rate, subtitle secondary. QS stays open on this device, so label change is
+ * the only thing user sees without reopening. See shtml/anlaki.vercel.app/vmfxYr.
+ */
 @AndroidEntryPoint
 class RefreshRateTileService : TileService() {
 
@@ -39,8 +44,6 @@ class RefreshRateTileService : TileService() {
         if (PreferencesHelper.keepAliveEnabled) {
             KeepAliveService.start(applicationContext)
         }
-        // Clear any leftover tile feedback notification from previous builds (user wants tile notice, not shade notification).
-        TileFeedbackNotification.cancel(this)
         loadSupportedRatesAndRestore()
     }
 
@@ -49,7 +52,6 @@ class RefreshRateTileService : TileService() {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.getSupportedRates()
             }
-
             result.onSuccess { rates ->
                 val excludedRates = TileRateSelection.recoverEmptySelection(
                     rates,
@@ -67,30 +69,19 @@ class RefreshRateTileService : TileService() {
         }
     }
 
-    override fun onStopListening() {
-        super.onStopListening()
-    }
-
     override fun onClick() {
         super.onClick()
-        Timber.d("Tile onClick isBinderReady=${ShizukuHelper.isBinderReady()} hasPerm=${ShizukuHelper.hasPermission()} bound=${ShizukuHelper.isUserServiceBound()} connecting=$isConnecting switching=$isSwitching")
-
         if (!ShizukuHelper.isBinderReady()) {
             showToast("Shizuku not running")
             updateTileUnavailable()
             return
         }
-
         if (!ShizukuHelper.hasPermission()) {
             showToast("Grant Shizuku permission in app")
             updateTileUnavailable()
             return
         }
-
-        if (isConnecting || isSwitching) {
-            Timber.d("Tile click ignored: connecting or switching")
-            return
-        }
+        if (isConnecting || isSwitching) return
 
         if (!ShizukuHelper.isUserServiceBound()) {
             bindAndCycleRate()
@@ -102,20 +93,16 @@ class RefreshRateTileService : TileService() {
     private fun bindAndCycleRate() {
         isConnecting = true
         updateTileConnecting()
-        Timber.d("Tile bindAndCycleRate: requesting Shizuku user service")
-
         ShizukuHelper.acquireUserService(
             owner = SHIZUKU_OWNER,
             onConnected = {
                 scope.launch {
                     isConnecting = false
-                    Timber.d("Tile Shizuku connected, cycling rate")
                     cycleRate()
                 }
             },
             onFailed = { _, message ->
                 isConnecting = false
-                Timber.w("Tile Shizuku connect failed: $message")
                 showToast(message)
                 updateTileUnavailable()
             }
@@ -127,30 +114,25 @@ class RefreshRateTileService : TileService() {
             showToast("No supported refresh rates detected")
             return
         }
-
         val previousRate = displayedRate
         val cycleAnchor = displayedRate ?: PreferencesHelper.lastRate
         val newRate = TileRateSelection.nextRate(tileRates, cycleAnchor) ?: return
         displayedRate = newRate
         isSwitching = true
         updateTileSwitching(newRate)
-        Timber.d("Tile cycleRate: switching to $newRate from $previousRate")
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(newRate)
             }
-
             result.onSuccess {
                 isSwitching = false
                 updateTileWithRate(newRate)
-                Timber.d("Tile cycleRate success: $newRate")
             }.onError { _, msg ->
                 displayedRate = previousRate
                 isSwitching = false
                 updateTile()
                 showToast(msg)
-                Timber.w("Tile cycleRate failed: $msg")
             }
         }
     }
@@ -177,7 +159,6 @@ class RefreshRateTileService : TileService() {
 
     private fun updateTileWithRate(rate: Float) {
         val tile = qsTile ?: return
-
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "${rate.roundToInt()} Hz"
