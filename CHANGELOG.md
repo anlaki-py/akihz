@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.44] - 2026-08-31
+
 ### Added
 
 - Added a toggle in Settings > Background to enable or disable the keep-alive foreground notification (enabled by default).
