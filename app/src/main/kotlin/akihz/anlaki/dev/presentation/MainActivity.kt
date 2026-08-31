@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
         PreferencesHelper.init(this)
         hasAcceptedWelcomeNotice = PreferencesHelper.welcomeNoticeAccepted
-        if (hasAcceptedWelcomeNotice) {
+        if (hasAcceptedWelcomeNotice && PreferencesHelper.keepAliveEnabled) {
             KeepAliveService.start(this)
         }
         handleUpdateIntent(intent)
@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
             var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
             var blurEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.blurEnabled) }
+            var keepAliveEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.keepAliveEnabled) }
             var homeDebugSettings by remember {
                 mutableStateOf(PreferencesHelper.homeDebugSettings)
             }
@@ -160,6 +161,16 @@ class MainActivity : ComponentActivity() {
                         blurEnabled = enabled
                         PreferencesHelper.blurEnabled = enabled
                     },
+                    keepAliveEnabled = keepAliveEnabled,
+                    onKeepAliveEnabledChanged = { enabled ->
+                        keepAliveEnabled = enabled
+                        PreferencesHelper.keepAliveEnabled = enabled
+                        if (enabled) {
+                            KeepAliveService.start(this@MainActivity)
+                        } else {
+                            KeepAliveService.stop(this@MainActivity)
+                        }
+                    },
                     openUpdatesRequest = updateRequest,
                     openDebugRequest = debugRequest,
                     debugPage = pendingDebugPage,
@@ -185,7 +196,9 @@ class MainActivity : ComponentActivity() {
                             PreferencesHelper.welcomeNoticeAccepted = true
                             hasAcceptedWelcomeNotice = true
                             showWelcomeNotice = false
-                            KeepAliveService.start(this@MainActivity)
+                            if (keepAliveEnabled) {
+                                KeepAliveService.start(this@MainActivity)
+                            }
                             checkShizukuPermission()
                         }
                     )

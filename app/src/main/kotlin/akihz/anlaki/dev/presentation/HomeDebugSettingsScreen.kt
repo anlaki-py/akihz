@@ -95,8 +95,8 @@ private fun HomeDebugSlider(
         title = title,
         value = value,
         valueLabel = "${value.toInt()} $unit",
-        description = "$description Default ${default.toInt()} $unit • range " +
-            "${range.start.toInt()}–${range.endInclusive.toInt()} $unit.",
+        description = "$description Default ${default.toInt()} $unit, range " +
+            "${range.start.toInt()} to ${range.endInclusive.toInt()} $unit.",
         onValueChange = onValueChanged,
         onValueChangeFinished = {},
         valueRange = range,

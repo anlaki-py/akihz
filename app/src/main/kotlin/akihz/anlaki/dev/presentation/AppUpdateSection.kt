@@ -118,13 +118,13 @@ fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
                             PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
                         }
                         UpdateAvailability.AheadOfStable -> {
-                            statusText = "You’re ahead of stable; the next stable will install normally"
+                            statusText = "You're ahead of stable; the next stable will install normally"
                             PreferencesHelper.clearAvailableUpdate()
                             PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
                             UpdateAvailableNotification.cancel(context)
                         }
                         UpdateAvailability.UpToDate -> {
-                            statusText = "You’re up to date"
+                            statusText = "You're up to date"
                             PreferencesHelper.clearAvailableUpdate()
                             PreferencesHelper.lastUpdateCheckAt = System.currentTimeMillis()
                             UpdateAvailableNotification.cancel(context)

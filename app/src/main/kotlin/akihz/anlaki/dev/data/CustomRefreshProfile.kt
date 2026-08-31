@@ -32,6 +32,9 @@ data class CustomRefreshProfile(
         /** Produces a concise user-facing display rate. */
         fun rateLabel(rate: Float): String =
             if (rate % 1f == 0f) rate.toInt().toString() else rate.toString()
+
+        /** Returns true when a settings key name contains refresh_rate, case insensitive. */
+        fun isRefreshRateKey(name: String): Boolean = name.contains("refresh_rate", ignoreCase = true)
     }
 }
 

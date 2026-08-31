@@ -105,7 +105,7 @@ class ProcessMetricsCollectorTest {
 
     @Test
     fun `recorder state default is idle`() {
-        // No monitor constructed — this is a pure model test
+        // No monitor constructed, this is a pure model test
         val state: PerfRecorderState = PerfRecorderState.Idle
         assertTrue(state is PerfRecorderState.Idle)
         // Reference assertNull to avoid unused warning when state changes

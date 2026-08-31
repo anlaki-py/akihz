@@ -2,25 +2,28 @@ package akihz.anlaki.dev.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.CustomRefreshProfile
 import akihz.anlaki.dev.data.CustomSettingsKey
+import akihz.anlaki.dev.presentation.components.PreferenceGroup
+import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
 /**
- * Edits roles and per-rate values for one selected settings key.
+ * Edits roles and per-rate values for one selected refresh_rate key.
+ * Only refresh_rate keys are surfaced by the surrounding screen.
  *
- * @param setting selected custom key
+ * @param setting selected custom key containing refresh_rate
  * @param rates refresh rates exposed by the profile
  * @param enabled whether editing controls are enabled
  * @param onRolesChanged receives updated read and write roles
@@ -36,29 +39,36 @@ fun CustomKeyEditor(
     onValueChanged: (Float, String) -> Unit,
     onRemove: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    PreferenceGroup(heading = setting.id) {
+        PreferenceTemplate(
+            title = "Read for validation",
+            description = "Read key to verify current rate",
+            icon = Icons.Default.Visibility,
+            checked = setting.canRead,
+            onCheckedChange = if (enabled) {
+                { onRolesChanged(it, setting.canWrite) }
+            } else null
+        )
+        PreferenceTemplate(
+            title = "Write when switching",
+            description = "Write key when applying a rate",
+            icon = Icons.Default.Edit,
+            checked = setting.canWrite,
+            onCheckedChange = if (enabled) {
+                { onRolesChanged(setting.canRead, it) }
+            } else null
+        )
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(setting.name)
-                    Text(setting.namespace.name.lowercase())
-                }
-                IconButton(onClick = onRemove, enabled = enabled) {
-                    Text("×")
-                }
-            }
-            RoleToggle("Read for validation", setting.canRead, enabled) {
-                onRolesChanged(it, setting.canWrite)
-            }
-            RoleToggle("Write when switching", setting.canWrite, enabled) {
-                onRolesChanged(setting.canRead, it)
-            }
+            Text(
+                "Values per rate",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             rates.forEach { rate ->
                 OutlinedTextField(
                     value = setting.values[CustomRefreshProfile.rateKey(rate)].orEmpty(),
@@ -70,21 +80,11 @@ fun CustomKeyEditor(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun RoleToggle(
-    label: String,
-    checked: Boolean,
-    enabled: Boolean,
-    onChanged: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, modifier = Modifier.padding(top = 12.dp))
-        Switch(checked = checked, onCheckedChange = onChanged, enabled = enabled)
+        PreferenceTemplate(
+            title = "Remove key",
+            description = "Delete ${setting.name} from profile",
+            icon = Icons.Default.Delete,
+            onClick = if (enabled) onRemove else null
+        )
     }
 }

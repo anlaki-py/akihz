@@ -20,10 +20,10 @@
 - When asked to build a debug app/APK, build only the universal APK using `./gradlew :app:packageDebugUniversalApk` rather than assembling every ABI split.
 - The universal debug APK is written to `app/build/outputs/apk_from_bundle/debug/app-debug-universal.apk`.
 
-## Debug CLI (ADB) — crash / perf without UI taps
+## Debug CLI (ADB) crash and perf without UI taps
 - Direct activities (exported, bypass navigation):
-  - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.CrashLogActivity` — opens Crash logs screen directly.
-  - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.PerformanceMonitorActivity` — opens Performance monitoring directly.
+  - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.CrashLogActivity`, opens Crash logs screen directly.
+  - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.PerformanceMonitorActivity`, opens Performance monitoring directly.
   - `$PKG` is `akihz.anlaki.dev.debug` (debug) or `akihz.anlaki.dev` (release); script auto-detects.
 - MainActivity deep link (auto-unlocks `debugOptionsUnlocked`):
   - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.MainActivity --es akihz.extra.DEBUG_PAGE crash_logs|performance|home|categories`
