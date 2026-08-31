@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Debug CLI helper for akihz – lets you drive crash/perf debugging purely from adb.
+# Debug CLI helper for akihz, lets you drive crash and perf debugging purely from adb.
 # Usage:
 #   ./scripts/debug-cli.sh <cmd> [args]
 # Examples:
@@ -163,7 +163,7 @@ case "${1:-help}" in
     ;;
   help|--help|-h)
     cat <<'EOF'
-Debug CLI – akihz
+Debug CLI, akihz
 Detected package: PKG (auto)
 Direct activity launches (no UI tap needed):
   open-performance      launch PerformanceMonitorActivity directly

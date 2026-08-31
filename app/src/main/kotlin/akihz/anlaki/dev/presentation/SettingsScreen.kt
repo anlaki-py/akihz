@@ -14,7 +14,9 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 
 /**
- * Displays advanced and app information preferences.
+ * Displays appearance, background, engine, update and about preferences.
+ *
+ * Layout follows semantic grouping for balanced card sizes.
  *
  * @param onResetToDefaults restores system refresh-rate settings
  * @param onOpenCustomKeys opens custom refresh-rate key configuration
@@ -28,6 +30,8 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * @param debugOptionsUnlocked whether the persistent developer entry is visible
  * @param onDebugOptionsUnlocked persists the developer entry after six version taps
  * @param autoCheckRequest changes when an update notification opens this screen
+ * @param keepAliveEnabled whether the keep-alive notification is enabled
+ * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  * @param modifier layout modifier supplied by the app shell
  */
 @Composable
@@ -43,8 +47,10 @@ fun SettingsScreen(
     debugOptionsUnlocked: Boolean,
     onDebugOptionsUnlocked: () -> Unit,
     onOpenDebugSettings: () -> Unit,
+    modifier: Modifier = Modifier,
     autoCheckRequest: Int = 0,
-    modifier: Modifier = Modifier
+    keepAliveEnabled: Boolean = true,
+    onKeepAliveEnabledChanged: (Boolean) -> Unit = {}
 ) {
     var versionTapCount by remember { mutableIntStateOf(0) }
     PreferenceLayout(
@@ -59,22 +65,16 @@ fun SettingsScreen(
             onAmoledModeChanged = onAmoledModeChanged,
             onBlurEnabledChanged = onBlurEnabledChanged
         )
-        AdvancedSection(
+        BackgroundSection(
+            keepAliveEnabled = keepAliveEnabled,
+            onKeepAliveEnabledChanged = onKeepAliveEnabledChanged
+        )
+        RefreshRateEngineSection(
             onResetToDefaults = onResetToDefaults,
             onOpenCustomKeys = onOpenCustomKeys
         )
-        if (debugOptionsUnlocked) {
-            PreferenceGroup(heading = "Developer") {
-                PreferenceTemplate(
-                    title = "Debug options",
-                    description = "Tune home-screen sizing and Material 3 Expressive shapes",
-                    icon = Icons.Default.DeveloperMode,
-                    onClick = onOpenDebugSettings
-                )
-            }
-        }
+        UpdatesSection(autoCheckRequest = autoCheckRequest)
         AboutSection(
-            autoCheckRequest = autoCheckRequest,
             onVersionClick = {
                 if (!debugOptionsUnlocked) {
                     versionTapCount++
@@ -85,5 +85,16 @@ fun SettingsScreen(
                 }
             }
         )
+        DiagnosticsSection()
+        if (debugOptionsUnlocked) {
+            PreferenceGroup(heading = "Developer") {
+                PreferenceTemplate(
+                    title = "Debug options",
+                    description = "Home screen tuning, performance monitoring, and crash logs",
+                    icon = Icons.Default.DeveloperMode,
+                    onClick = onOpenDebugSettings
+                )
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation
 
-import android.content.Intent
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -21,6 +20,13 @@ import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import javax.inject.Inject
 
+/**
+ * Quick Settings tile for cycling refresh rate.
+ *
+ * No banner API — HyperOS shows Tile.label as "X is on" when ACTIVE. So label must hold
+ * the visible rate, subtitle secondary. QS stays open on this device, so label change is
+ * the only thing user sees without reopening. See shtml/anlaki.vercel.app/vmfxYr.
+ */
 @AndroidEntryPoint
 class RefreshRateTileService : TileService() {
 
@@ -34,8 +40,10 @@ class RefreshRateTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
-        KeepAliveService.start(applicationContext)
         PreferencesHelper.init(applicationContext)
+        if (PreferencesHelper.keepAliveEnabled) {
+            KeepAliveService.start(applicationContext)
+        }
         loadSupportedRatesAndRestore()
     }
 
@@ -44,7 +52,6 @@ class RefreshRateTileService : TileService() {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.getSupportedRates()
             }
-
             result.onSuccess { rates ->
                 val excludedRates = TileRateSelection.recoverEmptySelection(
                     rates,
@@ -62,31 +69,21 @@ class RefreshRateTileService : TileService() {
         }
     }
 
-    override fun onStopListening() {
-        super.onStopListening()
-    }
-
     override fun onClick() {
         super.onClick()
-
         if (!ShizukuHelper.isBinderReady()) {
             showToast("Shizuku not running")
             updateTileUnavailable()
             return
         }
-
         if (!ShizukuHelper.hasPermission()) {
             showToast("Grant Shizuku permission in app")
             updateTileUnavailable()
             return
         }
-
-        if (isConnecting || isSwitching) {
-            return
-        }
+        if (isConnecting || isSwitching) return
 
         if (!ShizukuHelper.isUserServiceBound()) {
-            showToast("Connecting...")
             bindAndCycleRate()
         } else {
             cycleRate()
@@ -95,13 +92,13 @@ class RefreshRateTileService : TileService() {
 
     private fun bindAndCycleRate() {
         isConnecting = true
-
+        updateTileConnecting()
         ShizukuHelper.acquireUserService(
             owner = SHIZUKU_OWNER,
             onConnected = {
                 scope.launch {
-                    cycleRate()
                     isConnecting = false
+                    cycleRate()
                 }
             },
             onFailed = { _, message ->
@@ -117,21 +114,20 @@ class RefreshRateTileService : TileService() {
             showToast("No supported refresh rates detected")
             return
         }
-
         val previousRate = displayedRate
         val cycleAnchor = displayedRate ?: PreferencesHelper.lastRate
         val newRate = TileRateSelection.nextRate(tileRates, cycleAnchor) ?: return
         displayedRate = newRate
         isSwitching = true
-        updateTileWithRate(newRate)
+        updateTileSwitching(newRate)
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(newRate)
             }
-
             result.onSuccess {
                 isSwitching = false
+                updateTileWithRate(newRate)
             }.onError { _, msg ->
                 displayedRate = previousRate
                 isSwitching = false
@@ -163,10 +159,27 @@ class RefreshRateTileService : TileService() {
 
     private fun updateTileWithRate(rate: Float) {
         val tile = qsTile ?: return
-
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "${rate.roundToInt()} Hz"
+        tile.icon = createRefreshRateTileIcon(rate)
+        tile.updateTile()
+    }
+
+    private fun updateTileConnecting() {
+        val tile = qsTile ?: return
+        tile.state = Tile.STATE_ACTIVE
+        tile.label = getString(R.string.app_name)
+        tile.subtitle = "Connecting..."
+        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        tile.updateTile()
+    }
+
+    private fun updateTileSwitching(rate: Float) {
+        val tile = qsTile ?: return
+        tile.state = Tile.STATE_ACTIVE
+        tile.label = getString(R.string.app_name)
+        tile.subtitle = "Switching to ${rate.roundToInt()} Hz..."
         tile.icon = createRefreshRateTileIcon(rate)
         tile.updateTile()
     }

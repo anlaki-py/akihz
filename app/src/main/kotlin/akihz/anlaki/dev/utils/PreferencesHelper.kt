@@ -42,6 +42,7 @@ object PreferencesHelper {
     private const val KEY_PRESSED_CORNER = "debug_pressed_corner"
     private const val KEY_DEBUG_OPTIONS_UNLOCKED = "debug_options_unlocked"
     private const val KEY_WELCOME_NOTICE_ACCEPTED = "welcome_notice_accepted"
+    private const val KEY_KEEP_ALIVE_ENABLED = "keep_alive_enabled"
 
     private lateinit var prefs: SharedPreferences
     private val _lastRateFlow = MutableStateFlow(60f)
@@ -174,6 +175,11 @@ object PreferencesHelper {
     var welcomeNoticeAccepted: Boolean
         get() = prefs.getBoolean(KEY_WELCOME_NOTICE_ACCEPTED, false)
         set(value) = prefs.edit { putBoolean(KEY_WELCOME_NOTICE_ACCEPTED, value) }
+
+    /** Whether the foreground keep-alive notification/service is enabled. Enabled by default. */
+    var keepAliveEnabled: Boolean
+        get() = prefs.getBoolean(KEY_KEEP_ALIVE_ENABLED, true)
+        set(value) = prefs.edit { putBoolean(KEY_KEEP_ALIVE_ENABLED, value) }
 
     fun clear() {
         prefs.edit { clear() }
