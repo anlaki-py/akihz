@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.45] - 2026-09-03
+
 ### Added
 
 - Added FPS Monitor in Settings with a floating overlay that shows real time FPS and a Quick Settings tile labeled FPS. You can drag the pill to move it and tap it to open its options.

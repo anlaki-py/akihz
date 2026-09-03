@@ -7,7 +7,7 @@
 
   <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
 
-  <p>Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, and OEM-specific settings support.</p>
+  <p>Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, OEM-specific settings support, and an FPS Monitor with a floating overlay.</p>
 
   <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -49,6 +49,7 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 - **Dynamic detection:** automatically reads your display's supported refresh rates instead of using hardcoded values
 - **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
 - **Custom tile cycle:** include or exclude each detected rate from the Quick Settings tile on Home
+- **FPS Monitor:** shows real time FPS from SurfaceFlinger in a floating pill. Drag to move, tap for options. Quick Settings tile labeled FPS to start and stop. Requires Shizuku and overlay permission.
 - **Automatic update alerts:** checks GitHub on a daily, three-day, or weekly schedule and notifies once per release
 - **Reliable background access:** a foreground service keeps tile controls ready, with a settings shortcut for disabling battery optimization
 - **Multi-OEM support:** targets the correct system settings keys per manufacturer
@@ -87,9 +88,10 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 ## Usage
 
 1. Open Shizuku and start it (wireless debugging or ADB)
-2. Open akiHz and grant Shizuku permission
+2. Open akiHz and grant Shizuku permission. Grant notification and overlay permission when asked.
 3. Select a refresh rate from the buttons, or add the **akiHz** tile to your Quick Settings panel and tap it to cycle
-4. For more reliable background operation, open **Settings → Advanced → Allow background running** and approve the Android prompt
+4. To see FPS, open **Settings → FPS Monitor** and press Start, or add the **FPS Monitor** tile to Quick Settings and tap it. Drag the pill to move it, tap it for size and layer options.
+5. For more reliable background operation, open **Settings → Background → Allow background running** and approve the Android prompt
 
 ## FAQ
 
