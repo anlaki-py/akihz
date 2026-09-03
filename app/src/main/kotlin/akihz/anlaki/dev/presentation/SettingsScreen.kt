@@ -50,7 +50,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     autoCheckRequest: Int = 0,
     keepAliveEnabled: Boolean = true,
-    onKeepAliveEnabledChanged: (Boolean) -> Unit = {}
+    onKeepAliveEnabledChanged: (Boolean) -> Unit = {},
+    onOpenFpsMonitor: () -> Unit = {}
 ) {
     var versionTapCount by remember { mutableIntStateOf(0) }
     PreferenceLayout(
@@ -85,6 +86,7 @@ fun SettingsScreen(
                 }
             }
         )
+        FpsMonitorSection(onOpenFpsMonitor = onOpenFpsMonitor)
         DiagnosticsSection()
         if (debugOptionsUnlocked) {
             PreferenceGroup(heading = "Developer") {

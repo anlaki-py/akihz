@@ -43,6 +43,14 @@ object PreferencesHelper {
     private const val KEY_DEBUG_OPTIONS_UNLOCKED = "debug_options_unlocked"
     private const val KEY_WELCOME_NOTICE_ACCEPTED = "welcome_notice_accepted"
     private const val KEY_KEEP_ALIVE_ENABLED = "keep_alive_enabled"
+    private const val KEY_FPS_TARGET_PACKAGE = "fps_target_package"
+    private const val KEY_FPS_TARGET_LABEL = "fps_target_label"
+    private const val KEY_FPS_OVERLAY_SCALE = "fps_overlay_scale"
+    private const val KEY_FPS_SELECTED_LAYER = "fps_selected_layer"
+    private const val KEY_FPS_RUNNING = "fps_running"
+    private const val KEY_FPS_DEBUG_LOGGING = "fps_debug_logging"
+    private const val KEY_FPS_DEBUG_LOG = "fps_debug_log"
+    private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
 
     private lateinit var prefs: SharedPreferences
     private val _lastRateFlow = MutableStateFlow(60f)
@@ -180,6 +188,45 @@ object PreferencesHelper {
     var keepAliveEnabled: Boolean
         get() = prefs.getBoolean(KEY_KEEP_ALIVE_ENABLED, true)
         set(value) = prefs.edit { putBoolean(KEY_KEEP_ALIVE_ENABLED, value) }
+
+    var fpsTargetPackage: String?
+        get() = prefs.getString(KEY_FPS_TARGET_PACKAGE, null)
+        set(value) = prefs.edit { putString(KEY_FPS_TARGET_PACKAGE, value) }
+
+    var fpsTargetLabel: String?
+        get() = prefs.getString(KEY_FPS_TARGET_LABEL, null)
+        set(value) = prefs.edit { putString(KEY_FPS_TARGET_LABEL, value) }
+
+    var fpsOverlayScale: Int
+        get() = prefs.getInt(KEY_FPS_OVERLAY_SCALE, 100)
+        set(value) = prefs.edit { putInt(KEY_FPS_OVERLAY_SCALE, value.coerceIn(50, 200)) }
+
+    var fpsSelectedLayer: String?
+        get() = prefs.getString(KEY_FPS_SELECTED_LAYER, null)
+        set(value) = prefs.edit { putString(KEY_FPS_SELECTED_LAYER, value) }
+
+    var fpsRunning: Boolean
+        get() = prefs.getBoolean(KEY_FPS_RUNNING, false)
+        set(value) = prefs.edit { putBoolean(KEY_FPS_RUNNING, value) }
+
+    var fpsDebugLoggingEnabled: Boolean
+        get() = prefs.getBoolean(KEY_FPS_DEBUG_LOGGING, false)
+        set(value) = prefs.edit { putBoolean(KEY_FPS_DEBUG_LOGGING, value) }
+
+    var fpsDebugLog: String
+        get() = prefs.getString(KEY_FPS_DEBUG_LOG, "") ?: ""
+        set(value) = prefs.edit { putString(KEY_FPS_DEBUG_LOG, value.takeLast(24000)) }
+
+    var notificationPermissionRequested: Boolean
+        get() = prefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
+        set(value) = prefs.edit { putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, value) }
+
+    fun clearFpsTarget() {
+        prefs.edit {
+            remove(KEY_FPS_TARGET_PACKAGE)
+            remove(KEY_FPS_TARGET_LABEL)
+        }
+    }
 
     fun clear() {
         prefs.edit { clear() }
