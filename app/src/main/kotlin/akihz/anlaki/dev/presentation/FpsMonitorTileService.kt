@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -98,13 +99,23 @@ class FpsMonitorTileService : TileService() {
         tile.updateTile()
     }
 
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     private fun launchApp() {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra(MainActivity.EXTRA_OPEN_FPS_MONITOR, true)
         }
         try {
-            startActivityAndCollapse(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                startActivityAndCollapse(pendingIntent)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(intent)
+            }
         } catch (_: Exception) {
             try {
                 startActivity(intent)
