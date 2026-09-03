@@ -63,6 +63,7 @@
 ## Changelog and Release Metadata
 - Before a stable release, add a non-empty `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` matching the version that the workflow will publish.
 - Before pushing release-worthy changes to `beta`, keep the `## [Unreleased]` section non-empty; beta release notes are sourced from that section.
+- Keep changelog entries non-technical and concise. Avoid detailed implementation notes and keep each bullet short.
 - The release workflow must fail before creating a tag when its expected changelog section is missing or empty.
 - GitHub release notes are sourced from the matching changelog section, not generated from commit history.
 - `release-metadata.json` must include the exact extracted Markdown in its `releaseNotes` field, alongside the canonical changelog URL.

@@ -53,7 +53,7 @@ private enum class AppPage(
     Settings("Settings", Icons.Default.Settings)
 }
 
-private enum class DetailPage { CustomKeys, DebugOptions }
+private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor }
 
 /**
  * Hosts the refresh-rate and settings pages with floating tab navigation.
@@ -99,6 +99,7 @@ fun AkihzApp(
     onKeepAliveEnabledChanged: (Boolean) -> Unit = {},
     openUpdatesRequest: Int = 0,
     openDebugRequest: Int = 0,
+    openFpsMonitorRequest: Int = 0,
     debugPage: String? = null,
     onErrorDismissed: () -> Unit = {}
 ) {
@@ -142,6 +143,13 @@ fun AkihzApp(
         }
     }
 
+    LaunchedEffect(openFpsMonitorRequest) {
+        if (openFpsMonitorRequest > 0) {
+            pagerState.animateScrollToPage(AppPage.Settings.ordinal)
+            detailPage = DetailPage.FpsMonitor
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -180,6 +188,10 @@ fun AkihzApp(
                             modifier = Modifier.fillMaxSize(),
                             initialPage = debugInitialPage
                         )
+                        DetailPage.FpsMonitor -> FpsMonitorScreen(
+                            onBack = { detailPage = null },
+                            modifier = Modifier.fillMaxSize()
+                        )
                         null -> HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize()
@@ -208,6 +220,7 @@ fun AkihzApp(
                                     debugOptionsUnlocked = debugOptionsUnlocked,
                                     onDebugOptionsUnlocked = onDebugOptionsUnlocked,
                                     onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
+                                    onOpenFpsMonitor = { detailPage = DetailPage.FpsMonitor },
                                     autoCheckRequest = openUpdatesRequest,
                                     keepAliveEnabled = keepAliveEnabled,
                                     onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,

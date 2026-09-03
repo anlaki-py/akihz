@@ -23,8 +23,8 @@ import javax.inject.Inject
 /**
  * Quick Settings tile for cycling refresh rate.
  *
- * No banner API — HyperOS shows Tile.label as "X is on" when ACTIVE. So label must hold
- * the visible rate, subtitle secondary. QS stays open on this device, so label change is
+ * No banner API. HyperOS shows Tile.label as "X is on" when ACTIVE, so label must hold
+ * the visible rate and subtitle is secondary. QS stays open on this device, so label change is
  * the only thing user sees without reopening. See shtml/anlaki.vercel.app/vmfxYr.
  */
 @AndroidEntryPoint
@@ -169,7 +169,7 @@ class RefreshRateTileService : TileService() {
         val tile = qsTile ?: return
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
-        // Keep current icon while connecting — avoid generic flicker.
+        // Keep current icon while connecting to avoid generic flicker.
         val rate = displayedRate
         when {
             rate != null -> {

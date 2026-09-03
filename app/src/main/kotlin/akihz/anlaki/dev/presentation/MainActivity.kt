@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -7,6 +8,7 @@ import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.AlertDialog
@@ -21,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
@@ -44,6 +47,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_OPEN_UPDATES = "akihz.extra.OPEN_UPDATES"
         const val EXTRA_OPEN_DEBUG = "akihz.extra.OPEN_DEBUG"
         const val EXTRA_DEBUG_PAGE = "akihz.extra.DEBUG_PAGE"
+        const val EXTRA_OPEN_FPS_MONITOR = "akihz.extra.OPEN_FPS_MONITOR"
         private const val REQUEST_CODE_SHIZUKU = 1001
         private const val SHIZUKU_OWNER = "main_activity"
     }
@@ -54,7 +58,13 @@ class MainActivity : ComponentActivity() {
     private val dialogState = MutableStateFlow<AppDialog?>(null)
     private val openUpdatesRequest = MutableStateFlow(0)
     private val openDebugRequest = MutableStateFlow(0)
+    private val openFpsMonitorRequest = MutableStateFlow(0)
     private var pendingDebugPage: String? = null
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            PreferencesHelper.notificationPermissionRequested = true
+        }
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         if (hasAcceptedWelcomeNotice) {
@@ -89,6 +99,7 @@ class MainActivity : ComponentActivity() {
         if (hasAcceptedWelcomeNotice && PreferencesHelper.keepAliveEnabled) {
             KeepAliveService.start(this)
         }
+        requestNotificationPermissionIfNeeded()
         handleUpdateIntent(intent)
 
         setContent {
@@ -129,6 +140,7 @@ class MainActivity : ComponentActivity() {
                 val appDialog by dialogState.collectAsState()
                 val updateRequest by openUpdatesRequest.collectAsState()
                 val debugRequest by openDebugRequest.collectAsState()
+                val fpsMonitorRequest by openFpsMonitorRequest.collectAsState()
 
                 AkihzApp(
                     uiState = uiState,
@@ -173,6 +185,7 @@ class MainActivity : ComponentActivity() {
                     },
                     openUpdatesRequest = updateRequest,
                     openDebugRequest = debugRequest,
+                    openFpsMonitorRequest = fpsMonitorRequest,
                     debugPage = pendingDebugPage,
                     onErrorDismissed = { viewModel.onErrorDismissed() }
                 )
@@ -274,6 +287,10 @@ class MainActivity : ComponentActivity() {
             openUpdatesRequest.value += 1
             intent.removeExtra(EXTRA_OPEN_UPDATES)
         }
+        if (intent?.getBooleanExtra(EXTRA_OPEN_FPS_MONITOR, false) == true) {
+            openFpsMonitorRequest.value += 1
+            intent.removeExtra(EXTRA_OPEN_FPS_MONITOR)
+        }
         val debugPageExtra = intent?.getStringExtra(EXTRA_DEBUG_PAGE)
         val openDebug = intent?.getBooleanExtra(EXTRA_OPEN_DEBUG, false) == true || debugPageExtra != null
         if (openDebug) {
@@ -285,6 +302,20 @@ class MainActivity : ComponentActivity() {
             intent?.removeExtra(EXTRA_OPEN_DEBUG)
             intent?.removeExtra(EXTRA_DEBUG_PAGE)
         }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (PreferencesHelper.notificationPermissionRequested) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            PreferencesHelper.notificationPermissionRequested = true
+            return
+        }
+        // Only request once on first install; mark as requested before launching to avoid loops.
+        PreferencesHelper.notificationPermissionRequested = true
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun showDialog(title: String, message: String, cancelable: Boolean = true) {

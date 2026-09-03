@@ -7,14 +7,21 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Added
+
+- Added FPS Monitor in Settings with a floating overlay that shows real time FPS and a Quick Settings tile labeled FPS. You can drag the pill to move it and tap it to open its options.
+- The app now asks for notification permission once after you install it.
+
 ### Changed
 
-- Home refresh-rate buttons now use expressive corners: 8dp at rest, 20dp while pressed, and 32dp when selected, for a more distinct resting, touch, and active shape.
+- Home buttons now have more distinct shapes when resting, pressed, or selected.
 
 ### Fixed
 
-- Fixed Quick Settings tile flicker when first connecting to Shizuku: the tile now keeps the current refresh-rate icon while binding and only updates after the new rate is set, instead of briefly switching to the generic icon.
-- Fixed Quick Settings tile showing the generic icon when the currently selected refresh rate was excluded from tile cycling: the tile now always displays the actual selected rate, while cycling only among the enabled rates.
+- Fixed the Quick Settings tile sometimes flickering or showing the wrong icon.
+- Fixed the FPS overlay sometimes not showing and the FPS tile icon looking the same as the refresh rate tile in the picker.
+- Fixed the back button on the FPS Monitor page so it goes back instead of closing the app.
+- Fixed the FPS Monitor controls so the layer option is only in the overlay.
 
 ## [0.0.44] - 2026-08-31
 
