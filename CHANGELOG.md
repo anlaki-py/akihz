@@ -7,6 +7,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Changed
+
+- Home refresh-rate buttons now use expressive corners: 8dp at rest, 20dp while pressed, and 32dp when selected, for a more distinct resting, touch, and active shape.
+
 ### Fixed
 
 - Fixed Quick Settings tile flicker when first connecting to Shizuku: the tile now keeps the current refresh-rate icon while binding and only updates after the new rate is set, instead of briefly switching to the generic icon.
