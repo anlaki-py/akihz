@@ -23,8 +23,8 @@ import javax.inject.Inject
 /**
  * Quick Settings tile for cycling refresh rate.
  *
- * No banner API — HyperOS shows Tile.label as "X is on" when ACTIVE. So label must hold
- * the visible rate, subtitle secondary. QS stays open on this device, so label change is
+ * No banner API. HyperOS shows Tile.label as "X is on" when ACTIVE, so label must hold
+ * the visible rate and subtitle is secondary. QS stays open on this device, so label change is
  * the only thing user sees without reopening. See shtml/anlaki.vercel.app/vmfxYr.
  */
 @AndroidEntryPoint
@@ -59,9 +59,8 @@ class RefreshRateTileService : TileService() {
                 )
                 tileRates = TileRateSelection.includedRates(rates, excludedRates)
                 val savedRate = PreferencesHelper.lastRate
-                displayedRate = tileRates.firstOrNull {
-                    kotlin.math.abs(it - savedRate) < 0.01f
-                }
+                // Show actual rate even if excluded from cycle; tileRates only for nextRate.
+                displayedRate = rates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
                 updateTile()
             }.onError { _, _ ->
                 updateTileUnavailable()
@@ -170,8 +169,23 @@ class RefreshRateTileService : TileService() {
         val tile = qsTile ?: return
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
-        tile.subtitle = "Connecting..."
-        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        // Keep current icon while connecting to avoid generic flicker.
+        val rate = displayedRate
+        when {
+            rate != null -> {
+                tile.subtitle = "${rate.roundToInt()} Hz"
+                tile.icon = createRefreshRateTileIcon(rate)
+            }
+            tileRates.isNotEmpty() -> {
+                tile.subtitle = "Tap to switch"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+            }
+            else -> {
+                tile.subtitle = "Open app first"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+                tile.state = Tile.STATE_UNAVAILABLE
+            }
+        }
         tile.updateTile()
     }
 

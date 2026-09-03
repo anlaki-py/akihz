@@ -7,6 +7,22 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Added
+
+- Added FPS Monitor in Settings with a floating overlay that shows real time FPS and a Quick Settings tile labeled FPS. You can drag the pill to move it and tap it to open its options.
+- The app now asks for notification permission once after you install it.
+
+### Changed
+
+- Home buttons now have more distinct shapes when resting, pressed, or selected.
+
+### Fixed
+
+- Fixed the Quick Settings tile sometimes flickering or showing the wrong icon.
+- Fixed the FPS overlay sometimes not showing and the FPS tile icon looking the same as the refresh rate tile in the picker.
+- Fixed the back button on the FPS Monitor page so it goes back instead of closing the app.
+- Fixed the FPS Monitor controls so the layer option is only in the overlay.
+
 ## [0.0.44] - 2026-08-31
 
 ### Added
