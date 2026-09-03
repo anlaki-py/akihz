@@ -1,5 +1,10 @@
 # Android App Development - Agent Guidelines
 
+## Agent Session Startup and Code Quality Rules
+- At the start of every session, load the `unslop` and `maintainable-engineering` skills (via `skill` tool) before any other work.
+- Follow the `unslop` skill writing rules for every response, file edit, and commit message — no em dashes, no puffery, plain concrete language, short sentences where possible.
+- After every task that touches code, run the `cleanup` skill before marking the work done. Use it to scope the session diff, check for dead code / duplicate logic / unnecessary complexity / scope creep, and verify each finding before removing anything.
+
 ## Code Structure Rules
 1. **File Limit**: Maximum 200 lines per Kotlin/Java file. (Note: It is acceptable if the file is slightly longer than 200 lines, or even if it is necessary to have many lines. Only split the file if having a large number of lines does not make sense.)
 2. **Package Structure**:
