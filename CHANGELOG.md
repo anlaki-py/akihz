@@ -7,6 +7,11 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed Quick Settings tile flicker when first connecting to Shizuku: the tile now keeps the current refresh-rate icon while binding and only updates after the new rate is set, instead of briefly switching to the generic icon.
+- Fixed Quick Settings tile showing the generic icon when the currently selected refresh rate was excluded from tile cycling: the tile now always displays the actual selected rate, while cycling only among the enabled rates.
+
 ## [0.0.44] - 2026-08-31
 
 ### Added
