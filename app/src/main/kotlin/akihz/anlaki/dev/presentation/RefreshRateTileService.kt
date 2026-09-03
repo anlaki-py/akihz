@@ -59,9 +59,9 @@ class RefreshRateTileService : TileService() {
                 )
                 tileRates = TileRateSelection.includedRates(rates, excludedRates)
                 val savedRate = PreferencesHelper.lastRate
-                displayedRate = tileRates.firstOrNull {
-                    kotlin.math.abs(it - savedRate) < 0.01f
-                }
+                // Show actual rate even if excluded from cycle; tileRates only for nextRate.
+                displayedRate = rates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
+                    ?: tileRates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
                 updateTile()
             }.onError { _, _ ->
                 updateTileUnavailable()
@@ -170,8 +170,23 @@ class RefreshRateTileService : TileService() {
         val tile = qsTile ?: return
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
-        tile.subtitle = "Connecting..."
-        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        // Keep current icon while connecting — avoid generic flicker.
+        val rate = displayedRate
+        when {
+            rate != null -> {
+                tile.subtitle = "${rate.roundToInt()} Hz"
+                tile.icon = createRefreshRateTileIcon(rate)
+            }
+            tileRates.isNotEmpty() -> {
+                tile.subtitle = "Tap to switch"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+            }
+            else -> {
+                tile.subtitle = "Open app first"
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+                tile.state = Tile.STATE_UNAVAILABLE
+            }
+        }
         tile.updateTile()
     }
 
