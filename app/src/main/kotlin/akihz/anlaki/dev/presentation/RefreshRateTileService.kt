@@ -61,7 +61,6 @@ class RefreshRateTileService : TileService() {
                 val savedRate = PreferencesHelper.lastRate
                 // Show actual rate even if excluded from cycle; tileRates only for nextRate.
                 displayedRate = rates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
-                    ?: tileRates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
                 updateTile()
             }.onError { _, _ ->
                 updateTileUnavailable()
