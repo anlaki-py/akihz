@@ -1,8 +1,8 @@
 # Android App Development - Agent Guidelines
 
 ## Agent Session Startup and Code Quality Rules
-- At the start of every session, load the `unslop` and `maintainable-engineering` skills (via `skill` tool) before any other work.
-- Follow the `unslop` skill writing rules for every response, file edit, and commit message — no em dashes, no puffery, plain concrete language, short sentences where possible.
+- At the start of every session, load the `unslop` and `i-have-adhd` skills (via `skill` tool) before any other work. Also load `maintainable-engineering` if available.
+- Follow the `unslop` and `i-have-adhd` writing rules for every response, file edit, and commit message. Use plain concrete language and short sentences. Lead with the next action, number multi-step work, and give time estimates where possible.
 - After every task that touches code, run the `cleanup` skill before marking the work done. Use it to scope the session diff, check for dead code / duplicate logic / unnecessary complexity / scope creep, and verify each finding before removing anything.
 
 ## Code Structure Rules
@@ -46,8 +46,10 @@
   - Example: `./scripts/debug-cli.sh create-test-crash && ./scripts/debug-cli.sh list-crashes && ./scripts/debug-cli.sh perf-start && sleep 3 && ./scripts/debug-cli.sh perf-cat && ./scripts/debug-cli.sh perf-stop`
 
 ## Android/Termux Environment
-- When working in the user's Android/Termux environment, do not run local Gradle builds, lint, tests, APK packaging, or Android runtime verification.
-- Use the GitHub Actions CI results for build, lint, and test verification in this environment.
+- Before running local Gradle builds, lint, tests, APK packaging, or Android runtime verification, check if the build tools exist on the system.
+- Check for Java with `java -version`, the Gradle wrapper with `./gradlew --version`, the Android SDK with `$ANDROID_HOME` or `local.properties`, and ADB with `adb --version`.
+- If the tools exist, feel free to build and test locally.
+- If any required tool is missing, do not install it. Note the missing tools in your reply and use the GitHub Actions CI results for build, lint, and test verification.
 
 ## GitHub CI and Release Rules
 - The `CI` workflow runs lint and unit tests for pushes to `main` and `beta`, for pull requests targeting either branch, and when manually dispatched.
