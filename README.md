@@ -5,9 +5,9 @@
 
   <h3>Android refresh rate switcher (FOSS)</h3>
 
-  <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
+  <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app built for daily use. It changes your display refresh rate fast and keeps the controls ready. It uses <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
 
-  <p>It has a Quick Settings tile for one-tap cycling. It reads your supported refresh rates. It uses OEM specific keys. It includes an FPS monitor with a floating overlay.</p>
+  <p>Add the tile to your control center. Tap to switch rate. Long press to open the app. It also shows live app FPS in a small overlay you can drag around.</p>
 
   <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -46,16 +46,24 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 
 ## Features
 
-- Reads your display supported refresh rates instead of using fixed values.
-- Tap the Quick Settings tile to cycle rates. Long press to open the app.
+- Tap the control center tile to cycle rates. Long press to open the app.
 - Choose which rates the tile cycles through on Home.
-- Shows real time FPS from SurfaceFlinger in a floating pill. Drag to move. Tap for options. Start and stop from the FPS tile. Needs Shizuku and overlay permission.
-- Checks GitHub daily, every three days, or weekly. Notifies once per release.
-- Keeps tile controls ready with a foreground service. Includes a shortcut to disable battery optimization.
-- Uses the correct system settings keys per manufacturer.
+- Stays ready in the background with a foreground service. Includes a shortcut to disable battery optimization.
 - Changes rate as soon as you tap. Adds no delay.
+- Reads your display supported refresh rates instead of using fixed values.
+- Uses the correct system settings keys per manufacturer.
+- Shows live app FPS from SurfaceFlinger in a floating pill. Drag to move. Tap for options. Start and stop from the FPS tile.
+- Checks GitHub daily, every three days, or weekly. Notifies once per release.
 - Pick a device profile in Settings if auto detection fails.
 - Uses pure `#000000` surfaces in dark mode when AMOLED mode is on.
+
+## FPS monitoring
+
+The overlay shows real presented app FPS, not screen Hz. A 120 Hz screen can still show a 30 FPS game. The app reads SurfaceFlinger TimeStats `averageFPS` through Shizuku and samples about twice per second.
+
+Start it from **Settings → FPS Monitor** or from the FPS tile in your control center. It needs Shizuku and overlay permission. Drag the pill to move it. Tap it for size and layer options.
+
+The method is tested on Xiaomi 12T with Android 15 and HyperOS 2. Full notes are in the Gist [Real-Time FPS Monitoring with SurfaceFlinger TimeStats on Android 15 / HyperOS 2](https://gist.github.com/anlaki-py/d9c8cf06cd54149d522adb8e665bfbd0).
 
 ## Supported devices
 
