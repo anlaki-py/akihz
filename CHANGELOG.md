@@ -9,18 +9,14 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
-- Added FPS pill styling in Settings: opacity, pill color, round or rectangle shape, outline toggle, and an option to hide the FPS label.
+- Added FPS pill styling in Settings: opacity, pill color, round or rectangle shape with a corner radius slider, outline toggle, and an option to hide the FPS label.
 - The pill options panel now has opacity and FPS label controls next to the size slider.
-- Added a corner radius slider for the rectangle FPS pill, from sharp corners to fully round.
 
 ### Changed
 
 - The overlay shows 0.0 FPS instead of Idle / no data when the screen is static.
-
-### Fixed
-
-- Fixed changing FPS overlay looks while monitoring is stopped turning monitoring on by itself.
-- Fixed the FPS pill background staying stretched wide after the "Connecting..." text, so it always fits the reading.
+- Changing overlay looks while monitoring is stopped leaves monitoring stopped.
+- The pill background now fits the reading instead of staying stretched after longer status text.
 
 ## [0.0.45] - 2026-09-03
 
