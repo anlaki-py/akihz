@@ -91,6 +91,9 @@ class FpsMonitorService : Service() {
                 val scale = intent.getIntExtra(EXTRA_SCALE, 100)
                 overlay?.setScale(scale)
             }
+            ACTION_APPLY_STYLE -> {
+                overlay?.applyStyleFromPrefs()
+            }
             ACTION_SET_LAYER -> {
                 val layer = intent.getStringExtra(EXTRA_LAYER)
                 overlay?.setSelectedLayer(layer)
@@ -243,6 +246,7 @@ class FpsMonitorService : Service() {
         const val ACTION_NOTE = "akihz.fps.NOTE"
         const val ACTION_SET_LOGGING = "akihz.fps.SET_LOGGING"
         const val ACTION_SET_SCALE = "akihz.fps.SET_SCALE"
+        const val ACTION_APPLY_STYLE = "akihz.fps.APPLY_STYLE"
         const val ACTION_SET_LAYER = "akihz.fps.SET_LAYER"
         const val ACTION_REFRESH_LAYER = "akihz.fps.REFRESH_LAYER"
         const val EXTRA_NOTE = "note"

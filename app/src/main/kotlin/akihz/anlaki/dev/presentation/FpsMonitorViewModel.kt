@@ -10,6 +10,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.data.fps.OverlayPillColor
+import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.utils.FpsMonitorService
 import akihz.anlaki.dev.utils.PreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +28,11 @@ data class FpsMonitorUiState(
     val targetPackage: String? = null,
     val targetLabel: String? = null,
     val overlayScale: Int = 100,
+    val overlayAlpha: Int = OverlayStyle.ALPHA_DEFAULT,
+    val showUnit: Boolean = true,
+    val pillColor: OverlayPillColor = OverlayPillColor.Black,
+    val rectShape: Boolean = false,
+    val pillOutline: Boolean = true,
     val selectedLayer: String? = null,
     val debugLoggingEnabled: Boolean = false,
     val debugLog: String = "",
@@ -52,6 +59,11 @@ class FpsMonitorViewModel @Inject constructor(
                 targetPackage = PreferencesHelper.fpsTargetPackage,
                 targetLabel = PreferencesHelper.fpsTargetLabel,
                 overlayScale = PreferencesHelper.fpsOverlayScale,
+                overlayAlpha = PreferencesHelper.fpsOverlayAlpha,
+                showUnit = PreferencesHelper.fpsShowUnit,
+                pillColor = PreferencesHelper.fpsPillColor,
+                rectShape = PreferencesHelper.fpsRectShape,
+                pillOutline = PreferencesHelper.fpsPillOutline,
                 selectedLayer = PreferencesHelper.fpsSelectedLayer,
                 debugLoggingEnabled = PreferencesHelper.fpsDebugLoggingEnabled,
                 debugLog = PreferencesHelper.fpsDebugLog
@@ -137,6 +149,70 @@ class FpsMonitorViewModel @Inject constructor(
             Intent(appContext, FpsMonitorService::class.java).apply {
                 action = FpsMonitorService.ACTION_SET_SCALE
                 putExtra(FpsMonitorService.EXTRA_SCALE, clamped)
+            }
+        )
+    }
+
+    /**
+     * Updates the pill fill opacity and pushes it to the running overlay.
+     *
+     * @param alpha opacity from 40 to 100
+     */
+    fun setOverlayAlpha(alpha: Int) {
+        val clamped = alpha.coerceIn(OverlayStyle.ALPHA_MIN, OverlayStyle.ALPHA_MAX)
+        PreferencesHelper.fpsOverlayAlpha = clamped
+        _uiState.update { it.copy(overlayAlpha = clamped) }
+        sendApplyStyle()
+    }
+
+    /**
+     * Shows or hides the FPS label next to the value.
+     *
+     * @param enabled true for "60.0 FPS", false for "60.0"
+     */
+    fun setShowUnit(enabled: Boolean) {
+        PreferencesHelper.fpsShowUnit = enabled
+        _uiState.update { it.copy(showUnit = enabled) }
+        sendApplyStyle()
+    }
+
+    /**
+     * Changes the pill background color.
+     *
+     * @param color new pill color
+     */
+    fun setPillColor(color: OverlayPillColor) {
+        PreferencesHelper.fpsPillColor = color
+        _uiState.update { it.copy(pillColor = color) }
+        sendApplyStyle()
+    }
+
+    /**
+     * Switches the pill between pill and rectangle shape.
+     *
+     * @param rectangular true for rectangle, false for pill
+     */
+    fun setRectShape(rectangular: Boolean) {
+        PreferencesHelper.fpsRectShape = rectangular
+        _uiState.update { it.copy(rectShape = rectangular) }
+        sendApplyStyle()
+    }
+
+    /**
+     * Shows or hides the pill outline.
+     *
+     * @param enabled true to draw the edge, false for a flat pill
+     */
+    fun setPillOutline(enabled: Boolean) {
+        PreferencesHelper.fpsPillOutline = enabled
+        _uiState.update { it.copy(pillOutline = enabled) }
+        sendApplyStyle()
+    }
+
+    private fun sendApplyStyle() {
+        appContext.startService(
+            Intent(appContext, FpsMonitorService::class.java).apply {
+                action = FpsMonitorService.ACTION_APPLY_STYLE
             }
         )
     }
