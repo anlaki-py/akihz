@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import akihz.anlaki.dev.data.HomeDebugSettings
+import akihz.anlaki.dev.data.fps.OverlayPillColor
+import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
@@ -46,6 +48,11 @@ object PreferencesHelper {
     private const val KEY_FPS_TARGET_PACKAGE = "fps_target_package"
     private const val KEY_FPS_TARGET_LABEL = "fps_target_label"
     private const val KEY_FPS_OVERLAY_SCALE = "fps_overlay_scale"
+    private const val KEY_FPS_OVERLAY_ALPHA = "fps_overlay_alpha"
+    private const val KEY_FPS_SHOW_UNIT = "fps_show_unit"
+    private const val KEY_FPS_PILL_COLOR = "fps_pill_color"
+    private const val KEY_FPS_RECT_SHAPE = "fps_rect_shape"
+    private const val KEY_FPS_PILL_OUTLINE = "fps_pill_outline"
     private const val KEY_FPS_SELECTED_LAYER = "fps_selected_layer"
     private const val KEY_FPS_RUNNING = "fps_running"
     private const val KEY_FPS_DEBUG_LOGGING = "fps_debug_logging"
@@ -200,6 +207,28 @@ object PreferencesHelper {
     var fpsOverlayScale: Int
         get() = prefs.getInt(KEY_FPS_OVERLAY_SCALE, 100)
         set(value) = prefs.edit { putInt(KEY_FPS_OVERLAY_SCALE, value.coerceIn(50, 200)) }
+
+    var fpsOverlayAlpha: Int
+        get() = prefs.getInt(KEY_FPS_OVERLAY_ALPHA, OverlayStyle.ALPHA_DEFAULT)
+        set(value) = prefs.edit {
+            putInt(KEY_FPS_OVERLAY_ALPHA, value.coerceIn(OverlayStyle.ALPHA_MIN, OverlayStyle.ALPHA_MAX))
+        }
+
+    var fpsShowUnit: Boolean
+        get() = prefs.getBoolean(KEY_FPS_SHOW_UNIT, true)
+        set(value) = prefs.edit { putBoolean(KEY_FPS_SHOW_UNIT, value) }
+
+    var fpsPillColor: OverlayPillColor
+        get() = OverlayPillColor.fromStoredValue(prefs.getString(KEY_FPS_PILL_COLOR, null))
+        set(value) = prefs.edit { putString(KEY_FPS_PILL_COLOR, value.name) }
+
+    var fpsRectShape: Boolean
+        get() = prefs.getBoolean(KEY_FPS_RECT_SHAPE, false)
+        set(value) = prefs.edit { putBoolean(KEY_FPS_RECT_SHAPE, value) }
+
+    var fpsPillOutline: Boolean
+        get() = prefs.getBoolean(KEY_FPS_PILL_OUTLINE, true)
+        set(value) = prefs.edit { putBoolean(KEY_FPS_PILL_OUTLINE, value) }
 
     var fpsSelectedLayer: String?
         get() = prefs.getString(KEY_FPS_SELECTED_LAYER, null)
