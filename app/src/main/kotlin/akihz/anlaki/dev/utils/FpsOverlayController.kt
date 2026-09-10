@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
+import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -31,7 +32,7 @@ import java.util.Locale
  * Floating FPS pill with expandable options panel.
  *
  * Matches the original Surface FPS Monitor behavior: drag to move,
- * tap to expand layer choices and size slider, slider persists via prefs.
+ * tap to expand layer, size, opacity, and label options persisted via prefs.
  */
 class FpsOverlayController(private val context: Context) {
     private val appContext = context.applicationContext
@@ -44,6 +45,9 @@ class FpsOverlayController(private val context: Context) {
     private var layerChoices: RadioGroup? = null
     private var overlaySizeLabel: TextView? = null
     private var overlaySizeSlider: SeekBar? = null
+    private var overlayAlphaLabel: TextView? = null
+    private var overlayAlphaSlider: SeekBar? = null
+    private var showUnitBox: CheckBox? = null
     private var windowParams: WindowManager.LayoutParams? = null
     private var touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     private var currentPackage: String? = null
@@ -106,11 +110,41 @@ class FpsOverlayController(private val context: Context) {
             })
         }
 
+        val alphaLabel = TextView(appContext).apply {
+            setTextColor(Color.WHITE)
+            text = "Overlay opacity: ${PreferencesHelper.fpsOverlayAlpha}%"
+        }
+        val alphaSlider = SeekBar(appContext).apply {
+            min = OverlayStyle.ALPHA_MIN
+            max = OverlayStyle.ALPHA_MAX
+            progress = PreferencesHelper.fpsOverlayAlpha
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
+                    alphaLabel.text = "Overlay opacity: $progress%"
+                }
+                override fun onStartTrackingTouch(s: SeekBar?) {}
+                override fun onStopTrackingTouch(s: SeekBar?) {
+                    val p = s?.progress ?: return
+                    setAlpha(p)
+                }
+            })
+        }
+        val unitBox = CheckBox(appContext).apply {
+            text = "Show FPS label"
+            setTextColor(Color.WHITE)
+            isChecked = PreferencesHelper.fpsShowUnit
+            minHeight = dp(44)
+            setOnCheckedChangeListener { _, checked -> setShowUnit(checked) }
+        }
+
         val optionsContent = LinearLayout(appContext).apply {
             orientation = LinearLayout.VERTICAL
             addView(choices)
             addView(sizeLabel)
             addView(slider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(56)))
+            addView(alphaLabel)
+            addView(alphaSlider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(56)))
+            addView(unitBox)
         }
         val scroll = ScrollView(appContext).apply {
             isFillViewport = true
@@ -159,6 +193,9 @@ class FpsOverlayController(private val context: Context) {
         layerChoices = choices
         overlaySizeLabel = sizeLabel
         overlaySizeSlider = slider
+        overlayAlphaLabel = alphaLabel
+        overlayAlphaSlider = alphaSlider
+        showUnitBox = unitBox
         scalePercent = PreferencesHelper.fpsOverlayScale
         selectedLayer = PreferencesHelper.fpsSelectedLayer
         alphaPercent = PreferencesHelper.fpsOverlayAlpha
@@ -201,6 +238,9 @@ class FpsOverlayController(private val context: Context) {
         layerChoices = null
         overlaySizeLabel = null
         overlaySizeSlider = null
+        overlayAlphaLabel = null
+        overlayAlphaSlider = null
+        showUnitBox = null
         windowParams = null
         shownLayerKeys = emptyList()
         optionsExpanded = false
@@ -283,7 +323,13 @@ class FpsOverlayController(private val context: Context) {
         rectangularShape = PreferencesHelper.fpsRectShape
         pillOutline = PreferencesHelper.fpsPillOutline
         Timber.i("FPS overlay style alpha=$alphaPercent unit=$showUnit color=$pillColor")
-        handler.post { applyStyle() }
+        handler.post {
+            overlayAlphaSlider?.progress = alphaPercent
+            overlayAlphaLabel?.text = "Overlay opacity: $alphaPercent%"
+            val box = showUnitBox
+            if (box != null && box.isChecked != showUnit) box.isChecked = showUnit
+            applyStyle()
+        }
     }
 
     /**
@@ -296,7 +342,11 @@ class FpsOverlayController(private val context: Context) {
         alphaPercent = clamped
         PreferencesHelper.fpsOverlayAlpha = clamped
         Timber.i("FPS overlay alpha $clamped%")
-        handler.post { applyStyle() }
+        handler.post {
+            overlayAlphaSlider?.progress = clamped
+            overlayAlphaLabel?.text = "Overlay opacity: $clamped%"
+            applyStyle()
+        }
     }
 
     /**
@@ -307,7 +357,11 @@ class FpsOverlayController(private val context: Context) {
     fun setShowUnit(enabled: Boolean) {
         showUnit = enabled
         PreferencesHelper.fpsShowUnit = enabled
-        handler.post { applyStyle() }
+        handler.post {
+            val box = showUnitBox
+            if (box != null && box.isChecked != enabled) box.isChecked = enabled
+            applyStyle()
+        }
     }
 
     /**
