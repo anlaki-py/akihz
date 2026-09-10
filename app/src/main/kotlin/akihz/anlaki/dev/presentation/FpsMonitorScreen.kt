@@ -11,10 +11,13 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,14 +26,23 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CropSquare
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -41,10 +53,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import akihz.anlaki.dev.data.fps.OverlayPillColor
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceSlider
@@ -66,6 +80,7 @@ fun FpsMonitorScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDebugDialog by remember { mutableStateOf(false) }
+    var showColorOptions by remember { mutableStateOf(false) }
     var pendingStartAfterPermission by remember { mutableStateOf(false) }
 
     BackHandler(onBack = onBack)
@@ -214,6 +229,44 @@ fun FpsMonitorScreen(
                     steps = 0,
                     increment = 10f
                 )
+                PreferenceSlider(
+                    title = "Overlay opacity",
+                    value = state.overlayAlpha.toFloat(),
+                    valueLabel = "${state.overlayAlpha}%",
+                    description = "Fades the pill background only, text stays solid",
+                    onValueChange = { viewModel.setOverlayAlpha(it.toInt()) },
+                    onValueChangeFinished = { viewModel.setOverlayAlpha(it.toInt()) },
+                    valueRange = 40f..100f,
+                    steps = 0,
+                    increment = 5f
+                )
+                PreferenceTemplate(
+                    title = "Show FPS label",
+                    description = if (state.showUnit) "Pill shows 60.0 FPS" else "Pill shows 60.0",
+                    icon = Icons.Default.TextFields,
+                    checked = state.showUnit,
+                    onCheckedChange = { viewModel.setShowUnit(it) }
+                )
+                PreferenceTemplate(
+                    title = "Pill color",
+                    description = pillColorLabel(state.pillColor),
+                    icon = Icons.Default.Palette,
+                    onClick = { showColorOptions = true }
+                )
+                PreferenceTemplate(
+                    title = "Rectangular shape",
+                    description = if (state.rectShape) "Rectangle pill" else "Round pill",
+                    icon = Icons.Default.CropSquare,
+                    checked = state.rectShape,
+                    onCheckedChange = { viewModel.setRectShape(it) }
+                )
+                PreferenceTemplate(
+                    title = "Pill outline",
+                    description = if (state.pillOutline) "Edge is visible" else "Flat pill, no edge",
+                    icon = Icons.Default.Layers,
+                    checked = state.pillOutline,
+                    onCheckedChange = { viewModel.setPillOutline(it) }
+                )
             }
 
             PreferenceGroup(heading = "Target") {
@@ -257,7 +310,7 @@ fun FpsMonitorScreen(
 
             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                 Text(
-                    text = "Method is OEM-dependent. Xiaomi 12T / HyperOS 2 validated. Static screens may show Idle / no data. Drag the pill to move it, tap to show layer and size options.",
+                    text = "Method is OEM-dependent. Xiaomi 12T / HyperOS 2 validated. Static screens show 0.0 FPS. Drag the pill to move it, tap to show layer, size, and opacity options.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -279,6 +332,17 @@ fun FpsMonitorScreen(
                 LaunchedEffect(message) { viewModel.consumeMessage() }
             }
         }
+    }
+
+    if (showColorOptions) {
+        PillColorSheet(
+            selected = state.pillColor,
+            onSelected = {
+                viewModel.setPillColor(it)
+                showColorOptions = false
+            },
+            onDismiss = { showColorOptions = false }
+        )
     }
 
     if (showDebugDialog) {
@@ -362,4 +426,60 @@ private fun shareText(context: Context, text: String) {
         putExtra(Intent.EXTRA_TEXT, text)
     }
     context.startActivity(Intent.createChooser(intent, "Share diagnostics"))
+}
+
+private fun pillColorLabel(color: OverlayPillColor): String =
+    when (color) {
+        OverlayPillColor.Black -> "Black, white text"
+        OverlayPillColor.Green -> "Green, white text"
+        OverlayPillColor.Red -> "Red, white text"
+        OverlayPillColor.White -> "White, black text"
+    }
+
+/**
+ * Bottom sheet for picking the FPS pill background color.
+ *
+ * @param selected currently active color
+ * @param onSelected invoked when the user picks a color
+ * @param onDismiss invoked when the sheet closes without a pick
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PillColorSheet(
+    selected: OverlayPillColor,
+    onSelected: (OverlayPillColor) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        Text(
+            text = "Pill color",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+        )
+        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+            OverlayPillColor.entries.forEach { color ->
+                ListItem(
+                    headlineContent = { Text(pillColorLabel(color)) },
+                    leadingContent = {
+                        RadioButton(
+                            selected = color == selected,
+                            onClick = null
+                        )
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelected(color) }
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+    }
 }
