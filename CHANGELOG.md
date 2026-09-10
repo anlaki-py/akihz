@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.46] - 2026-09-10
+
 ### Added
 
 - Added FPS pill styling in Settings: opacity, pill color, round or rectangle shape with a corner radius slider, outline toggle, and an option to hide the FPS label.
