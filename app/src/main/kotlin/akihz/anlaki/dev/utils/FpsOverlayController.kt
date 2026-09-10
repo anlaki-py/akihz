@@ -59,6 +59,7 @@ class FpsOverlayController(private val context: Context) {
     private var showUnit = true
     private var pillColor = OverlayPillColor.Black
     private var rectangularShape = false
+    private var cornerRadius = OverlayStyle.RECT_RADIUS_DP
     private var pillOutline = true
     private var pillBackground: GradientDrawable? = null
 
@@ -202,6 +203,7 @@ class FpsOverlayController(private val context: Context) {
         showUnit = PreferencesHelper.fpsShowUnit
         pillColor = PreferencesHelper.fpsPillColor
         rectangularShape = PreferencesHelper.fpsRectShape
+        cornerRadius = PreferencesHelper.fpsCornerRadius
         pillOutline = PreferencesHelper.fpsPillOutline
 
         // Apply scale and style after views are assigned
@@ -248,7 +250,10 @@ class FpsOverlayController(private val context: Context) {
 
     fun setStatus(text: String) {
         Timber.d("FPS overlay status: $text")
-        handler.post { fpsView?.text = text }
+        handler.post {
+            fpsView?.text = text
+            refitPillToText()
+        }
     }
 
     fun display(foreground: String?, layers: List<LayerStat>) {
@@ -281,6 +286,7 @@ class FpsOverlayController(private val context: Context) {
         val text = OverlayStyle.formatFps(shownFps, showUnit)
         handler.post {
             fpsView?.text = text
+            refitPillToText()
             updateChoices(layers)
         }
     }
@@ -294,6 +300,7 @@ class FpsOverlayController(private val context: Context) {
             overlaySizeSlider?.progress = clamped
             overlaySizeLabel?.text = "Overlay size: $clamped%"
             applyScale(clamped)
+            refitPillToText()
             keepOnScreen()
         }
     }
@@ -321,6 +328,7 @@ class FpsOverlayController(private val context: Context) {
         showUnit = PreferencesHelper.fpsShowUnit
         pillColor = PreferencesHelper.fpsPillColor
         rectangularShape = PreferencesHelper.fpsRectShape
+        cornerRadius = PreferencesHelper.fpsCornerRadius
         pillOutline = PreferencesHelper.fpsPillOutline
         Timber.i("FPS overlay style alpha=$alphaPercent unit=$showUnit color=$pillColor")
         handler.post {
@@ -361,6 +369,7 @@ class FpsOverlayController(private val context: Context) {
             val box = showUnitBox
             if (box != null && box.isChecked != enabled) box.isChecked = enabled
             applyStyle()
+            refitPillToText()
         }
     }
 
@@ -469,6 +478,43 @@ class FpsOverlayController(private val context: Context) {
         item.setPadding(dp(10), dp(4), dp(10), dp(4))
     }
 
+    /**
+     * Forces the pill background to fit its text.
+     *
+     * The overlay window can keep a width measured for an earlier, longer
+     * text such as "Connecting...", leaving a stretched pill behind short
+     * readings like "0.0". Measuring the pill unconstrained and pinning the
+     * exact width makes the background track the text on every update.
+     */
+    private fun refitPillToText() {
+        val pill = fpsView ?: return
+        pill.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val fitted = pill.measuredWidth.coerceAtLeast(1)
+        val lp = pill.layoutParams as? LinearLayout.LayoutParams
+            ?: LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        if (lp.width != fitted) {
+            lp.width = fitted
+            pill.layoutParams = lp
+        }
+        refitWindow()
+    }
+
+    /** Re-runs window layout so a shrink actually reaches the screen. */
+    private fun refitWindow() {
+        val root = overlay ?: return
+        val params = windowParams ?: return
+        if (!root.isAttachedToWindow) return
+        try {
+            windowManager.updateViewLayout(root, params)
+        } catch (_: Exception) {}
+    }
+
     private fun applyScale(percent: Int) {
         val view = fpsView ?: return
         val factor = percent / 100f
@@ -485,7 +531,7 @@ class FpsOverlayController(private val context: Context) {
         val view = fpsView ?: return
         val background = pillBackground ?: return
         background.setColor(OverlayStyle.pillColor(pillColor, alphaPercent))
-        background.cornerRadius = dp(OverlayStyle.pillRadiusDp(rectangularShape)).toFloat()
+        background.cornerRadius = dp(OverlayStyle.pillRadiusDp(rectangularShape, cornerRadius)).toFloat()
         if (pillOutline) {
             background.setStroke(dp(1), OverlayStyle.strokeColor(pillColor))
         } else {

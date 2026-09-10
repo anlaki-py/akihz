@@ -52,6 +52,7 @@ object PreferencesHelper {
     private const val KEY_FPS_SHOW_UNIT = "fps_show_unit"
     private const val KEY_FPS_PILL_COLOR = "fps_pill_color"
     private const val KEY_FPS_RECT_SHAPE = "fps_rect_shape"
+    private const val KEY_FPS_CORNER_RADIUS = "fps_corner_radius"
     private const val KEY_FPS_PILL_OUTLINE = "fps_pill_outline"
     private const val KEY_FPS_SELECTED_LAYER = "fps_selected_layer"
     private const val KEY_FPS_RUNNING = "fps_running"
@@ -225,6 +226,12 @@ object PreferencesHelper {
     var fpsRectShape: Boolean
         get() = prefs.getBoolean(KEY_FPS_RECT_SHAPE, false)
         set(value) = prefs.edit { putBoolean(KEY_FPS_RECT_SHAPE, value) }
+
+    var fpsCornerRadius: Int
+        get() = prefs.getInt(KEY_FPS_CORNER_RADIUS, OverlayStyle.RECT_RADIUS_DP)
+        set(value) = prefs.edit {
+            putInt(KEY_FPS_CORNER_RADIUS, value.coerceIn(OverlayStyle.RECT_RADIUS_MIN, OverlayStyle.RECT_RADIUS_MAX))
+        }
 
     var fpsPillOutline: Boolean
         get() = prefs.getBoolean(KEY_FPS_PILL_OUTLINE, true)

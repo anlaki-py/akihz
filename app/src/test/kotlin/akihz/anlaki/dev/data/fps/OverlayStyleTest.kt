@@ -58,6 +58,21 @@ class OverlayStyleTest {
     }
 
     @Test
+    fun `rectangle uses custom corner radius`() {
+        assertEquals(0, OverlayStyle.pillRadiusDp(true, 0))
+        assertEquals(20, OverlayStyle.pillRadiusDp(true, 20))
+        assertEquals(999, OverlayStyle.pillRadiusDp(false, 0))
+    }
+
+    @Test
+    fun `corner radius clamps to supported range`() {
+        assertEquals(0, OverlayStyle.rectRadiusDp(-5))
+        assertEquals(28, OverlayStyle.rectRadiusDp(99))
+        assertEquals(0, OverlayStyle.pillRadiusDp(true, -5))
+        assertEquals(28, OverlayStyle.pillRadiusDp(true, 99))
+    }
+
+    @Test
     fun `format honors unit toggle`() {
         assertEquals("60.0 FPS", OverlayStyle.formatFps(60.0, true))
         assertEquals("60.0", OverlayStyle.formatFps(60.0, false))

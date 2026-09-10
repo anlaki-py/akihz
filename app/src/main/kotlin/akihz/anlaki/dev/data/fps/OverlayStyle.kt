@@ -36,6 +36,8 @@ object OverlayStyle {
 
     const val PILL_RADIUS_DP = 999
     const val RECT_RADIUS_DP = 10
+    const val RECT_RADIUS_MIN = 0
+    const val RECT_RADIUS_MAX = 28
 
     private const val FILL_BLACK = 0xFF000000.toInt()
     private const val FILL_GREEN = 0xFF15803D.toInt()
@@ -91,13 +93,23 @@ object OverlayStyle {
         (STROKE_ALPHA shl 24) or (textColor(color) and 0x00FFFFFF)
 
     /**
+     * Clamps a rectangle corner radius to the supported range.
+     *
+     * @param value requested radius in dp
+     * @return radius from [RECT_RADIUS_MIN] to [RECT_RADIUS_MAX]
+     */
+    fun rectRadiusDp(value: Int): Int =
+        value.coerceIn(RECT_RADIUS_MIN, RECT_RADIUS_MAX)
+
+    /**
      * Returns the pill corner radius.
      *
      * @param rectangular true for rectangle, false for pill
+     * @param rectRadius corner radius in dp used when rectangular
      * @return corner radius in dp
      */
-    fun pillRadiusDp(rectangular: Boolean): Int =
-        if (rectangular) RECT_RADIUS_DP else PILL_RADIUS_DP
+    fun pillRadiusDp(rectangular: Boolean, rectRadius: Int = RECT_RADIUS_DP): Int =
+        if (rectangular) rectRadiusDp(rectRadius) else PILL_RADIUS_DP
 
     /**
      * Formats the pill text for a reading.
