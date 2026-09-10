@@ -7,7 +7,7 @@
 
   <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app that lets you instantly change your device's refresh rate (60Hz / 90Hz / 120Hz / etc.) using <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
 
-  <p>Features a Quick Settings tile for one-tap cycling, automatic detection of supported refresh rates, OEM-specific settings support, and an FPS Monitor with a floating overlay.</p>
+  <p>It has a Quick Settings tile for one-tap cycling. It reads your supported refresh rates. It uses OEM specific keys. It includes an FPS monitor with a floating overlay.</p>
 
   <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -46,16 +46,16 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 
 ## Features
 
-- **Dynamic detection:** automatically reads your display's supported refresh rates instead of using hardcoded values
-- **Quick Settings tile:** tap to cycle through rates instantly; long-press to open the app
-- **Custom tile cycle:** include or exclude each detected rate from the Quick Settings tile on Home
-- **FPS Monitor:** shows real time FPS from SurfaceFlinger in a floating pill. Drag to move, tap for options. Quick Settings tile labeled FPS to start and stop. Requires Shizuku and overlay permission.
-- **Automatic update alerts:** checks GitHub on a daily, three-day, or weekly schedule and notifies once per release
-- **Reliable background access:** a foreground service keeps tile controls ready, with a settings shortcut for disabling battery optimization
-- **Multi-OEM support:** targets the correct system settings keys per manufacturer
-- **Instant switching:** no artificial delays; the rate changes as soon as you tap
-- **OEM override:** manually pick a device profile in Settings if auto-detection does not match your phone
-- **True-black AMOLED mode:** uses pure `#000000` surfaces when dark mode is active
+- Reads your display supported refresh rates instead of using fixed values.
+- Tap the Quick Settings tile to cycle rates. Long press to open the app.
+- Choose which rates the tile cycles through on Home.
+- Shows real time FPS from SurfaceFlinger in a floating pill. Drag to move. Tap for options. Start and stop from the FPS tile. Needs Shizuku and overlay permission.
+- Checks GitHub daily, every three days, or weekly. Notifies once per release.
+- Keeps tile controls ready with a foreground service. Includes a shortcut to disable battery optimization.
+- Uses the correct system settings keys per manufacturer.
+- Changes rate as soon as you tap. Adds no delay.
+- Pick a device profile in Settings if auto detection fails.
+- Uses pure `#000000` surfaces in dark mode when AMOLED mode is on.
 
 ## Supported devices
 
