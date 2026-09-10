@@ -33,10 +33,25 @@ class FpsMonitorService : Service() {
     private var logger: FpsDebugLogger? = null
     private var lastLoggedForeground: String? = null
     private var stopping = false
+    private var started = false
 
     override fun onCreate() {
         super.onCreate()
         FpsMonitorNotification.createChannel(this)
+        PreferencesHelper.init(this)
+    }
+
+    /**
+     * Starts monitoring: foreground state, overlay, and sampling.
+     *
+     * Runs only for explicit starts (no intent action). Style, layer, and
+     * logging intents must never bootstrap monitoring on their own, so they
+     * are ignored unless a start already happened.
+     */
+    private fun ensureStarted() {
+        if (started) return
+        started = true
+        stopping = false
         val notification = FpsMonitorNotification.build(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
@@ -47,7 +62,6 @@ class FpsMonitorService : Service() {
         } else {
             startForeground(FpsMonitorNotification.NOTIFICATION_ID, notification)
         }
-        PreferencesHelper.init(this)
         logger = FpsDebugLogger(this).also {
             it.init(PreferencesHelper.fpsDebugLoggingEnabled)
             it.append(
@@ -75,30 +89,59 @@ class FpsMonitorService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            null -> ensureStarted()
             ACTION_STOP -> {
                 logger?.append("User action: stop monitor")
                 stopSelf()
             }
             ACTION_NOTE -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 val note = intent.getStringExtra(EXTRA_NOTE) ?: return START_NOT_STICKY
                 logger?.append("User action: $note")
             }
             ACTION_SET_LOGGING -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 val enabled = intent.getBooleanExtra(EXTRA_ENABLED, false)
                 logger?.setEnabled(enabled)
             }
             ACTION_SET_SCALE -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 val scale = intent.getIntExtra(EXTRA_SCALE, 100)
                 overlay?.setScale(scale)
             }
+            ACTION_APPLY_STYLE -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                overlay?.applyStyleFromPrefs()
+            }
             ACTION_SET_LAYER -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 val layer = intent.getStringExtra(EXTRA_LAYER)
                 overlay?.setSelectedLayer(layer)
                 logger?.append("User action: layer selection=${layer ?: "Auto"}")
             }
             ACTION_REFRESH_LAYER -> {
+                if (!started) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 overlay?.updateSelectedLayerFromPrefs()
             }
+            else -> ensureStarted()
         }
         return START_NOT_STICKY
     }
@@ -220,14 +263,18 @@ class FpsMonitorService : Service() {
         stopping = true
         samplingJob?.cancel()
         samplingJob = null
-        logger?.append("Monitor stopping")
-        logger?.persist()
-        runShell("dumpsys SurfaceFlinger --timestats -disable")
-        logger?.persist()
-        overlay?.detach()
+        if (started) {
+            logger?.append("Monitor stopping")
+            logger?.persist()
+            runShell("dumpsys SurfaceFlinger --timestats -disable")
+            logger?.persist()
+            overlay?.detach()
+            ShizukuHelper.releaseUserService(OWNER)
+            PreferencesHelper.fpsRunning = false
+        }
         overlay = null
-        ShizukuHelper.releaseUserService(OWNER)
-        PreferencesHelper.fpsRunning = false
+        logger = null
+        started = false
         super.onDestroy()
     }
 
@@ -243,6 +290,7 @@ class FpsMonitorService : Service() {
         const val ACTION_NOTE = "akihz.fps.NOTE"
         const val ACTION_SET_LOGGING = "akihz.fps.SET_LOGGING"
         const val ACTION_SET_SCALE = "akihz.fps.SET_SCALE"
+        const val ACTION_APPLY_STYLE = "akihz.fps.APPLY_STYLE"
         const val ACTION_SET_LAYER = "akihz.fps.SET_LAYER"
         const val ACTION_REFRESH_LAYER = "akihz.fps.REFRESH_LAYER"
         const val EXTRA_NOTE = "note"

@@ -30,7 +30,8 @@ internal fun PreferenceSlider(
     valueRange: ClosedFloatingPointRange<Float>,
     steps: Int,
     increment: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(
         modifier = modifier
@@ -65,7 +66,8 @@ internal fun PreferenceSlider(
                     val newValue = (value - increment).coerceIn(valueRange)
                     onValueChange(newValue)
                     onValueChangeFinished(newValue)
-                }
+                },
+                enabled = enabled
             ) {
                 Icon(
                     Icons.Default.Remove,
@@ -79,6 +81,7 @@ internal fun PreferenceSlider(
                 onValueChangeFinished = { onValueChangeFinished(value) },
                 valueRange = valueRange,
                 steps = steps,
+                enabled = enabled,
                 modifier = Modifier.weight(1f)
             )
             IconButton(
@@ -86,7 +89,8 @@ internal fun PreferenceSlider(
                     val newValue = (value + increment).coerceIn(valueRange)
                     onValueChange(newValue)
                     onValueChangeFinished(newValue)
-                }
+                },
+                enabled = enabled
             ) {
                 Icon(
                     Icons.Default.Add,
