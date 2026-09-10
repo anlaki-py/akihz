@@ -59,6 +59,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import akihz.anlaki.dev.data.fps.OverlayPillColor
+import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceSlider
@@ -259,6 +260,22 @@ fun FpsMonitorScreen(
                     icon = Icons.Default.CropSquare,
                     checked = state.rectShape,
                     onCheckedChange = { viewModel.setRectShape(it) }
+                )
+                PreferenceSlider(
+                    title = "Corner radius",
+                    value = state.cornerRadius.toFloat(),
+                    valueLabel = "${state.cornerRadius} dp",
+                    description = if (state.rectShape) {
+                        "Round the rectangle corners, 0 is sharp"
+                    } else {
+                        "Turn on Rectangular shape to use this"
+                    },
+                    onValueChange = { viewModel.setCornerRadius(it.toInt()) },
+                    onValueChangeFinished = { viewModel.setCornerRadius(it.toInt()) },
+                    valueRange = OverlayStyle.RECT_RADIUS_MIN.toFloat()..OverlayStyle.RECT_RADIUS_MAX.toFloat(),
+                    steps = OverlayStyle.RECT_RADIUS_MAX - OverlayStyle.RECT_RADIUS_MIN - 1,
+                    increment = 1f,
+                    enabled = state.rectShape
                 )
                 PreferenceTemplate(
                     title = "Pill outline",

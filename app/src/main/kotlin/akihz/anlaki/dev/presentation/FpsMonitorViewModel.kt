@@ -32,6 +32,7 @@ data class FpsMonitorUiState(
     val showUnit: Boolean = true,
     val pillColor: OverlayPillColor = OverlayPillColor.Black,
     val rectShape: Boolean = false,
+    val cornerRadius: Int = OverlayStyle.RECT_RADIUS_DP,
     val pillOutline: Boolean = true,
     val selectedLayer: String? = null,
     val debugLoggingEnabled: Boolean = false,
@@ -63,6 +64,7 @@ class FpsMonitorViewModel @Inject constructor(
                 showUnit = PreferencesHelper.fpsShowUnit,
                 pillColor = PreferencesHelper.fpsPillColor,
                 rectShape = PreferencesHelper.fpsRectShape,
+                cornerRadius = PreferencesHelper.fpsCornerRadius,
                 pillOutline = PreferencesHelper.fpsPillOutline,
                 selectedLayer = PreferencesHelper.fpsSelectedLayer,
                 debugLoggingEnabled = PreferencesHelper.fpsDebugLoggingEnabled,
@@ -115,13 +117,8 @@ class FpsMonitorViewModel @Inject constructor(
     fun setTarget(packageName: String, label: String) {
         PreferencesHelper.fpsTargetPackage = packageName
         PreferencesHelper.fpsTargetLabel = label
-        viewModelScope.launch {
-            appContext.startService(
-                Intent(appContext, FpsMonitorService::class.java).apply {
-                    action = FpsMonitorService.ACTION_NOTE
-                    putExtra(FpsMonitorService.EXTRA_NOTE, "fixed target selected: $label ($packageName)")
-                }
-            )
+        sendIfRunning(FpsMonitorService.ACTION_NOTE) {
+            putExtra(FpsMonitorService.EXTRA_NOTE, "fixed target selected: $label ($packageName)")
         }
         refresh()
         _uiState.update { it.copy(message = "Target: $label") }
@@ -129,13 +126,8 @@ class FpsMonitorViewModel @Inject constructor(
 
     fun clearTarget() {
         PreferencesHelper.clearFpsTarget()
-        viewModelScope.launch {
-            appContext.startService(
-                Intent(appContext, FpsMonitorService::class.java).apply {
-                    action = FpsMonitorService.ACTION_NOTE
-                    putExtra(FpsMonitorService.EXTRA_NOTE, "automatic app detection selected")
-                }
-            )
+        sendIfRunning(FpsMonitorService.ACTION_NOTE) {
+            putExtra(FpsMonitorService.EXTRA_NOTE, "automatic app detection selected")
         }
         refresh()
         _uiState.update { it.copy(message = "Automatic detection enabled") }
@@ -145,12 +137,9 @@ class FpsMonitorViewModel @Inject constructor(
         val clamped = scale.coerceIn(50, 200)
         PreferencesHelper.fpsOverlayScale = clamped
         _uiState.update { it.copy(overlayScale = clamped) }
-        appContext.startService(
-            Intent(appContext, FpsMonitorService::class.java).apply {
-                action = FpsMonitorService.ACTION_SET_SCALE
-                putExtra(FpsMonitorService.EXTRA_SCALE, clamped)
-            }
-        )
+        sendIfRunning(FpsMonitorService.ACTION_SET_SCALE) {
+            putExtra(FpsMonitorService.EXTRA_SCALE, clamped)
+        }
     }
 
     /**
@@ -199,6 +188,21 @@ class FpsMonitorViewModel @Inject constructor(
     }
 
     /**
+     * Changes the rectangle corner radius.
+     *
+     * Takes effect on the pill only when the rectangle shape is on.
+     * Stored always so the value survives shape toggles and restarts.
+     *
+     * @param radius corner radius in dp from [OverlayStyle.RECT_RADIUS_MIN] to [OverlayStyle.RECT_RADIUS_MAX]
+     */
+    fun setCornerRadius(radius: Int) {
+        val clamped = radius.coerceIn(OverlayStyle.RECT_RADIUS_MIN, OverlayStyle.RECT_RADIUS_MAX)
+        PreferencesHelper.fpsCornerRadius = clamped
+        _uiState.update { it.copy(cornerRadius = clamped) }
+        sendApplyStyle()
+    }
+
+    /**
      * Shows or hides the pill outline.
      *
      * @param enabled true to draw the edge, false for a flat pill
@@ -209,35 +213,47 @@ class FpsMonitorViewModel @Inject constructor(
         sendApplyStyle()
     }
 
-    private fun sendApplyStyle() {
+    /**
+     * Sends an intent to the monitor service only while it runs.
+     *
+     * Starting with Android 8, sending an intent to a stopped service creates
+     * it, and our service starts sampling in `onCreate`. Unconditional sends
+     * from style edits therefore boot monitoring while the user only changes
+     * overlay looks. Prefs are already saved, so a later explicit start
+     * picks the new values up.
+     *
+     * @param action service action to send
+     * @param fill adds extras to the intent
+     */
+    private fun sendIfRunning(action: String, fill: Intent.() -> Unit = {}) {
+        if (!_uiState.value.isRunning && !PreferencesHelper.fpsRunning) return
         appContext.startService(
             Intent(appContext, FpsMonitorService::class.java).apply {
-                action = FpsMonitorService.ACTION_APPLY_STYLE
+                this.action = action
+                fill()
             }
         )
+    }
+
+    private fun sendApplyStyle() {
+        sendIfRunning(FpsMonitorService.ACTION_APPLY_STYLE)
     }
 
     fun clearSelectedLayer() {
         PreferencesHelper.fpsSelectedLayer = null
         _uiState.update { it.copy(selectedLayer = null) }
-        appContext.startService(
-            Intent(appContext, FpsMonitorService::class.java).apply {
-                action = FpsMonitorService.ACTION_SET_LAYER
-                putExtra(FpsMonitorService.EXTRA_LAYER, null as String?)
-            }
-        )
+        sendIfRunning(FpsMonitorService.ACTION_SET_LAYER) {
+            putExtra(FpsMonitorService.EXTRA_LAYER, null as String?)
+        }
         _uiState.update { it.copy(message = "Layer: Auto") }
     }
 
     fun toggleDebugLogging() {
         val enabled = !PreferencesHelper.fpsDebugLoggingEnabled
         PreferencesHelper.fpsDebugLoggingEnabled = enabled
-        appContext.startService(
-            Intent(appContext, FpsMonitorService::class.java).apply {
-                action = FpsMonitorService.ACTION_SET_LOGGING
-                putExtra(FpsMonitorService.EXTRA_ENABLED, enabled)
-            }
-        )
+        sendIfRunning(FpsMonitorService.ACTION_SET_LOGGING) {
+            putExtra(FpsMonitorService.EXTRA_ENABLED, enabled)
+        }
         refresh()
         _uiState.update { it.copy(message = "Debug logging ${if (enabled) "enabled" else "disabled"}") }
     }
