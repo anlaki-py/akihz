@@ -39,6 +39,15 @@ class FpsOverlayController(context: Context) {
     private var selectedLayer: String? = null
     private var dragRemainderX = 0f
     private var dragRemainderY = 0f
+    // Plain flags, not Compose state: flipping Compose state here would
+    // recompose the pill on every drag frame and defeat the pause below.
+    private var isDragging = false
+    private var pendingForeground: String? = null
+    private var pendingLayers: List<LayerStat>? = null
+    private var hasPendingDisplay = false
+    private var pendingStatus: String? = null
+    private var cachedRefreshRate = 0.0
+    private var cachedRateAtMs = 0L
 
     /** Builds the Compose content, then shows the overlay window. */
     fun attach() {
@@ -52,6 +61,11 @@ class FpsOverlayController(context: Context) {
         pillText = "Connecting…"
         rows = listOf(FpsLayerRow(null, "Auto", selectedLayer == null))
         expanded = false
+        isDragging = false
+        hasPendingDisplay = false
+        pendingForeground = null
+        pendingLayers = null
+        pendingStatus = null
 
         val lifecycle = FpsOverlayLifecycle().also { overlayLifecycle = it }
         lifecycle.resume()
@@ -66,7 +80,7 @@ class FpsOverlayController(context: Context) {
                     layers = rows,
                     onTapPill = { toggleOptionsPanel() },
                     onDrag = { dxPx, dyPx -> onDragFrame(dxPx, dyPx) },
-                    onDragEnd = { keepOnScreen() },
+                    onDragEnd = { onDragEnd() },
                     onScaleChange = { style = style.copy(scalePercent = it) },
                     onScaleDone = { setScale(it) },
                     onAlphaChange = { style = style.copy(alphaPercent = it) },
@@ -90,6 +104,11 @@ class FpsOverlayController(context: Context) {
     /** Hides the overlay and disposes the composition. */
     fun detach() {
         if (composeView == null) return
+        isDragging = false
+        hasPendingDisplay = false
+        pendingForeground = null
+        pendingLayers = null
+        pendingStatus = null
         window.hide()
         composeView?.disposeComposition()
         composeView = null
@@ -100,15 +119,34 @@ class FpsOverlayController(context: Context) {
 
     /**
      * Shows a status string in the pill.
+     *
+     * Deferred while dragging so the text change does not recompose
+     * the pill mid-gesture and stutter the move.
      * @param text status to display
      */
     fun setStatus(text: String) {
         Timber.d("FPS overlay status: $text")
+        if (isDragging) {
+            pendingStatus = text
+            return
+        }
         handler.post { pillText = text }
     }
 
-    /** Shows FPS for the foreground app and refreshes layer choices. */
+    /**
+     * Shows FPS for the foreground app and refreshes layer choices.
+     *
+     * While dragging, the latest sample is stashed and applied on drag
+     * end. Updating pillText and rows every 500 ms mid-drag recomposes
+     * the pill under the finger, which is the lag source.
+     */
     fun display(foreground: String?, layers: List<LayerStat>) {
+        if (isDragging) {
+            pendingForeground = foreground
+            pendingLayers = layers
+            hasPendingDisplay = true
+            return
+        }
         if (foreground == null) {
             setStatus(FpsPillRenderer.formatFps(0.0, style.showUnit))
             handler.post { rows = autoRow() }
@@ -238,6 +276,8 @@ class FpsOverlayController(context: Context) {
     }
 
     private fun onDragFrame(dxPx: Float, dyPx: Float) {
+        // First drag frame pauses text updates until onDragEnd flushes them.
+        isDragging = true
         val pos = window.position() ?: return
         dragRemainderX += dxPx / density
         dragRemainderY += dyPx / density
@@ -247,6 +287,28 @@ class FpsOverlayController(context: Context) {
         dragRemainderY -= dy
         if (dx != 0 || dy != 0) {
             window.moveTo(pos.first + dx, pos.second + dy)
+        }
+    }
+
+    private fun onDragEnd() {
+        isDragging = false
+        dragRemainderX = 0f
+        dragRemainderY = 0f
+        keepOnScreen()
+        // Apply the latest sample skipped mid-drag, so the pill is fresh
+        // but never recomposed under the finger.
+        val status = pendingStatus
+        pendingStatus = null
+        if (status != null) {
+            handler.post { pillText = status }
+        }
+        if (hasPendingDisplay) {
+            hasPendingDisplay = false
+            val foreground = pendingForeground
+            val layers = pendingLayers
+            pendingForeground = null
+            pendingLayers = null
+            if (layers != null) display(foreground, layers)
         }
     }
 
@@ -268,13 +330,26 @@ class FpsOverlayController(context: Context) {
         return out
     }
 
-    private fun displayRefreshRate(): Double =
-        FpsPillRenderer.displayRefreshRate(appContext)
+    private fun displayRefreshRate(): Double {
+        // DisplayManager lookup on every 500 ms sample runs on the main
+        // thread, so cache it briefly to keep drag frames light.
+        val now = android.os.SystemClock.uptimeMillis()
+        if (now - cachedRateAtMs < RATE_CACHE_MS && cachedRefreshRate > 0) {
+            return cachedRefreshRate
+        }
+        val rate = FpsPillRenderer.displayRefreshRate(appContext)
+        if (rate > 0) {
+            cachedRefreshRate = rate
+            cachedRateAtMs = now
+        }
+        return rate
+    }
 
     private fun keepOnScreen() = window.keepOnScreen()
 
     companion object {
         const val SCALE_MIN = 50
         const val SCALE_MAX = 200
+        private const val RATE_CACHE_MS = 5_000L
     }
 }
