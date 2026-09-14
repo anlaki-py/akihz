@@ -32,8 +32,10 @@ data class LayerStat(
         return value
     }
 
+    /** Returns true when the stable names match. */
     override fun equals(other: Any?): Boolean =
         other is LayerStat && stableName == other.stableName
 
+    /** Returns the stable name hash. */
     override fun hashCode(): Int = stableName.hashCode()
 }

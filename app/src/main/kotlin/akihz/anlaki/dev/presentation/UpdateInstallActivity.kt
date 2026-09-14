@@ -19,6 +19,7 @@ class UpdateInstallActivity : ComponentActivity() {
         if (downloader.canInstallPackages()) launchInstaller() else finish()
     }
 
+    /** Verifies the download and launches the installer. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         downloader = AppUpdateDownloader(this)

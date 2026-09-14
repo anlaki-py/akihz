@@ -116,6 +116,10 @@ internal class FpsOverlayWindow(context: Context) {
             onDragEnd = onDragEnd
         )
 
+    /**
+     * Converts dp to pixels for the current screen.
+     * @param value size in dp
+     */
     fun dp(value: Int): Int =
         Math.round(value * appContext.resources.displayMetrics.density)
 }

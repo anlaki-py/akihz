@@ -15,6 +15,10 @@ object FpsMonitorNotification {
     const val NOTIFICATION_ID = 1002
     private const val CHANNEL_ID = "akihz_fps_monitor"
 
+    /**
+     * Creates the low importance notification channel.
+     * @param context used to access the notification manager
+     */
     fun createChannel(context: Context) {
         NotificationChannels.ensure(
             context,
@@ -27,6 +31,7 @@ object FpsMonitorNotification {
         }
     }
 
+    /** Builds the ongoing monitor notification with a stop action. */
     fun build(context: Context, contentText: String = "Monitoring the foreground app"): Notification {
         val openIntent = PendingIntent.getActivity(
             context,

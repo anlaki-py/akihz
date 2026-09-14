@@ -11,6 +11,7 @@ import akihz.anlaki.dev.utils.Result
  */
 internal object ShizukuRefreshRates {
 
+    /** Returns the override strategy, or the auto-detected one. */
     internal fun activeStrategy(): OemSettingsStrategy.KeySet {
         val override = PreferencesHelper.oemOverride
         return if (override.isNotBlank() && override != "Auto-detect") {

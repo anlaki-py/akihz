@@ -38,6 +38,7 @@ class RefreshRateTileService : TileService() {
     @Inject lateinit var getTileRates: GetTileRatesUseCase
     @Inject lateinit var cycleTileRate: CycleTileRateUseCase
 
+    /** Loads rates and refreshes the tile on listen. */
     override fun onStartListening() {
         super.onStartListening()
         PreferencesHelper.init(applicationContext)
@@ -62,6 +63,7 @@ class RefreshRateTileService : TileService() {
         }
     }
 
+    /** Cycles to the next rate when the tile is tapped. */
     override fun onClick() {
         super.onClick()
         if (!ShizukuHelper.isBinderReady()) {
@@ -202,6 +204,7 @@ class RefreshRateTileService : TileService() {
         tile.updateTile()
     }
 
+    /** Releases the tile service resources. */
     override fun onDestroy() {
         super.onDestroy()
         ShizukuHelper.releaseUserService(SHIZUKU_OWNER)

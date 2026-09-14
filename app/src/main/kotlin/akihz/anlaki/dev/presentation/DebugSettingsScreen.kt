@@ -22,6 +22,11 @@ import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 
 internal enum class DebugPage { Categories, HomeScreen, Performance, CrashLogs;
     companion object {
+        /**
+         * Maps a debug page name to its page.
+         * @param value raw name or null
+         * @return matching page, Categories by default
+         */
         fun fromString(value: String?): DebugPage = when (value?.lowercase()) {
             "performance", "perf" -> Performance
             "crash", "crashes", "crash_logs", "crashlogs" -> CrashLogs

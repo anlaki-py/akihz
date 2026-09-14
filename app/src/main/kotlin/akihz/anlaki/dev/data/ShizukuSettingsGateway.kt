@@ -16,6 +16,7 @@ internal object ShizukuSettingsGateway {
     internal const val MAX_SETTING_KEY_LENGTH = 128
     internal const val MAX_SETTING_VALUE_LENGTH = 512
 
+    /** Maps a namespace to its settings command name. */
     internal fun namespaceToString(namespace: Namespace): String {
         return when (namespace) {
             Namespace.SECURE -> "secure"
@@ -24,6 +25,10 @@ internal object ShizukuSettingsGateway {
         }
     }
 
+    /**
+     * Runs a shell command on the bound service.
+     * @return output text, or an error when unbound or failed.
+     */
     internal fun exec(service: ICommandService?, command: String): Result<String> {
         if (service == null) {
             return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
@@ -43,6 +48,10 @@ internal object ShizukuSettingsGateway {
         }
     }
 
+    /**
+     * Runs a settings command on the bound service.
+     * @return output text, or an error when unbound or failed.
+     */
     internal fun execSettings(service: ICommandService?, arguments: List<String>): Result<String> {
         if (service == null) {
             return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
@@ -98,11 +107,13 @@ internal object ShizukuSettingsGateway {
         return execSettings(service, listOf("delete", namespaceToString(namespace), key)).map { Unit }
     }
 
+    /** Returns true when a settings key has safe chars and length. */
     internal fun isValidKey(key: String): Boolean =
         key.length in 1..MAX_SETTING_KEY_LENGTH && key.all {
             it.isLetterOrDigit() || it == '_' || it == '.' || it == '-'
         }
 
+    /** Builds an invalid-key error result. */
     internal fun <T> invalidKey(): Result<T> =
         Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "Invalid setting key.")
 }

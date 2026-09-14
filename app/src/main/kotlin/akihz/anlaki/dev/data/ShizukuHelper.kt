@@ -14,14 +14,22 @@ import akihz.anlaki.dev.utils.Result
  */
 object ShizukuHelper {
 
+    /** Returns true when the Shizuku binder answers. */
     fun isBinderReady(): Boolean = ShizukuConnection.isBinderReady()
 
+    /** Returns true when this app holds Shizuku permission. */
     fun hasPermission(): Boolean = ShizukuConnection.hasPermission()
 
+    /**
+     * Asks Shizuku for permission.
+     * @param requestCode identifies the permission result.
+     */
     fun requestPermission(requestCode: Int) = ShizukuConnection.requestPermission(requestCode)
 
+    /** Returns the Shizuku UID, or -1 when unavailable. */
     fun getUid(): Int = ShizukuConnection.getUid()
 
+    /** Returns true when the user service is bound. */
     fun isUserServiceBound(): Boolean = ShizukuConnection.isBound()
 
     /**
@@ -90,6 +98,7 @@ object ShizukuHelper {
     fun resetRefreshRate(): Result<Unit> =
         ShizukuRefreshRates.resetRefreshRate(::exec)
 
+    /** Returns the user service pid, or null when unknown. */
     fun getServicePid(): Int? = ShizukuConnection.servicePid()
 
     /**

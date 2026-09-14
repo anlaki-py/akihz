@@ -86,6 +86,10 @@ sealed interface PerfRecorderState {
  * byte-for-byte comparable, which makes `diff` useful.
  */
 internal object PerfLogJson {
+    /**
+     * Escapes a string for JSON output.
+     * @return quoted string, or null literal when missing.
+     */
     fun escape(value: String?): String {
         if (value == null) return "null"
         val sb = StringBuilder(value.length + 8)
@@ -110,11 +114,17 @@ internal object PerfLogJson {
         return sb.toString()
     }
 
+    /** Formats a number for JSON, or null literal when missing. */
     fun number(value: Number?): String = value?.toString() ?: "null"
 
+    /**
+     * Formats a float with fixed decimals for JSON.
+     * @return formatted value, or null literal when missing.
+     */
     fun numberOrNull(value: Float?, decimals: Int = 2): String =
         value?.let { String.format(java.util.Locale.US, "%.${decimals}f", it) } ?: "null"
 
+    /** Builds one JSON line for a session header. */
     fun session(line: PerfSessionInfo): String = buildString {
         append('{')
         append("\"type\":\"session\",")
@@ -132,6 +142,7 @@ internal object PerfLogJson {
         append('}')
     }
 
+    /** Builds one JSON line for a metric sample. */
     fun sample(line: PerfSample): String = buildString {
         append('{')
         append("\"type\":\"sample\",")
@@ -162,6 +173,7 @@ internal object PerfLogJson {
         append('}')
     }
 
+    /** Builds one JSON line for a log event. */
     fun event(line: PerfEvent): String = buildString {
         append('{')
         append("\"type\":\"event\",")

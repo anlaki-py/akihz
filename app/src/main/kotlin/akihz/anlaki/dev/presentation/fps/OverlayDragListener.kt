@@ -23,6 +23,7 @@ internal class OverlayDragListener(
     private var downY = 0f
     private var moved = false
 
+    /** Moves the overlay on drag and clicks the pill on tap. */
     override fun onTouch(view: View, event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {

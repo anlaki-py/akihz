@@ -252,6 +252,7 @@ class CustomKeysViewModel @Inject constructor(
 
     private fun show(message: String) = _state.update { it.copy(message = message) }
 
+    /** Cancels the test timer and restores values if needed. */
     override fun onCleared() {
         if (testOriginals != null) finishTest(false)
         super.onCleared()

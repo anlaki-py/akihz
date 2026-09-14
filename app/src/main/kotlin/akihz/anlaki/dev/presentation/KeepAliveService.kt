@@ -13,6 +13,7 @@ import timber.log.Timber
 
 /** Keeps the app process available for reliable Quick Settings tile actions. */
 class KeepAliveService : Service() {
+    /** Starts the foreground keep alive notification. */
     override fun onCreate() {
         super.onCreate()
         KeepAliveNotification.createChannel(this)
@@ -28,8 +29,10 @@ class KeepAliveService : Service() {
         }
     }
 
+    /** Keeps the service sticky after a start request. */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
+    /** Restarts the service after the task is removed when enabled. */
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         if (isKeepAliveEnabled(applicationContext)) {
@@ -37,8 +40,10 @@ class KeepAliveService : Service() {
         }
     }
 
+    /** Returns null because clients never bind to this service. */
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /** Restarts the service after destroy when the toggle is on. */
     override fun onDestroy() {
         super.onDestroy()
         if (isKeepAliveEnabled(applicationContext)) {

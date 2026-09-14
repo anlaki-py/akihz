@@ -34,6 +34,7 @@ internal data class FloatingNavigationItem(
 )
 
 @Composable
+/** Shows the floating bottom navigation bar. */
 internal fun FloatingBottomBar(
     items: List<FloatingNavigationItem>,
     selectedIndex: Int,

@@ -31,6 +31,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+/** Shows the OEM override picker. */
 internal fun OemOverridePreference(
     options: List<String>,
     selectedOption: String,

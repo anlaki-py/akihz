@@ -6,9 +6,21 @@ import android.os.IInterface
 import android.os.Parcel
 
 interface ICommandService : IInterface {
+    /**
+     * Runs a shell command.
+     * @param command shell line to run.
+     * @return output text, or an ERROR message.
+     */
     fun runCommand(command: String): String
+    /**
+     * Runs a settings command.
+     * @param arguments operation, namespace, key, and optional value.
+     * @return output text, or an ERROR message.
+     */
     fun runSettingsCommand(arguments: List<String>): String
+    /** Stops the user service process. */
     fun destroy()
+    /** Returns the user service process id. */
     fun getPid(): Int
 
     abstract class Stub : Binder(), ICommandService {
@@ -16,8 +28,13 @@ interface ICommandService : IInterface {
             this.attachInterface(this, DESCRIPTOR)
         }
 
+        /** Returns this binder. */
         override fun asBinder(): IBinder = this
 
+        /**
+         * Dispatches one binder transaction to its handler.
+         * @return true when the code was handled.
+         */
         override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
             val descriptor = DESCRIPTOR
             if (code in IBinder.FIRST_CALL_TRANSACTION..0x00FFFFFF) {
@@ -64,6 +81,10 @@ interface ICommandService : IInterface {
             const val TRANSACTION_destroy = IBinder.FIRST_CALL_TRANSACTION + 2
             const val TRANSACTION_getPid = IBinder.FIRST_CALL_TRANSACTION + 3
 
+            /**
+             * Wraps a binder as [ICommandService].
+             * @return local interface, or a remote proxy.
+             */
             @JvmStatic
             fun asInterface(obj: IBinder?): ICommandService? {
                 if (obj == null) return null
@@ -76,8 +97,10 @@ interface ICommandService : IInterface {
         }
 
         private class Proxy(private val mRemote: IBinder) : ICommandService {
+            /** Returns the remote binder. */
             override fun asBinder(): IBinder = mRemote
 
+            /** Runs a shell command on the remote service. */
             override fun runCommand(command: String): String {
                 val data = Parcel.obtain()
                 val reply = Parcel.obtain()
@@ -95,6 +118,7 @@ interface ICommandService : IInterface {
                 return result
             }
 
+            /** Runs a settings command on the remote service. */
             override fun runSettingsCommand(arguments: List<String>): String {
                 val data = Parcel.obtain()
                 val reply = Parcel.obtain()
@@ -110,6 +134,7 @@ interface ICommandService : IInterface {
                 }
             }
 
+            /** Asks the remote service to stop. */
             override fun destroy() {
                 val data = Parcel.obtain()
                 val reply = Parcel.obtain()
@@ -123,6 +148,7 @@ interface ICommandService : IInterface {
                 }
             }
 
+            /** Returns the remote service process id. */
             override fun getPid(): Int {
                 val data = Parcel.obtain()
                 val reply = Parcel.obtain()

@@ -28,6 +28,7 @@ class AkihzApplication : Application() {
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /** Sets up prefs, crash logging, lifecycle logging, and update checks. */
     override fun onCreate() {
         super.onCreate()
         PreferencesHelper.init(this)
@@ -77,12 +78,14 @@ class AkihzApplication : Application() {
 
     private fun installLifecycleLogger() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            /** Logs a foreground marker to the perf recorder. */
             override fun onStart(owner: LifecycleOwner) {
                 applicationScope.launch {
                     performanceMonitor.log(tag = "lifecycle", message = "foreground")
                 }
             }
 
+            /** Logs a background marker to the perf recorder. */
             override fun onStop(owner: LifecycleOwner) {
                 applicationScope.launch {
                     performanceMonitor.log(tag = "lifecycle", message = "background")

@@ -38,6 +38,10 @@ internal fun AutomaticUpdateCheckPreference() {
         }
     }
 
+    /**
+     * Saves the new interval and reschedules background checks.
+     * @param selected interval to apply
+     */
     fun applyFrequency(selected: UpdateCheckFrequency) {
         frequency = selected
         PreferencesHelper.updateCheckFrequency = selected

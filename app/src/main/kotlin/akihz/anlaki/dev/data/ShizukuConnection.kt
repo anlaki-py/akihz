@@ -23,6 +23,7 @@ internal object ShizukuConnection {
     private val connectionOwners = ConnectionOwnership()
     private val pendingConnections = mutableListOf<PendingConnection>()
 
+    /** Returns true when the Shizuku binder answers. */
     fun isBinderReady(): Boolean {
         return try {
             Shizuku.pingBinder()
@@ -32,6 +33,7 @@ internal object ShizukuConnection {
         }
     }
 
+    /** Returns true when this app holds Shizuku permission. */
     fun hasPermission(): Boolean {
         if (!isBinderReady()) return false
         return try {
@@ -42,6 +44,10 @@ internal object ShizukuConnection {
         }
     }
 
+    /**
+     * Asks Shizuku for permission.
+     * @param requestCode identifies the permission result.
+     */
     fun requestPermission(requestCode: Int) {
         if (isBinderReady() && !hasPermission()) {
             try {
@@ -52,6 +58,7 @@ internal object ShizukuConnection {
         }
     }
 
+    /** Returns the Shizuku UID, or -1 when unavailable. */
     fun getUid(): Int {
         return try {
             Shizuku.getUid()
@@ -61,10 +68,13 @@ internal object ShizukuConnection {
         }
     }
 
+    /** Returns true when the user service is bound. */
     fun isBound(): Boolean = commandService != null
 
+    /** Returns the bound command service, or null when unbound. */
     fun service(): ICommandService? = commandService
 
+    /** Returns the user service pid, or null when unknown. */
     fun servicePid(): Int? = commandService?.let { runCatching { it.getPid() }.getOrNull() }
 
     /**
@@ -114,6 +124,7 @@ internal object ShizukuConnection {
         userServiceArgs = args
 
         serviceConnection = object : ServiceConnection {
+            /** Stores the service and fires queued connect callbacks. */
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 val callbacks = synchronized(this@ShizukuConnection) {
                     commandService = ICommandService.Stub.asInterface(binder)
@@ -124,6 +135,7 @@ internal object ShizukuConnection {
                 callbacks.forEach { it.onConnected() }
             }
 
+            /** Clears the stored service after a disconnect. */
             override fun onServiceDisconnected(name: ComponentName?) {
                 synchronized(this@ShizukuConnection) {
                     commandService = null
