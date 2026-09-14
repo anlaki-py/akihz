@@ -2,9 +2,9 @@
 -keep interface rikka.shizuku.** { *; }
 
 # Custom AIDL interface for Shizuku IPC
--keep class akihz.anlaki.dev.ICommandService { *; }
--keep class akihz.anlaki.dev.ICommandService$Stub { *; }
--keep class akihz.anlaki.dev.ICommandService$Stub$Proxy { *; }
+-keep class akihz.anlaki.dev.data.ICommandService { *; }
+-keep class akihz.anlaki.dev.data.ICommandService$Stub { *; }
+-keep class akihz.anlaki.dev.data.ICommandService$Stub$Proxy { *; }
 -keep class akihz.anlaki.dev.data.ICommandServiceImpl { *; }
 
 # Hilt / Dagger

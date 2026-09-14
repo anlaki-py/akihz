@@ -119,7 +119,10 @@ internal object ShizukuConnection {
             .daemon(true)
             .processNameSuffix("refresh_rate_service")
             .debuggable(false)
-            .version(3)
+        // Bump version whenever the ICommandService IPC surface changes.
+        // Shizuku kills a running daemon whose version differs, so updaters
+        // never talk to stale code with a mismatched interface token.
+        .version(4)
 
         userServiceArgs = args
 
