@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import akihz.anlaki.dev.data.PreferencesHelper
 import akihz.anlaki.dev.data.fps.LayerStat
 import akihz.anlaki.dev.data.fps.OverlayPillColor
@@ -29,6 +30,7 @@ class FpsOverlayController(context: Context) {
     private val density = appContext.resources.displayMetrics.density
 
     private var composeView: ComposeView? = null
+    private var overlayLifecycle: FpsOverlayLifecycle? = null
     private var pillText by mutableStateOf("Connecting…")
     private var rows by mutableStateOf(listOf(FpsLayerRow(null, "Auto", true)))
     private var style by mutableStateOf(FpsPillStyle.load())
@@ -51,7 +53,11 @@ class FpsOverlayController(context: Context) {
         rows = listOf(FpsLayerRow(null, "Auto", selectedLayer == null))
         expanded = false
 
+        val lifecycle = FpsOverlayLifecycle().also { overlayLifecycle = it }
+        lifecycle.resume()
         val view = ComposeView(appContext).apply {
+            FpsOverlayViewTrees.install(this, lifecycle, lifecycle, lifecycle)
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setContent {
                 FpsOverlayContent(
                     text = pillText,
@@ -73,6 +79,8 @@ class FpsOverlayController(context: Context) {
         composeView = view
         if (!window.show(view)) {
             composeView = null
+            lifecycle.destroy()
+            overlayLifecycle = null
             return
         }
         // Also ensure visible after a short delay for first draw
@@ -85,6 +93,8 @@ class FpsOverlayController(context: Context) {
         window.hide()
         composeView?.disposeComposition()
         composeView = null
+        overlayLifecycle?.destroy()
+        overlayLifecycle = null
         expanded = false
     }
 
