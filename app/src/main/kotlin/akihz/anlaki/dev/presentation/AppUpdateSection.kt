@@ -29,9 +29,9 @@ import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateNotification
-import akihz.anlaki.dev.utils.UpdateAvailableNotification
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.notifications.UpdateNotification
+import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt

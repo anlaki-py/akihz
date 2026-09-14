@@ -13,6 +13,7 @@
    - `presentation/` - UI, ViewModels, Composables
    - `di/` - dependency injection modules
    - `utils/` - helpers and extensions
+   - Group by feature inside these: `presentation/fps/`, `presentation/notifications/`, `domain/usecase/`. Only `Result` and `ErrorType` stay in `utils/`.
 3. **Single Responsibility**: One class = one purpose. Extract interfaces, models, and utils
 
 ## Documentation Rules

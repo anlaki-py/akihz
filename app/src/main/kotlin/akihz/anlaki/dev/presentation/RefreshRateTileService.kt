@@ -8,15 +8,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.R
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.domain.TileRateSelection
-import akihz.anlaki.dev.domain.repository.RefreshRateRepository
-import akihz.anlaki.dev.utils.KeepAliveService
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.domain.usecase.CycleTileRateUseCase
+import akihz.anlaki.dev.domain.usecase.GetTileRatesUseCase
+import akihz.anlaki.dev.data.PreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import javax.inject.Inject
 
@@ -36,7 +35,8 @@ class RefreshRateTileService : TileService() {
     private var isConnecting = false
     private var isSwitching = false
 
-    @Inject lateinit var refreshRateRepository: RefreshRateRepository
+    @Inject lateinit var getTileRates: GetTileRatesUseCase
+    @Inject lateinit var cycleTileRate: CycleTileRateUseCase
 
     override fun onStartListening() {
         super.onStartListening()
@@ -49,18 +49,12 @@ class RefreshRateTileService : TileService() {
 
     private fun loadSupportedRatesAndRestore() {
         scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.getSupportedRates()
-            }
-            result.onSuccess { rates ->
-                val excludedRates = TileRateSelection.recoverEmptySelection(
-                    rates,
-                    PreferencesHelper.excludedTileRates
-                )
-                tileRates = TileRateSelection.includedRates(rates, excludedRates)
+            val result = getTileRates(PreferencesHelper.excludedTileRates)
+            result.onSuccess { tile ->
+                tileRates = tile.includedRates
                 val savedRate = PreferencesHelper.lastRate
                 // Show actual rate even if excluded from cycle; tileRates only for nextRate.
-                displayedRate = rates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
+                displayedRate = tile.allRates.firstOrNull { kotlin.math.abs(it - savedRate) < 0.01f }
                 updateTile()
             }.onError { _, _ ->
                 updateTileUnavailable()
@@ -115,16 +109,17 @@ class RefreshRateTileService : TileService() {
         }
         val previousRate = displayedRate
         val cycleAnchor = displayedRate ?: PreferencesHelper.lastRate
-        val newRate = TileRateSelection.nextRate(tileRates, cycleAnchor) ?: return
-        displayedRate = newRate
+        val included = tileRates
+        // Optimistic label while the write runs; the use case result wins.
+        val preview = TileRateSelection.nextRate(included, cycleAnchor) ?: return
+        displayedRate = preview
         isSwitching = true
-        updateTileSwitching(newRate)
+        updateTileSwitching(preview)
 
         scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.setRate(newRate)
-            }
-            result.onSuccess {
+            val result = cycleTileRate(included, cycleAnchor)
+            result.onSuccess { newRate ->
+                displayedRate = newRate
                 isSwitching = false
                 updateTileWithRate(newRate)
             }.onError { _, msg ->

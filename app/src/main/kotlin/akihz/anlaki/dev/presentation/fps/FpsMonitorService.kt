@@ -1,5 +1,6 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.fps
 
+import akihz.anlaki.dev.data.PreferencesHelper
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo

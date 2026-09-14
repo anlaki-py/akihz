@@ -1,7 +1,6 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.notifications
 
 import android.Manifest
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -72,14 +71,12 @@ object UpdateAvailableNotification {
     }
 
     private fun createChannel(context: Context) {
-        val channel = NotificationChannel(
+        NotificationChannels.ensure(
+            context,
             CHANNEL_ID,
             "Update alerts",
+            "Notifies when a new akiHz version is available",
             NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = "Notifies when a new akiHz version is available"
-        }
-        context.getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
+        )
     }
 }

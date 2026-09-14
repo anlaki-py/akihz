@@ -10,8 +10,8 @@ import android.service.quicksettings.TileService
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import akihz.anlaki.dev.data.ShizukuHelper
-import akihz.anlaki.dev.utils.FpsMonitorService
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.presentation.fps.FpsMonitorService
+import akihz.anlaki.dev.data.PreferencesHelper
 
 /**
  * Quick Settings tile for toggling Surface FPS monitoring.

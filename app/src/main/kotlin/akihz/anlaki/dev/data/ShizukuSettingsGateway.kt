@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.data
 
-import akihz.anlaki.dev.ICommandService
 import akihz.anlaki.dev.data.OemSettingsStrategy.Namespace
 import akihz.anlaki.dev.utils.ErrorType
 import akihz.anlaki.dev.utils.Result

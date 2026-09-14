@@ -1,4 +1,4 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.data
 
 import android.content.Context
 import android.content.SharedPreferences

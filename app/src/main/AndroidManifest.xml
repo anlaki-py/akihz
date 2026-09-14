@@ -88,7 +88,7 @@
         </service>
 
         <service
-            android:name=".utils.KeepAliveService"
+            android:name=".presentation.KeepAliveService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
@@ -97,7 +97,7 @@
         </service>
 
         <service
-            android:name=".utils.FpsMonitorService"
+            android:name=".presentation.fps.FpsMonitorService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
@@ -106,7 +106,7 @@
         </service>
 
         <receiver
-            android:name=".utils.UpdateDownloadReceiver"
+            android:name=".presentation.notifications.UpdateDownloadReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />

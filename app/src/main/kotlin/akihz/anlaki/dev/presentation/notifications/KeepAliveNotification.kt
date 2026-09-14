@@ -1,7 +1,6 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.notifications
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -17,18 +16,17 @@ object KeepAliveNotification {
 
     /** Creates the low-importance notification channel for the foreground service. */
     fun createChannel(context: Context) {
-        val channel = NotificationChannel(
+        NotificationChannels.ensure(
+            context,
             CHANNEL_ID,
             context.getString(R.string.keep_alive_channel_name),
+            context.getString(R.string.keep_alive_notification_text),
             NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = context.getString(R.string.keep_alive_notification_text)
+        ) {
             setShowBadge(false)
             enableLights(false)
             enableVibration(false)
         }
-        context.getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
     }
 
     /** Builds the ongoing notification that opens [MainActivity] when tapped. */

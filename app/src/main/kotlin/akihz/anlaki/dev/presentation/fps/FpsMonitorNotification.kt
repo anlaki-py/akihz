@@ -1,7 +1,6 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.fps
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -9,6 +8,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import akihz.anlaki.dev.R
 import akihz.anlaki.dev.presentation.MainActivity
+import akihz.anlaki.dev.presentation.notifications.NotificationChannels
 
 /** Notification for the FPS monitor foreground service. */
 object FpsMonitorNotification {
@@ -16,15 +16,15 @@ object FpsMonitorNotification {
     private const val CHANNEL_ID = "akihz_fps_monitor"
 
     fun createChannel(context: Context) {
-        val channel = NotificationChannel(
+        NotificationChannels.ensure(
+            context,
             CHANNEL_ID,
             "FPS monitoring",
+            "Shows real-time FPS from SurfaceFlinger while another app is foreground",
             NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Shows real-time FPS from SurfaceFlinger while another app is foreground"
+        ) {
             setShowBadge(false)
         }
-        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     fun build(context: Context, contentText: String = "Monitoring the foreground app"): Notification {

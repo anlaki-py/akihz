@@ -29,8 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
-import akihz.anlaki.dev.utils.KeepAliveService
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.data.PreferencesHelper
 import rikka.shizuku.Shizuku
 import kotlinx.coroutines.flow.MutableStateFlow
 

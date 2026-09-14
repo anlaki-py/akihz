@@ -1,4 +1,4 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.notifications
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver

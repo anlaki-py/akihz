@@ -9,9 +9,9 @@ import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.data.PerformanceMonitor
 import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.data.UpdateCheckScheduler
-import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateAvailableNotification
-import akihz.anlaki.dev.utils.UpdateNotification
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
+import akihz.anlaki.dev.presentation.notifications.UpdateNotification
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

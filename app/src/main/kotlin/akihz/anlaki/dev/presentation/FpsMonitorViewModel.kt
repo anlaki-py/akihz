@@ -12,8 +12,8 @@ import androidx.lifecycle.viewModelScope
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.data.fps.OverlayPillColor
 import akihz.anlaki.dev.data.fps.OverlayStyle
-import akihz.anlaki.dev.utils.FpsMonitorService
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.presentation.fps.FpsMonitorService
+import akihz.anlaki.dev.data.PreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow

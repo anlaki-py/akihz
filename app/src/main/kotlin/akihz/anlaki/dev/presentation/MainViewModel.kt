@@ -14,7 +14,8 @@ import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.domain.usecase.GetTileRatesUseCase
+import akihz.anlaki.dev.data.PreferencesHelper
 import javax.inject.Inject
 
 data class MainUiState(
@@ -30,7 +31,8 @@ data class MainUiState(
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val refreshRateRepository: RefreshRateRepository
+    private val refreshRateRepository: RefreshRateRepository,
+    private val getTileRates: GetTileRatesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -70,21 +72,15 @@ class MainViewModel @Inject constructor(
     fun loadSupportedRates() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.getSupportedRates()
-            }
-            result.onSuccess { rates ->
-                val excludedRates = TileRateSelection.recoverEmptySelection(
-                    rates,
-                    PreferencesHelper.excludedTileRates
-                )
-                if (excludedRates != PreferencesHelper.excludedTileRates) {
-                    PreferencesHelper.excludedTileRates = excludedRates
+            val result = getTileRates(PreferencesHelper.excludedTileRates)
+            result.onSuccess { tileRates ->
+                if (tileRates.excludedRates != PreferencesHelper.excludedTileRates) {
+                    PreferencesHelper.excludedTileRates = tileRates.excludedRates
                 }
                 _uiState.update {
                     it.copy(
-                        supportedRates = rates,
-                        excludedTileRates = excludedRates,
+                        supportedRates = tileRates.allRates,
+                        excludedTileRates = tileRates.excludedRates,
                         isLoading = false
                     )
                 }

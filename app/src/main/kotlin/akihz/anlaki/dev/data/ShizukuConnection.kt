@@ -5,7 +5,6 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import akihz.anlaki.dev.BuildConfig
-import akihz.anlaki.dev.ICommandService
 import akihz.anlaki.dev.utils.ErrorType
 import rikka.shizuku.Shizuku
 import timber.log.Timber

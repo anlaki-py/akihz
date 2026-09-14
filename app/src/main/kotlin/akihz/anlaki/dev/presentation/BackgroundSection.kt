@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.BatteryOptimizationHelper
 
 /**
  * Background execution controls.

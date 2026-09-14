@@ -1,7 +1,6 @@
 package akihz.anlaki.dev.data
 
 import akihz.anlaki.dev.BuildConfig
-import akihz.anlaki.dev.ICommandService
 import akihz.anlaki.dev.utils.ErrorType
 import akihz.anlaki.dev.utils.Result
 

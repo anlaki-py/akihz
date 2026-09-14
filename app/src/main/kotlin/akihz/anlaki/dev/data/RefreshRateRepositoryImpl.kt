@@ -2,7 +2,6 @@ package akihz.anlaki.dev.data
 
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.ErrorType
-import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
