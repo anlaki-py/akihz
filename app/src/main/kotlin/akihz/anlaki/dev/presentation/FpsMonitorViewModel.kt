@@ -52,6 +52,7 @@ class FpsMonitorViewModel @Inject constructor(
         refresh()
     }
 
+    /** Reloads saved prefs into the UI state. */
     fun refresh() {
         PreferencesHelper.init(appContext)
         _uiState.update {
@@ -73,6 +74,10 @@ class FpsMonitorViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Starts monitoring and marks it running.
+     * @param context used to start the service
+     */
     fun startService(context: Context) {
         PreferencesHelper.init(context)
         PreferencesHelper.fpsRunning = true
@@ -84,6 +89,10 @@ class FpsMonitorViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Stops monitoring and marks it stopped.
+     * @param context used to stop the service
+     */
     fun stopService(context: Context) {
         PreferencesHelper.init(context)
         PreferencesHelper.fpsRunning = false
@@ -101,19 +110,35 @@ class FpsMonitorViewModel @Inject constructor(
         return true
     }
 
+    /**
+     * Stops monitoring through the shared stop path.
+     * @param context used to stop the service
+     */
     fun stopMonitoring(context: Context) {
         stopService(context)
     }
 
+    /**
+     * Returns true when the Shizuku binder is ready.
+     * @return true when ready
+     */
     fun hasShizukuBinder(): Boolean = ShizukuHelper.isBinderReady()
+    /**
+     * Returns true when Shizuku permission is granted.
+     * @return true when granted
+     */
     fun hasShizukuPermission(): Boolean = ShizukuHelper.hasPermission()
+    /** Asks Shizuku for permission with request code 1001. */
     fun requestShizukuPermission() = ShizukuHelper.requestPermission(1001)
+    /** Returns true when the app can draw overlays. */
     fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
+    /** Returns true when post notification permission is granted. */
     fun hasNotificationPermission(context: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
 
+    /** Saves a fixed target app and notifies the running service. */
     fun setTarget(packageName: String, label: String) {
         PreferencesHelper.fpsTargetPackage = packageName
         PreferencesHelper.fpsTargetLabel = label
@@ -124,6 +149,7 @@ class FpsMonitorViewModel @Inject constructor(
         _uiState.update { it.copy(message = "Target: $label") }
     }
 
+    /** Clears the fixed target and restores automatic detection. */
     fun clearTarget() {
         PreferencesHelper.clearFpsTarget()
         sendIfRunning(FpsMonitorService.ACTION_NOTE) {
@@ -133,6 +159,10 @@ class FpsMonitorViewModel @Inject constructor(
         _uiState.update { it.copy(message = "Automatic detection enabled") }
     }
 
+    /**
+     * Saves overlay scale and pushes it to the running service.
+     * @param scale size percent from 50 to 200
+     */
     fun setOverlayScale(scale: Int) {
         val clamped = scale.coerceIn(50, 200)
         PreferencesHelper.fpsOverlayScale = clamped
@@ -239,6 +269,7 @@ class FpsMonitorViewModel @Inject constructor(
         sendIfRunning(FpsMonitorService.ACTION_APPLY_STYLE)
     }
 
+    /** Clears the picked layer and restores automatic choice. */
     fun clearSelectedLayer() {
         PreferencesHelper.fpsSelectedLayer = null
         _uiState.update { it.copy(selectedLayer = null) }
@@ -248,6 +279,7 @@ class FpsMonitorViewModel @Inject constructor(
         _uiState.update { it.copy(message = "Layer: Auto") }
     }
 
+    /** Flips debug logging and pushes the state to the service. */
     fun toggleDebugLogging() {
         val enabled = !PreferencesHelper.fpsDebugLoggingEnabled
         PreferencesHelper.fpsDebugLoggingEnabled = enabled
@@ -258,6 +290,7 @@ class FpsMonitorViewModel @Inject constructor(
         _uiState.update { it.copy(message = "Debug logging ${if (enabled) "enabled" else "disabled"}") }
     }
 
+    /** Clears the one shot UI message. */
     fun consumeMessage() {
         _uiState.update { it.copy(message = null) }
     }

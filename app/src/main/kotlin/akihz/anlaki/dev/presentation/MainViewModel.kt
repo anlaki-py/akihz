@@ -52,6 +52,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** Marks Shizuku as bound and loads rates. */
     fun onShizukuBound() {
         _uiState.update { it.copy(isServiceBound = true, isLoading = true) }
         viewModelScope.launch(Dispatchers.IO) {
@@ -61,14 +62,20 @@ class MainViewModel @Inject constructor(
         loadCurrentRate()
     }
 
+    /**
+     * Updates the Shizuku ready flag.
+     * @param ready true when Shizuku is ready
+     */
     fun onShizukuReadyChanged(ready: Boolean) {
         _uiState.update { it.copy(isShizukuReady = ready) }
     }
 
+    /** Clears the current error message. */
     fun onErrorDismissed() {
         _uiState.update { it.copy(error = null) }
     }
 
+    /** Loads supported rates and tile exclusions. */
     fun loadSupportedRates() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -96,6 +103,7 @@ class MainViewModel @Inject constructor(
         loadCurrentRate()
     }
 
+    /** Loads the active refresh rate from the device. */
     fun loadCurrentRate() {
         if (!_uiState.value.isServiceBound) return
 
@@ -109,6 +117,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Applies the selected refresh rate.
+     * @param hz rate to apply
+     */
     fun selectRate(hz: Float) {
         val state = _uiState.value
         if (state.isLoading || !state.isServiceBound || !ShizukuHelper.hasPermission()) return
@@ -142,6 +154,7 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(excludedTileRates = excludedRates) }
     }
 
+    /** Restores adaptive system refresh rate settings. */
     fun resetToDefaults() {
         if (!ShizukuHelper.isBinderReady()) {
             _uiState.update { it.copy(error = "Shizuku is not running.") }

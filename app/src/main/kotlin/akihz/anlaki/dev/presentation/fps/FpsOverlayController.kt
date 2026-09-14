@@ -44,6 +44,7 @@ class FpsOverlayController(context: Context) {
     private var style = FpsPillStyle.load()
     private var pillBackground: GradientDrawable? = null
 
+    /** Builds the pill and panel, then shows the overlay window. */
     fun attach() {
         if (window.root != null) {
             Timber.d("FPS overlay already attached")
@@ -102,6 +103,7 @@ class FpsOverlayController(context: Context) {
         handler.postDelayed({ keepOnScreen() }, 300)
     }
 
+    /** Hides the overlay and clears cached views. */
     fun detach() {
         if (window.root == null) return
         window.hide()
@@ -118,6 +120,10 @@ class FpsOverlayController(context: Context) {
         optionsExpanded = false
     }
 
+    /**
+     * Shows a status string in the pill.
+     * @param text status to display
+     */
     fun setStatus(text: String) {
         Timber.d("FPS overlay status: $text")
         handler.post {
@@ -126,6 +132,7 @@ class FpsOverlayController(context: Context) {
         }
     }
 
+    /** Shows FPS for the foreground app and refreshes layer choices. */
     fun display(foreground: String?, layers: List<LayerStat>) {
         if (foreground == null) {
             setStatus(FpsPillRenderer.formatFps(0.0, style.showUnit))
@@ -152,6 +159,10 @@ class FpsOverlayController(context: Context) {
         }
     }
 
+    /**
+     * Saves overlay scale and resizes the pill.
+     * @param percent size percent from 50 to 200
+     */
     fun setScale(percent: Int) {
         val clamped = percent.coerceIn(SCALE_MIN, SCALE_MAX)
         style = style.copy(scalePercent = clamped)
@@ -166,6 +177,10 @@ class FpsOverlayController(context: Context) {
         }
     }
 
+    /**
+     * Saves the picked layer and updates the radio state.
+     * @param stableName layer name, or null for Auto
+     */
     fun setSelectedLayer(stableName: String?) {
         selectedLayer = stableName
         PreferencesHelper.fpsSelectedLayer = stableName
@@ -176,6 +191,7 @@ class FpsOverlayController(context: Context) {
         }
     }
 
+    /** Reloads the picked layer from prefs and updates the radio state. */
     fun updateSelectedLayerFromPrefs() {
         selectedLayer = PreferencesHelper.fpsSelectedLayer
         handler.post {

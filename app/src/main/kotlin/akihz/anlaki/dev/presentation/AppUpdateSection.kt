@@ -70,6 +70,10 @@ fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
         mutableLongStateOf(restoredDownload?.downloadId ?: -1L)
     }
 
+    /**
+     * Starts a system download for the given update.
+     * @param update release to download
+     */
     fun enqueueUpdate(update: AppUpdate) {
         runCatching { downloader.enqueue(update) }
             .onSuccess {
@@ -98,6 +102,7 @@ fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
         }
     }
 
+    /** Checks the repo for the latest release on the current channel. */
     fun checkForUpdate() {
         statusText = "Checking for updates…"
         scope.launch {

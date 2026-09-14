@@ -21,12 +21,14 @@ import akihz.anlaki.dev.data.PreferencesHelper
  */
 class FpsMonitorTileService : TileService() {
 
+    /** Refreshes the tile state when the shade opens. */
     override fun onStartListening() {
         super.onStartListening()
         PreferencesHelper.init(applicationContext)
         updateTile()
     }
 
+    /** Starts or stops monitoring after checks, then refreshes the tile. */
     override fun onClick() {
         super.onClick()
         PreferencesHelper.init(applicationContext)

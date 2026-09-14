@@ -28,6 +28,7 @@ internal object OemKeyCatalog {
         "AOSP / Stock"
     )
 
+    /** Refresh rate keys for Xiaomi and Redmi devices. */
     internal fun xiaomi(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SECURE, "miui_refresh_rate"),
@@ -52,6 +53,7 @@ internal object OemKeyCatalog {
         modeKey = SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
     )
 
+    /** Refresh rate keys for Samsung devices. */
     internal fun samsung(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SECURE, "refresh_rate_mode"),
@@ -74,6 +76,7 @@ internal object OemKeyCatalog {
         modeKey = SettingsKey(Namespace.SECURE, "refresh_rate_mode")
     )
 
+    /** Refresh rate keys for OnePlus devices. */
     internal fun onePlus(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -96,6 +99,7 @@ internal object OemKeyCatalog {
         modeKey = SettingsKey(Namespace.SECURE, "refresh_rate_mode")
     )
 
+    /** Refresh rate keys for OPPO devices. */
     internal fun oppo(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -116,6 +120,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for vivo and iQOO devices. */
     internal fun vivo(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SECURE, "active"),
@@ -136,6 +141,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for realme devices. */
     internal fun realme(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SECURE, "user_refresh_rate"),
@@ -156,6 +162,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for ASUS and ROG devices. */
     internal fun asus(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -173,6 +180,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for Motorola devices. */
     internal fun motorola(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -190,6 +198,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for Sony devices. */
     internal fun sony(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -207,6 +216,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for Google Pixel devices. */
     internal fun pixel(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
@@ -226,6 +236,7 @@ internal object OemKeyCatalog {
         )
     )
 
+    /** Refresh rate keys for AOSP and stock Android devices. */
     internal fun aosp(): KeySet = KeySet(
         readKeys = listOf(
             SettingsKey(Namespace.SECURE, "user_refresh_rate"),

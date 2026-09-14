@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Creates the main screen and binds app services. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -219,12 +220,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Handles a new intent while the activity is alive.
+     * @param intent incoming intent
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleUpdateIntent(intent)
     }
 
+    /** Registers Shizuku listeners and refreshes permission state. */
     override fun onResume() {
         super.onResume()
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
@@ -235,6 +241,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Unregisters Shizuku listeners. */
     override fun onPause() {
         super.onPause()
         Shizuku.removeBinderReceivedListener(binderReceivedListener)
@@ -242,6 +249,7 @@ class MainActivity : ComponentActivity() {
         Shizuku.removeRequestPermissionResultListener(permissionResultListener)
     }
 
+    /** Releases the Shizuku user service. */
     override fun onDestroy() {
         super.onDestroy()
         ShizukuHelper.releaseUserService(SHIZUKU_OWNER)

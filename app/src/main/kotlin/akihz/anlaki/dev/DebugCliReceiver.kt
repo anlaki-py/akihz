@@ -41,6 +41,9 @@ class DebugCliReceiver : BroadcastReceiver() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /**
+     * Handles one debug CLI broadcast and writes the result to the output file.
+     */
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION) return
         val cmd = intent.getStringExtra(EXTRA_CMD) ?: run {
