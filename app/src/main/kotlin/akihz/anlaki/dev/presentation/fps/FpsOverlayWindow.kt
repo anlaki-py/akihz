@@ -3,30 +3,27 @@ package akihz.anlaki.dev.presentation.fps
 import android.content.Context
 import android.graphics.PixelFormat
 import android.view.Gravity
-import android.view.ViewConfiguration
+import android.view.View
 import android.view.WindowManager
-import android.widget.LinearLayout
 import timber.log.Timber
 
 /**
  * Hosts the overlay root view in the system window.
  *
- * Owns window params, add and remove, drag listener wiring, and the
- * keep on screen clamp. Pill content and options stay with the controller
- * and collaborators.
+ * Owns window params, add and remove, drag position, and the keep on
+ * screen clamp. Content is a ComposeView, so this file holds no UI code.
  */
 internal class FpsOverlayWindow(context: Context) {
 
     private val appContext = context.applicationContext
     private val windowManager = appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
-    var root: LinearLayout? = null
+    var root: View? = null
         private set
     private var params: WindowManager.LayoutParams? = null
 
     /** Adds [view] to the window at the default position. False when add failed. */
-    fun show(view: LinearLayout): Boolean {
+    fun show(view: View): Boolean {
         params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -63,7 +60,25 @@ internal class FpsOverlayWindow(context: Context) {
         params = null
     }
 
-    /** Re-runs window layout so a shrink actually reaches the screen. */
+    /** Current window position in pixels, null when not shown. */
+    fun position(): Pair<Int, Int>? = params?.let { it.x to it.y }
+
+    /**
+     * Moves the window to [x] and [y] in pixels.
+     *
+     * Called on every drag frame, mirroring the old touch listener.
+     */
+    fun moveTo(x: Int, y: Int) {
+        val p = params ?: return
+        val view = root ?: return
+        p.x = x
+        p.y = y
+        try {
+            windowManager.updateViewLayout(view, p)
+        } catch (_: Exception) {}
+    }
+
+    /** Re-runs window layout so a size change actually reaches the screen. */
     fun refit() {
         val view = root ?: return
         val p = params ?: return
@@ -96,25 +111,6 @@ internal class FpsOverlayWindow(context: Context) {
             } catch (_: Exception) {}
         }
     }
-
-    /** Drag listener bound to the current params. */
-    fun dragListener(onDragEnd: () -> Unit): OverlayDragListener =
-        OverlayDragListener(
-            touchSlop = touchSlop,
-            getPosition = { params?.let { it.x to it.y } },
-            setPosition = { x, y ->
-                params?.let {
-                    it.x = x
-                    it.y = y
-                }
-            },
-            onPositionChanged = {
-                try {
-                    root?.let { windowManager.updateViewLayout(it, params) }
-                } catch (_: Exception) {}
-            },
-            onDragEnd = onDragEnd
-        )
 
     /**
      * Converts dp to pixels for the current screen.
