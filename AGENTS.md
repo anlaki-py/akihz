@@ -6,7 +6,7 @@
 - After every task that touches code, run the `cleanup` skill before marking the work done. Use it to scope the session diff, check for dead code / duplicate logic / unnecessary complexity / scope creep, and verify each finding before removing anything.
 
 ## Code Structure Rules
-1. **File Limit**: Maximum 200 lines per Kotlin/Java file. (Note: It is acceptable if the file is slightly longer than 200 lines, or even if it is necessary to have many lines. Only split the file if having a large number of lines does not make sense.)
+1. **File Guideline**: Aim for about 350 lines per Kotlin/Java file. Treat this as a guideline, not a hard error. Split a file when it holds mixed jobs. Keep tightly linked logic together if a split would only create tiny fragments.
 2. **Package Structure**:
    - `data/` - models, repositories, data sources
    - `domain/` - use cases, business logic
