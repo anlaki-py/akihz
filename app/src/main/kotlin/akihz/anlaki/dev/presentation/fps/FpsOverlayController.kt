@@ -1,123 +1,91 @@
 package akihz.anlaki.dev.presentation.fps
 
-import akihz.anlaki.dev.data.PreferencesHelper
 import android.content.Context
-import android.graphics.drawable.GradientDrawable
-import android.view.Gravity
-import android.view.View
-import android.widget.CheckBox
-import android.widget.LinearLayout
-import android.widget.RadioGroup
-import android.widget.SeekBar
-import android.widget.TextView
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import akihz.anlaki.dev.data.PreferencesHelper
 import akihz.anlaki.dev.data.fps.LayerStat
 import akihz.anlaki.dev.data.fps.OverlayPillColor
 import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.data.fps.TimeStatsParser
+import java.util.Locale
 import timber.log.Timber
 
 /**
  * Floating FPS pill with expandable options panel.
  *
- * Coordinates three collaborators: [FpsPillRenderer] paints the pill,
- * [FpsLayerChoices] owns the layer pick list, and [FpsOverlayPanelFactory]
- * builds the options views. Window hosting and drag handling stay here.
- * Style values persist via prefs.
+ * Same public API as the old View version. Content is Compose hosted in
+ * a ComposeView, so the app uses one UI toolkit everywhere. Style and
+ * selection state live here as Compose state and persist via prefs.
  */
 class FpsOverlayController(context: Context) {
     private val appContext = context.applicationContext
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val handler = Handler(Looper.getMainLooper())
     private val window = FpsOverlayWindow(appContext)
-    private val layerChoices = FpsLayerChoices(appContext)
+    private val density = appContext.resources.displayMetrics.density
 
-    private var fpsView: TextView? = null
-    private var optionsPanel: LinearLayout? = null
-    private var layerGroup: RadioGroup? = null
-    private var overlaySizeLabel: TextView? = null
-    private var overlaySizeSlider: SeekBar? = null
-    private var overlayAlphaLabel: TextView? = null
-    private var overlayAlphaSlider: SeekBar? = null
-    private var showUnitBox: CheckBox? = null
+    private var composeView: ComposeView? = null
+    private var pillText by mutableStateOf("Connecting…")
+    private var rows by mutableStateOf(listOf(FpsLayerRow(null, "Auto", true)))
+    private var style by mutableStateOf(FpsPillStyle.load())
+    private var expanded by mutableStateOf(false)
     private var currentPackage: String? = null
     private var selectedLayer: String? = null
-    private var optionsExpanded = false
-    private var style = FpsPillStyle.load()
-    private var pillBackground: GradientDrawable? = null
+    private var dragRemainderX = 0f
+    private var dragRemainderY = 0f
 
-    /** Builds the pill and panel, then shows the overlay window. */
+    /** Builds the Compose content, then shows the overlay window. */
     fun attach() {
-        if (window.root != null) {
+        if (composeView != null) {
             Timber.d("FPS overlay already attached")
             return
         }
         Timber.i("Attaching FPS overlay")
-
-        val layout = LinearLayout(appContext).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
-        val pillView = TextView(appContext).apply {
-            text = "Connecting…"
-            gravity = Gravity.CENTER
-            includeFontPadding = false
-            minWidth = 0
-            minimumWidth = 0
-            setPadding(dp(16), dp(12), dp(16), dp(12))
-            background = GradientDrawable().also { pillBackground = it }
-        }
-        pillView.setOnClickListener { toggleOptionsPanel() }
-        pillView.setOnTouchListener(window.dragListener { keepOnScreen() })
-        layout.addView(pillView)
-
         style = FpsPillStyle.load()
         selectedLayer = PreferencesHelper.fpsSelectedLayer
-        val views = FpsOverlayPanelFactory.build(
-            context = appContext,
-            style = style,
-            onScaleStop = { setScale(it) },
-            onAlphaStop = { setAlpha(it) },
-            onUnit = { setShowUnit(it) }
-        )
-        layout.addView(views.panel)
+        pillText = "Connecting…"
+        rows = listOf(FpsLayerRow(null, "Auto", selectedLayer == null))
+        expanded = false
 
-        fpsView = pillView
-        optionsPanel = views.panel
-        layerGroup = views.choices
-        overlaySizeLabel = views.sizeLabel
-        overlaySizeSlider = views.sizeSlider
-        overlayAlphaLabel = views.alphaLabel
-        overlayAlphaSlider = views.alphaSlider
-        showUnitBox = views.unitBox
-
-        // Apply scale and style after views are assigned
-        fpsView?.let { FpsPillRenderer.applyScale(appContext, it, style) }
-        applyStyle()
-
-        if (!window.show(layout)) {
-            fpsView = null
-            optionsPanel = null
-            layerGroup = null
+        val view = ComposeView(appContext).apply {
+            setContent {
+                FpsOverlayContent(
+                    text = pillText,
+                    style = style,
+                    expanded = expanded,
+                    layers = rows,
+                    onTapPill = { toggleOptionsPanel() },
+                    onDrag = { dxPx, dyPx -> onDragFrame(dxPx, dyPx) },
+                    onDragEnd = { keepOnScreen() },
+                    onScaleChange = { style = style.copy(scalePercent = it) },
+                    onScaleDone = { setScale(it) },
+                    onAlphaChange = { style = style.copy(alphaPercent = it) },
+                    onAlphaDone = { setAlpha(it) },
+                    onUnitChange = { setShowUnit(it) },
+                    onLayerSelect = { setSelectedLayer(it) }
+                )
+            }
+        }
+        composeView = view
+        if (!window.show(view)) {
+            composeView = null
             return
         }
         // Also ensure visible after a short delay for first draw
         handler.postDelayed({ keepOnScreen() }, 300)
     }
 
-    /** Hides the overlay and clears cached views. */
+    /** Hides the overlay and disposes the composition. */
     fun detach() {
-        if (window.root == null) return
+        if (composeView == null) return
         window.hide()
-        fpsView = null
-        pillBackground = null
-        optionsPanel = null
-        layerGroup = null
-        overlaySizeLabel = null
-        overlaySizeSlider = null
-        overlayAlphaLabel = null
-        overlayAlphaSlider = null
-        showUnitBox = null
-        layerChoices.reset()
-        optionsExpanded = false
+        composeView?.disposeComposition()
+        composeView = null
+        expanded = false
     }
 
     /**
@@ -126,17 +94,14 @@ class FpsOverlayController(context: Context) {
      */
     fun setStatus(text: String) {
         Timber.d("FPS overlay status: $text")
-        handler.post {
-            fpsView?.text = text
-            refitPillToText()
-        }
+        handler.post { pillText = text }
     }
 
     /** Shows FPS for the foreground app and refreshes layer choices. */
     fun display(foreground: String?, layers: List<LayerStat>) {
         if (foreground == null) {
             setStatus(FpsPillRenderer.formatFps(0.0, style.showUnit))
-            handler.post { updateChoices(emptyList()) }
+            handler.post { rows = autoRow() }
             return
         }
         if (foreground != currentPackage) {
@@ -145,17 +110,15 @@ class FpsOverlayController(context: Context) {
         }
         if (layers.isEmpty()) {
             setStatus(FpsPillRenderer.formatFps(0.0, style.showUnit))
-            handler.post { updateChoices(emptyList()) }
+            handler.post { rows = autoRow() }
             return
         }
-        val chosen = layerChoices.choose(layers, selectedLayer)
-        val refreshRate = displayRefreshRate()
-        val shownFps = TimeStatsParser.displayFps(chosen.fps, refreshRate)
+        val chosen = chooseOverlayLayer(layers, selectedLayer)
+        val shownFps = TimeStatsParser.displayFps(chosen.fps, displayRefreshRate())
         val text = FpsPillRenderer.formatFps(shownFps, style.showUnit)
         handler.post {
-            fpsView?.text = text
-            refitPillToText()
-            updateChoices(layers)
+            pillText = text
+            rows = layerRows(layers)
         }
     }
 
@@ -169,10 +132,7 @@ class FpsOverlayController(context: Context) {
         PreferencesHelper.fpsOverlayScale = clamped
         Timber.i("FPS overlay scale $clamped%")
         handler.post {
-            overlaySizeSlider?.progress = clamped
-            overlaySizeLabel?.text = "Overlay size: $clamped%"
-            fpsView?.let { FpsPillRenderer.applyScale(appContext, it, style) }
-            refitPillToText()
+            style = style.copy(scalePercent = clamped)
             keepOnScreen()
         }
     }
@@ -185,9 +145,8 @@ class FpsOverlayController(context: Context) {
         selectedLayer = stableName
         PreferencesHelper.fpsSelectedLayer = stableName
         Timber.i("FPS layer selected: ${stableName ?: "Auto"}")
-        // Update radio check state
         handler.post {
-            layerGroup?.let { layerChoices.updateSelection(it, selectedLayer) }
+            rows = rows.map { it.copy(selected = it.stableName == selectedLayer) }
         }
     }
 
@@ -195,7 +154,7 @@ class FpsOverlayController(context: Context) {
     fun updateSelectedLayerFromPrefs() {
         selectedLayer = PreferencesHelper.fpsSelectedLayer
         handler.post {
-            layerGroup?.let { layerChoices.updateSelection(it, selectedLayer) }
+            rows = rows.map { it.copy(selected = it.stableName == selectedLayer) }
         }
     }
 
@@ -207,13 +166,6 @@ class FpsOverlayController(context: Context) {
     fun applyStyleFromPrefs() {
         style = FpsPillStyle.load()
         Timber.i("FPS overlay style alpha=${style.alphaPercent} unit=${style.showUnit} color=${style.pillColor}")
-        handler.post {
-            overlayAlphaSlider?.progress = style.alphaPercent
-            overlayAlphaLabel?.text = "Overlay opacity: ${style.alphaPercent}%"
-            val box = showUnitBox
-            if (box != null && box.isChecked != style.showUnit) box.isChecked = style.showUnit
-            applyStyle()
-        }
     }
 
     /**
@@ -226,11 +178,6 @@ class FpsOverlayController(context: Context) {
         style = style.copy(alphaPercent = clamped)
         PreferencesHelper.fpsOverlayAlpha = clamped
         Timber.i("FPS overlay alpha $clamped%")
-        handler.post {
-            overlayAlphaSlider?.progress = clamped
-            overlayAlphaLabel?.text = "Overlay opacity: $clamped%"
-            applyStyle()
-        }
     }
 
     /**
@@ -241,12 +188,6 @@ class FpsOverlayController(context: Context) {
     fun setShowUnit(enabled: Boolean) {
         style = style.copy(showUnit = enabled)
         PreferencesHelper.fpsShowUnit = enabled
-        handler.post {
-            val box = showUnitBox
-            if (box != null && box.isChecked != enabled) box.isChecked = enabled
-            applyStyle()
-            refitPillToText()
-        }
     }
 
     /**
@@ -257,7 +198,6 @@ class FpsOverlayController(context: Context) {
     fun setPillColor(color: OverlayPillColor) {
         style = style.copy(pillColor = color)
         PreferencesHelper.fpsPillColor = color
-        handler.post { applyStyle() }
     }
 
     /**
@@ -268,7 +208,6 @@ class FpsOverlayController(context: Context) {
     fun setRectShape(rectangular: Boolean) {
         style = style.copy(rectangularShape = rectangular)
         PreferencesHelper.fpsRectShape = rectangular
-        handler.post { applyStyle() }
     }
 
     /**
@@ -279,56 +218,50 @@ class FpsOverlayController(context: Context) {
     fun setPillOutline(enabled: Boolean) {
         style = style.copy(pillOutline = enabled)
         PreferencesHelper.fpsPillOutline = enabled
-        handler.post { applyStyle() }
     }
 
     private fun toggleOptionsPanel() {
-        optionsExpanded = !optionsExpanded
-        Timber.i("FPS overlay options ${if (optionsExpanded) "opened" else "closed"}")
-        optionsPanel?.visibility = if (optionsExpanded) View.VISIBLE else View.GONE
-        window.root?.post { keepOnScreen() }
+        expanded = !expanded
+        Timber.i("FPS overlay options ${if (expanded) "opened" else "closed"}")
+        window.refit()
         handler.postDelayed({ keepOnScreen() }, 100)
     }
 
-    private fun updateChoices(layers: List<LayerStat>) {
-        val group = layerGroup ?: return
-        layerChoices.updateChoices(
-            group = group,
-            layers = layers,
-            selectedLayer = selectedLayer,
-            onSelect = {
-                selectedLayer = it
-                PreferencesHelper.fpsSelectedLayer = it
-            },
-            refreshRate = { displayRefreshRate() },
-            onChanged = { keepOnScreen() }
-        )
+    private fun onDragFrame(dxPx: Float, dyPx: Float) {
+        val pos = window.position() ?: return
+        dragRemainderX += dxPx / density
+        dragRemainderY += dyPx / density
+        val dx = dragRemainderX.toInt()
+        val dy = dragRemainderY.toInt()
+        dragRemainderX -= dx
+        dragRemainderY -= dy
+        if (dx != 0 || dy != 0) {
+            window.moveTo(pos.first + dx, pos.second + dy)
+        }
     }
 
-    private fun applyStyle() {
-        val view = fpsView ?: return
-        val background = pillBackground ?: return
-        FpsPillRenderer.applyStyle(appContext, view, background, style)
-    }
+    private fun autoRow(): List<FpsLayerRow> =
+        listOf(FpsLayerRow(null, "Auto", selectedLayer == null))
 
-    /**
-     * Forces the pill background to fit its text, then re-runs window layout
-     * so a shrink actually reaches the screen.
-     */
-    private fun refitPillToText() {
-        val pill = fpsView ?: return
-        if (FpsPillRenderer.refitPillToText(pill)) refitWindow()
+    private fun layerRows(layers: List<LayerStat>): List<FpsLayerRow> {
+        val rate = displayRefreshRate()
+        val out = ArrayList<FpsLayerRow>(layers.size + 1)
+        out += FpsLayerRow(null, "Auto", selectedLayer == null)
+        for (layer in layers) {
+            val fps = TimeStatsParser.displayFps(layer.fps, rate)
+            out += FpsLayerRow(
+                stableName = layer.stableName,
+                label = layer.shortName() + String.format(Locale.US, "  %.1f", fps),
+                selected = layer.stableName == selectedLayer
+            )
+        }
+        return out
     }
-
-    /** Re-runs window layout so a shrink actually reaches the screen. */
-    private fun refitWindow() = window.refit()
 
     private fun displayRefreshRate(): Double =
         FpsPillRenderer.displayRefreshRate(appContext)
 
     private fun keepOnScreen() = window.keepOnScreen()
-
-    private fun dp(value: Int): Int = window.dp(value)
 
     companion object {
         const val SCALE_MIN = 50
