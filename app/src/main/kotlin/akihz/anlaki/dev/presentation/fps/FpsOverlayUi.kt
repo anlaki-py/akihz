@@ -22,8 +22,11 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -135,46 +138,54 @@ private fun FpsPill(
  * Drag when the pointer moves past touch slop, tap otherwise.
  *
  * Mirrors the old View touch listener so a tap still opens the panel
- * while a drag moves the window without clicking.
+ * while a drag moves the window without clicking. Callbacks stay fresh
+ * through rememberUpdatedState with a fixed key, so the FPS text ticking
+ * every 500 ms never restarts a drag in progress. That restart was the
+ * lag: each recomposition reset the gesture and the pill stuttered.
  */
 private fun Modifier.overlayDrag(
     touchSlopPx: Float,
     onDrag: (dxPx: Float, dyPx: Float) -> Unit,
     onDragEnd: () -> Unit,
     onTap: () -> Unit
-): Modifier = pointerInput(touchSlopPx, onDrag, onDragEnd, onTap) {
-    val slop = touchSlopPx
-    awaitEachGesture {
-        val down = awaitFirstDown()
-        var moved = false
-        var totalX = 0f
-        var totalY = 0f
-        var done = false
-        while (!done) {
-            val event = awaitPointerEvent()
-            val change = event.changes.firstOrNull() ?: break
-            if (!change.pressed) {
-                done = true
-                break
-            }
-            val dx = change.position.x - change.previousPosition.x
-            val dy = change.position.y - change.previousPosition.y
-            totalX += dx
-            totalY += dy
-            if (!moved && kotlin.math.hypot(totalX.toDouble(), totalY.toDouble()) > slop) {
-                moved = true
+): Modifier = composed {
+    val latestDrag by rememberUpdatedState(onDrag)
+    val latestEnd by rememberUpdatedState(onDragEnd)
+    val latestTap by rememberUpdatedState(onTap)
+    pointerInput(touchSlopPx) {
+        val slop = touchSlopPx
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            var moved = false
+            var totalX = 0f
+            var totalY = 0f
+            var done = false
+            while (!done) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull() ?: break
+                if (!change.pressed) {
+                    done = true
+                    break
+                }
+                val dx = change.position.x - change.previousPosition.x
+                val dy = change.position.y - change.previousPosition.y
+                totalX += dx
+                totalY += dy
+                if (!moved && kotlin.math.hypot(totalX.toDouble(), totalY.toDouble()) > slop) {
+                    moved = true
+                }
+                if (moved) {
+                    latestDrag(dx, dy)
+                    change.consume()
+                }
+                if (event.changes.all { !it.pressed }) done = true
             }
             if (moved) {
-                onDrag(dx, dy)
-                change.consume()
+                latestEnd()
+            } else {
+                down.consume()
+                latestTap()
             }
-            if (event.changes.all { !it.pressed }) done = true
-        }
-        if (moved) {
-            onDragEnd()
-        } else {
-            down.consume()
-            onTap()
         }
     }
 }
