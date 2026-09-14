@@ -1,4 +1,4 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.fps
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable

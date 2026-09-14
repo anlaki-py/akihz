@@ -6,7 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import akihz.anlaki.dev.data.AppUpdateDownloader
 import akihz.anlaki.dev.data.UpdateDownloadStore
-import akihz.anlaki.dev.utils.UpdateNotification
+import akihz.anlaki.dev.presentation.notifications.UpdateNotification
 import kotlinx.coroutines.launch
 
 /** Bridges an update notification to Android's permission and package installer screens. */

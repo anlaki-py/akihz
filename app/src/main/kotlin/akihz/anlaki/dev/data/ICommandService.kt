@@ -1,4 +1,4 @@
-package akihz.anlaki.dev
+package akihz.anlaki.dev.data
 
 import android.os.Binder
 import android.os.IBinder
@@ -58,7 +58,7 @@ interface ICommandService : IInterface {
         }
 
         companion object {
-            const val DESCRIPTOR = "akihz.anlaki.dev.ICommandService"
+            const val DESCRIPTOR = "akihz.anlaki.dev.data.ICommandService"
             const val TRANSACTION_runCommand = IBinder.FIRST_CALL_TRANSACTION + 0
             const val TRANSACTION_runSettingsCommand = IBinder.FIRST_CALL_TRANSACTION + 1
             const val TRANSACTION_destroy = IBinder.FIRST_CALL_TRANSACTION + 2

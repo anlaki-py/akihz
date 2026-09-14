@@ -1,7 +1,7 @@
 package akihz.anlaki.dev.data.fps
 
 import android.content.Context
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.data.PreferencesHelper
 import java.util.Date
 import java.util.Locale
 

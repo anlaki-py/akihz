@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.data.PreferencesHelper
 
 /**
  * Refresh-rate engine controls.
