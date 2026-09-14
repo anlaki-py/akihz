@@ -2,6 +2,7 @@ package akihz.anlaki.dev.presentation.fps
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.view.Choreographer
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -21,6 +22,7 @@ internal class FpsOverlayWindow(context: Context) {
     var root: View? = null
         private set
     private var params: WindowManager.LayoutParams? = null
+    private var moveFrameScheduled = false
 
     /** Adds [view] to the window at the default position. False when add failed. */
     fun show(view: View): Boolean {
@@ -66,16 +68,26 @@ internal class FpsOverlayWindow(context: Context) {
     /**
      * Moves the window to [x] and [y] in pixels.
      *
-     * Called on every drag frame, mirroring the old touch listener.
+     * Touch events arrive faster than the screen refreshes, and every
+     * layout call crosses into the window manager. Params update at once,
+     * but the layout call runs at most once per frame with the latest
+     * position. That keeps drags light.
      */
     fun moveTo(x: Int, y: Int) {
         val p = params ?: return
-        val view = root ?: return
+        if (root == null) return
         p.x = x
         p.y = y
-        try {
-            windowManager.updateViewLayout(view, p)
-        } catch (_: Exception) {}
+        if (moveFrameScheduled) return
+        moveFrameScheduled = true
+        Choreographer.getInstance().postFrameCallback {
+            moveFrameScheduled = false
+            val view = root ?: return@postFrameCallback
+            val current = params ?: return@postFrameCallback
+            try {
+                windowManager.updateViewLayout(view, current)
+            } catch (_: Exception) {}
+        }
     }
 
     /** Re-runs window layout so a size change actually reaches the screen. */
