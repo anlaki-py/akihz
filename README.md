@@ -139,7 +139,9 @@ More projects by the developer are available at [anlaki.dev](https://anlaki.dev/
 This is a personal app I vibe-coded to solve a problem I had. It is provided as
 is, with no promise of quality, reliability, compatibility, maintenance,
 support, or future updates. Development may slow down or stop permanently at
-any time and without notice.
+any time and without notice. Donations through
+[Ko-fi](https://ko-fi.com/unluky) help keep maintenance going and make it less
+likely the project gets abandoned. They do not buy support or guaranteed updates.
 
 Please treat this repository as something to download and use at your own risk,
 or fork and maintain yourself. Do not open issues asking for support, bug fixes,
