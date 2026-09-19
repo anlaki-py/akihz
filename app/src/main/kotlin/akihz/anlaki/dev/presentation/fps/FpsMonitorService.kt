@@ -1,5 +1,6 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.fps
 
+import akihz.anlaki.dev.data.PreferencesHelper
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -35,6 +36,7 @@ class FpsMonitorService : Service() {
     private var stopping = false
     private var started = false
 
+    /** Creates the channel and loads prefs for the monitor. */
     override fun onCreate() {
         super.onCreate()
         FpsMonitorNotification.createChannel(this)
@@ -87,6 +89,7 @@ class FpsMonitorService : Service() {
         )
     }
 
+    /** Routes start, stop, style, layer, and logging actions. */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             null -> ensureStarted()
@@ -259,6 +262,7 @@ class FpsMonitorService : Service() {
         logger?.append(sb.toString().trim())
     }
 
+    /** Stops sampling, saves logs, hides the overlay, and frees Shizuku. */
     override fun onDestroy() {
         stopping = true
         samplingJob?.cancel()
@@ -278,6 +282,7 @@ class FpsMonitorService : Service() {
         super.onDestroy()
     }
 
+    /** Returns null because clients never bind to this service. */
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun safeUid(): Int = try { ShizukuHelper.getUid() } catch (_: Exception) { -1 }
@@ -299,6 +304,10 @@ class FpsMonitorService : Service() {
         const val EXTRA_LAYER = "layer"
         private const val OWNER = "fps_monitor"
 
+        /**
+         * Starts the monitor as a foreground service.
+         * @param context used to start the service
+         */
         fun start(context: android.content.Context) {
             val intent = Intent(context, FpsMonitorService::class.java)
             try {
@@ -308,6 +317,10 @@ class FpsMonitorService : Service() {
             }
         }
 
+        /**
+         * Requests a monitor stop through the service action.
+         * @param context used to send the stop intent
+         */
         fun stop(context: android.content.Context) {
             context.startService(Intent(context, FpsMonitorService::class.java).apply { action = ACTION_STOP })
         }

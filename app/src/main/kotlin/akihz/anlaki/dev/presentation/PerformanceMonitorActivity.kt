@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class PerformanceMonitorActivity : ComponentActivity() {
+    /** Creates the activity and shows performance monitoring. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

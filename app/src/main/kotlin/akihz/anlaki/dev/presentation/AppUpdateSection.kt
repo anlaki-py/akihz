@@ -29,9 +29,9 @@ import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateNotification
-import akihz.anlaki.dev.utils.UpdateAvailableNotification
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.notifications.UpdateNotification
+import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -70,6 +70,10 @@ fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
         mutableLongStateOf(restoredDownload?.downloadId ?: -1L)
     }
 
+    /**
+     * Starts a system download for the given update.
+     * @param update release to download
+     */
     fun enqueueUpdate(update: AppUpdate) {
         runCatching { downloader.enqueue(update) }
             .onSuccess {
@@ -98,6 +102,7 @@ fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
         }
     }
 
+    /** Checks the repo for the latest release on the current channel. */
     fun checkForUpdate() {
         statusText = "Checking for updates…"
         scope.launch {

@@ -13,6 +13,8 @@ import android.os.Build
  * - **Motorola/Sony/ASUS**: Standard AOSP keys
  * - **Google Pixel**: Standard AOSP keys + `smooth_display_entry_point`
  * - **Stock Android / Others**: `user_refresh_rate`, `peak_refresh_rate` + `min_refresh_rate`
+ *
+ * Vendor key tables live in [OemKeyCatalog]. This file keeps models, routing, and detection.
  */
 object OemSettingsStrategy {
 
@@ -52,17 +54,17 @@ object OemSettingsStrategy {
      */
     fun resolve(): KeySet {
         return when {
-            isXiaomi() -> xiaomiKeySet()
-            isSamsung() -> samsungKeySet()
-            isOnePlus() -> onePlusKeySet()
-            isOppo() -> oppoKeySet()
-            isVivo() -> vivoKeySet()
-            isRealme() -> realmeKeySet()
-            isAsus() -> asusKeySet()
-            isMotorola() -> motorolaKeySet()
-            isSony() -> sonyKeySet()
-            isPixel() -> pixelKeySet()
-            else -> aospKeySet()
+            isXiaomi() -> OemKeyCatalog.xiaomi()
+            isSamsung() -> OemKeyCatalog.samsung()
+            isOnePlus() -> OemKeyCatalog.onePlus()
+            isOppo() -> OemKeyCatalog.oppo()
+            isVivo() -> OemKeyCatalog.vivo()
+            isRealme() -> OemKeyCatalog.realme()
+            isAsus() -> OemKeyCatalog.asus()
+            isMotorola() -> OemKeyCatalog.motorola()
+            isSony() -> OemKeyCatalog.sony()
+            isPixel() -> OemKeyCatalog.pixel()
+            else -> OemKeyCatalog.aosp()
         }
     }
 
@@ -71,17 +73,17 @@ object OemSettingsStrategy {
      */
     fun resolveByName(oemName: String): KeySet {
         return when (oemName.lowercase()) {
-            "xiaomi", "redmi", "xiaomi / redmi" -> xiaomiKeySet()
-            "samsung" -> samsungKeySet()
-            "oneplus" -> onePlusKeySet()
-            "oppo" -> oppoKeySet()
-            "vivo", "iqoo", "vivo / iqoo" -> vivoKeySet()
-            "realme" -> realmeKeySet()
-            "asus", "rog", "asus / rog" -> asusKeySet()
-            "motorola", "moto" -> motorolaKeySet()
-            "sony" -> sonyKeySet()
-            "google", "pixel", "google pixel" -> pixelKeySet()
-            "aosp", "stock", "generic", "aosp / stock" -> aospKeySet()
+            "xiaomi", "redmi", "xiaomi / redmi" -> OemKeyCatalog.xiaomi()
+            "samsung" -> OemKeyCatalog.samsung()
+            "oneplus" -> OemKeyCatalog.onePlus()
+            "oppo" -> OemKeyCatalog.oppo()
+            "vivo", "iqoo", "vivo / iqoo" -> OemKeyCatalog.vivo()
+            "realme" -> OemKeyCatalog.realme()
+            "asus", "rog", "asus / rog" -> OemKeyCatalog.asus()
+            "motorola", "moto" -> OemKeyCatalog.motorola()
+            "sony" -> OemKeyCatalog.sony()
+            "google", "pixel", "google pixel" -> OemKeyCatalog.pixel()
+            "aosp", "stock", "generic", "aosp / stock" -> OemKeyCatalog.aosp()
             else -> resolve()
         }
     }
@@ -89,238 +91,7 @@ object OemSettingsStrategy {
     /**
      * Returns a list of all supported OEM names for manual override.
      */
-    fun getSupportedOemNames(): List<String> = listOf(
-        "Auto-detect",
-        "Xiaomi / Redmi",
-        "Samsung",
-        "OnePlus",
-        "OPPO",
-        "vivo / iQOO",
-        "realme",
-        "ASUS / ROG",
-        "Motorola",
-        "Sony",
-        "Google Pixel",
-        "AOSP / Stock"
-    )
-
-    private fun xiaomiKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SECURE, "miui_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SECURE, "miui_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SECURE, "miui_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
-        ),
-        supportsMode = true,
-        modeKey = SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
-    )
-
-    private fun samsungKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode")
-        ),
-        supportsMode = true,
-        modeKey = SettingsKey(Namespace.SECURE, "refresh_rate_mode")
-    )
-
-    private fun onePlusKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode"),
-            SettingsKey(Namespace.SYSTEM, "user_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode"),
-            SettingsKey(Namespace.SYSTEM, "user_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "refresh_rate_mode")
-        ),
-        supportsMode = true,
-        modeKey = SettingsKey(Namespace.SECURE, "refresh_rate_mode")
-    )
-
-    private fun oppoKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate")
-        )
-    )
-
-    private fun vivoKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SECURE, "active"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SECURE, "active"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "refresh_rate_mode")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "active")
-        )
-    )
-
-    private fun realmeKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate")
-        )
-    )
-
-    private fun asusKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate")
-        )
-    )
-
-    private fun motorolaKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate")
-        )
-    )
-
-    private fun sonyKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate")
-        )
-    )
-
-    private fun pixelKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "smooth_display_entry_point"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "smooth_display_entry_point"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate")
-        )
-    )
-
-    private fun aospKeySet(): KeySet = KeySet(
-        readKeys = listOf(
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        writeKeys = listOf(
-            SettingsKey(Namespace.SECURE, "user_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.GLOBAL, "user_preferred_refresh_rate")
-        ),
-        lockKeys = listOf(
-            SettingsKey(Namespace.SYSTEM, "peak_refresh_rate"),
-            SettingsKey(Namespace.SYSTEM, "min_refresh_rate"),
-            SettingsKey(Namespace.SECURE, "user_refresh_rate")
-        )
-    )
+    fun getSupportedOemNames(): List<String> = OemKeyCatalog.supportedNames()
 
     private fun isXiaomi(): Boolean {
         return Build.MANUFACTURER.equals("xiaomi", ignoreCase = true) ||

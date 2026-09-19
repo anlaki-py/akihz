@@ -82,12 +82,28 @@ class CrashLogStore @Inject constructor(
             } ?: emptyList()
     }
 
+    /**
+     * Reads the text of a crash entry.
+     * @return file content, or empty string when unreadable.
+     */
     fun readContent(entry: CrashEntry): String = runCatching { entry.file.readText() }.getOrElse { "" }
 
+    /**
+     * Reads the text of a crash file.
+     * @return file content, or empty string when unreadable.
+     */
     fun readContent(file: File): String = runCatching { file.readText() }.getOrElse { "" }
 
+    /**
+     * Deletes one crash file.
+     * @return true when the file was deleted.
+     */
     fun delete(entry: CrashEntry): Boolean = runCatching { entry.file.delete() }.getOrDefault(false)
 
+    /**
+     * Deletes all crash files.
+     * @return number of files deleted.
+     */
     fun deleteAll(): Int {
         val dir = File(context.filesDir, "crash_logs")
         val files = dir.listFiles() ?: return 0

@@ -14,7 +14,8 @@ import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.domain.usecase.GetTileRatesUseCase
+import akihz.anlaki.dev.data.PreferencesHelper
 import javax.inject.Inject
 
 data class MainUiState(
@@ -30,7 +31,8 @@ data class MainUiState(
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val refreshRateRepository: RefreshRateRepository
+    private val refreshRateRepository: RefreshRateRepository,
+    private val getTileRates: GetTileRatesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -50,6 +52,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** Marks Shizuku as bound and loads rates. */
     fun onShizukuBound() {
         _uiState.update { it.copy(isServiceBound = true, isLoading = true) }
         viewModelScope.launch(Dispatchers.IO) {
@@ -59,32 +62,32 @@ class MainViewModel @Inject constructor(
         loadCurrentRate()
     }
 
+    /**
+     * Updates the Shizuku ready flag.
+     * @param ready true when Shizuku is ready
+     */
     fun onShizukuReadyChanged(ready: Boolean) {
         _uiState.update { it.copy(isShizukuReady = ready) }
     }
 
+    /** Clears the current error message. */
     fun onErrorDismissed() {
         _uiState.update { it.copy(error = null) }
     }
 
+    /** Loads supported rates and tile exclusions. */
     fun loadSupportedRates() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val result = withContext(Dispatchers.IO) {
-                refreshRateRepository.getSupportedRates()
-            }
-            result.onSuccess { rates ->
-                val excludedRates = TileRateSelection.recoverEmptySelection(
-                    rates,
-                    PreferencesHelper.excludedTileRates
-                )
-                if (excludedRates != PreferencesHelper.excludedTileRates) {
-                    PreferencesHelper.excludedTileRates = excludedRates
+            val result = getTileRates(PreferencesHelper.excludedTileRates)
+            result.onSuccess { tileRates ->
+                if (tileRates.excludedRates != PreferencesHelper.excludedTileRates) {
+                    PreferencesHelper.excludedTileRates = tileRates.excludedRates
                 }
                 _uiState.update {
                     it.copy(
-                        supportedRates = rates,
-                        excludedTileRates = excludedRates,
+                        supportedRates = tileRates.allRates,
+                        excludedTileRates = tileRates.excludedRates,
                         isLoading = false
                     )
                 }
@@ -100,6 +103,7 @@ class MainViewModel @Inject constructor(
         loadCurrentRate()
     }
 
+    /** Loads the active refresh rate from the device. */
     fun loadCurrentRate() {
         if (!_uiState.value.isServiceBound) return
 
@@ -113,6 +117,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Applies the selected refresh rate.
+     * @param hz rate to apply
+     */
     fun selectRate(hz: Float) {
         val state = _uiState.value
         if (state.isLoading || !state.isServiceBound || !ShizukuHelper.hasPermission()) return
@@ -146,6 +154,7 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(excludedTileRates = excludedRates) }
     }
 
+    /** Restores adaptive system refresh rate settings. */
     fun resetToDefaults() {
         if (!ShizukuHelper.isBinderReady()) {
             _uiState.update { it.copy(error = "Shizuku is not running.") }
