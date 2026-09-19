@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.47] - 2026-09-19
+
 ### Changed
 
 - Rebuilt the FPS floating overlay to match the rest of the app. It looks and works the same.
