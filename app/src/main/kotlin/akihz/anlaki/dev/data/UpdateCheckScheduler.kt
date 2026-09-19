@@ -7,7 +7,6 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
-import akihz.anlaki.dev.utils.PreferencesHelper
 import java.util.concurrent.TimeUnit
 
 /** Keeps exactly one periodic update-check job aligned with the user's preference. */

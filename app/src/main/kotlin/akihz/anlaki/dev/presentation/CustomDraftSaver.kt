@@ -22,6 +22,10 @@ internal class CustomDraftSaver(
     @Volatile private var latest: CustomRefreshProfile? = null
     private val saveMutex = Mutex()
 
+    /**
+     * Schedules a delayed save for the given profile.
+     * @param profile profile to persist
+     */
     fun schedule(profile: CustomRefreshProfile) {
         latest = profile
         pendingJob?.cancel()
@@ -31,6 +35,7 @@ internal class CustomDraftSaver(
         }
     }
 
+    /** Cancels pending work and saves the latest profile now. */
     suspend fun flush() {
         pendingJob?.cancelAndJoin()
         latest?.let { persist(it) }

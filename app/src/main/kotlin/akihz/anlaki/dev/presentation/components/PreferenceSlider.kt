@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
+/** Shows a labeled slider with step buttons. */
 internal fun PreferenceSlider(
     title: String,
     value: Float,

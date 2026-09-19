@@ -17,6 +17,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    /**
+     * Provides the display manager data source.
+     * @param context app context for display access.
+     */
     @Provides
     @Singleton
     fun provideDisplayManagerDataSource(
@@ -25,10 +29,15 @@ object AppModule {
         return DisplayManagerDataSource(context)
     }
 
+    /** Provides the Shizuku helper singleton. */
     @Provides
     @Singleton
     fun provideShizukuHelper(): ShizukuHelper = ShizukuHelper
 
+    /**
+     * Provides the refresh rate repository.
+     * @param dataSource display data. @param shizukuHelper Shizuku bridge.
+     */
     @Provides
     @Singleton
     fun provideRefreshRateRepository(

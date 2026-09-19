@@ -7,6 +7,17 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.47] - 2026-09-19
+
+### Changed
+
+- Rebuilt the FPS floating overlay to match the rest of the app. It looks and works the same.
+- Dragging the FPS pill is smooth now. Live readings pause while you move it and catch up when you let go.
+
+### Fixed
+
+- Fixed the FPS monitor and refresh controls doing nothing after updating. The background helper now restarts with the new version.
+
 ## [0.0.46] - 2026-09-10
 
 ### Added

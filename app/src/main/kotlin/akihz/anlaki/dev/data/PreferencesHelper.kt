@@ -1,4 +1,4 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.data
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -66,6 +66,10 @@ object PreferencesHelper {
     /** Last successfully selected rate, observed across app and tile components. */
     val lastRateFlow: StateFlow<Float> = _lastRateFlow.asStateFlow()
 
+    /**
+     * Loads prefs on first call. Later calls do nothing.
+     * @param context used to open SharedPreferences.
+     */
     fun init(context: Context) {
         if (::prefs.isInitialized) return
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -257,6 +261,7 @@ object PreferencesHelper {
         get() = prefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
         set(value) = prefs.edit { putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, value) }
 
+    /** Clears the saved FPS target package and label. */
     fun clearFpsTarget() {
         prefs.edit {
             remove(KEY_FPS_TARGET_PACKAGE)
@@ -264,6 +269,7 @@ object PreferencesHelper {
         }
     }
 
+    /** Clears all saved prefs. */
     fun clear() {
         prefs.edit { clear() }
     }

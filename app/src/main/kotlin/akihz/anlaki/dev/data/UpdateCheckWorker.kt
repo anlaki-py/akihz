@@ -6,8 +6,7 @@ import androidx.work.WorkerParameters
 import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
-import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateAvailableNotification
+import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 import java.io.IOException
 
 /** Checks GitHub for a newer release and alerts once for each available version. */

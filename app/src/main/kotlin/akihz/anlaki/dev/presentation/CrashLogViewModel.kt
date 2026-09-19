@@ -66,6 +66,7 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /** Clears the selected crash preview. */
     fun clearSelection() {
         _uiState.value = _uiState.value.copy(selectedContent = null, selectedFileName = null)
     }
@@ -91,6 +92,10 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Saves the crash file to Downloads.
+     * @param entry crash to save
+     */
     fun saveToDownloads(entry: CrashEntry) {
         viewModelScope.launch {
             val result = runCatching { writeToDownloads(entry.file) }
@@ -103,6 +108,7 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /** Saves the selected crash to Downloads. */
     fun saveSelectedToDownloads() {
         val name = _uiState.value.selectedFileName ?: run {
             _uiState.value = _uiState.value.copy(message = "No crash selected")
@@ -115,6 +121,10 @@ class CrashLogViewModel @Inject constructor(
         saveToDownloads(entry)
     }
 
+    /**
+     * Shares the given crash file.
+     * @param entry crash to share
+     */
     fun shareEntry(entry: CrashEntry) {
         viewModelScope.launch {
             val uri = withContext(Dispatchers.IO) { shareableUri(entry.file) }
@@ -126,6 +136,7 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /** Shares the selected crash as a temp file. */
     fun shareSelected() {
         val content = _uiState.value.selectedContent ?: run {
             _uiState.value = _uiState.value.copy(message = "No crash selected")
@@ -143,6 +154,10 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Deletes the given crash file.
+     * @param entry crash to delete
+     */
     fun deleteEntry(entry: CrashEntry) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { crashLogStore.delete(entry) }
@@ -155,6 +170,7 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /** Deletes all stored crash files. */
     fun deleteAll() {
         viewModelScope.launch {
             val count = withContext(Dispatchers.IO) { crashLogStore.deleteAll() }
@@ -173,6 +189,7 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
+    /** Clears the transient status message. */
     fun consumeMessage() {
         _uiState.value = _uiState.value.copy(message = null)
     }

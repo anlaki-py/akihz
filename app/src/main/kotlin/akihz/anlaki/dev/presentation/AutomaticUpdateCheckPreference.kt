@@ -20,8 +20,8 @@ import androidx.core.content.ContextCompat
 import akihz.anlaki.dev.data.UpdateCheckScheduler
 import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
-import akihz.anlaki.dev.utils.PreferencesHelper
-import akihz.anlaki.dev.utils.UpdateAvailableNotification
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 
 /** Displays and applies the automatic update-check interval preference. */
 @Composable
@@ -38,6 +38,10 @@ internal fun AutomaticUpdateCheckPreference() {
         }
     }
 
+    /**
+     * Saves the new interval and reschedules background checks.
+     * @param selected interval to apply
+     */
     fun applyFrequency(selected: UpdateCheckFrequency) {
         frequency = selected
         PreferencesHelper.updateCheckFrequency = selected

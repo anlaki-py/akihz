@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.data
 
-import akihz.anlaki.dev.ICommandService
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.Executors
@@ -12,6 +11,7 @@ import java.util.concurrent.TimeUnit
  */
 class ICommandServiceImpl : ICommandService.Stub() {
 
+    /** Runs [command] through a shell and returns its output. */
     override fun runCommand(command: String): String {
         return execute(listOf("/system/bin/sh", "-c", command))
     }
@@ -57,10 +57,12 @@ class ICommandServiceImpl : ICommandService.Stub() {
         }
     }
 
+    /** Exits the user service process. */
     override fun destroy() {
         System.exit(0)
     }
 
+    /** Returns this process id. */
     override fun getPid(): Int = android.os.Process.myPid()
 
     private companion object {

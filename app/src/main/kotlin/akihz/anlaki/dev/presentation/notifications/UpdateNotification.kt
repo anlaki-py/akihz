@@ -1,6 +1,5 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation.notifications
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -58,14 +57,12 @@ object UpdateNotification {
     }
 
     private fun createChannel(context: Context) {
-        val channel = NotificationChannel(
+        NotificationChannels.ensure(
+            context,
             CHANNEL_ID,
             "App updates",
+            "Notifies when an akiHz update is ready to install",
             NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Notifies when an akiHz update is ready to install"
-        }
-        context.getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
+        )
     }
 }

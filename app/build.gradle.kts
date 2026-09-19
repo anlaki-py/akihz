@@ -124,6 +124,8 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.savedstate)
     implementation(libs.lifecycle.process)
     implementation(libs.androidx.core.ktx)
     implementation(libs.hilt.android)

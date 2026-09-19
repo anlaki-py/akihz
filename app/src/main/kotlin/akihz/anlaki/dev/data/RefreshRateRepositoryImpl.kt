@@ -2,7 +2,6 @@ package akihz.anlaki.dev.data
 
 import akihz.anlaki.dev.domain.repository.RefreshRateRepository
 import akihz.anlaki.dev.utils.ErrorType
-import akihz.anlaki.dev.utils.PreferencesHelper
 import akihz.anlaki.dev.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,16 +11,22 @@ class RefreshRateRepositoryImpl(
     private val shizukuHelper: ShizukuHelper
 ) : RefreshRateRepository {
 
+    /** Returns supported rates, or custom profile rates when enabled. */
     override fun getSupportedRates(): Result<List<Float>> {
         val customProfile = CustomProfileManager.profile()
         if (customProfile.enabled) return Result.success(customProfile.rates)
         return displayManagerDataSource.getSupportedRefreshRates()
     }
 
+    /** Returns the current display refresh rate. */
     override fun getCurrentRate(): Result<Float> {
         return displayManagerDataSource.getCurrentRefreshRate()
     }
 
+    /**
+     * Sets the refresh rate and saves it on success.
+     * @param hz rate in hertz.
+     */
     override suspend fun setRate(hz: Float): Result<Unit> = withContext(Dispatchers.IO) {
         val result = shizukuHelper.setRefreshRate(hz)
 
@@ -40,6 +45,7 @@ class RefreshRateRepositoryImpl(
         Result.success(Unit)
     }
 
+    /** Resets refresh rate settings to defaults. */
     override suspend fun resetToDefaults(): Result<Unit> = withContext(Dispatchers.IO) {
         shizukuHelper.resetRefreshRate()
     }

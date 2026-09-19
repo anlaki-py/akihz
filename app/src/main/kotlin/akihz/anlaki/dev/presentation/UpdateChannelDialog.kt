@@ -22,6 +22,7 @@ import akihz.anlaki.dev.domain.update.UpdateChannel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+/** Shows the update channel picker. */
 internal fun UpdateChannelDialog(
     selected: UpdateChannel,
     onSelect: (UpdateChannel) -> Unit,

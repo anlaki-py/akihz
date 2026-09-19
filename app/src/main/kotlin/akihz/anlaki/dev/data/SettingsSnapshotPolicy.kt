@@ -5,6 +5,10 @@ internal object SettingsSnapshotPolicy {
     private const val MAX_RATE_SNAPSHOTS = 7
     private const val MAX_TOTAL_SNAPSHOTS = MAX_RATE_SNAPSHOTS + 1
 
+    /**
+     * Trims snapshots to the baseline plus the newest rate entries.
+     * @return compacted snapshot list.
+     */
     fun compact(existing: List<SettingsSnapshot>): List<SettingsSnapshot> {
         val baselineIndex = existing.indexOfLast { it.label == BASELINE_LABEL }
         if (baselineIndex < 0) {
@@ -20,6 +24,10 @@ internal object SettingsSnapshotPolicy {
         return listOf(baseline.copy(isDiff = false)) + rates
     }
 
+    /**
+     * Adds one snapshot and trims the list to its size cap.
+     * @return captured snapshot with the retained list, or null without a baseline.
+     */
     fun merge(
         existing: List<SettingsSnapshot>,
         label: String,
@@ -41,6 +49,10 @@ internal object SettingsSnapshotPolicy {
         return SnapshotMerge(rateSnapshot, listOf(baseline.copy(isDiff = false)) + retainedRates)
     }
 
+    /**
+     * Returns a stored value, falling back to the baseline for diffs.
+     * @return value string, or null when missing.
+     */
     fun inferredValue(
         snapshots: List<SettingsSnapshot>,
         label: String,

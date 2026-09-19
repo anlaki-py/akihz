@@ -107,6 +107,10 @@ internal class UpdateVerificationGate {
     private val mutex = Mutex()
     private var cached: CachedVerification? = null
 
+    /**
+     * Runs verification once per download and reuses the cached result.
+     * @return true when the APK matches the checksum.
+     */
     suspend fun verify(
         downloadId: Long,
         expectedSha256: String,

@@ -16,6 +16,7 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class CrashLogActivity : ComponentActivity() {
+    /** Creates the activity and shows the crash log screen. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

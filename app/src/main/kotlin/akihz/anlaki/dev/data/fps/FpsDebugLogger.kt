@@ -1,7 +1,7 @@
 package akihz.anlaki.dev.data.fps
 
 import android.content.Context
-import akihz.anlaki.dev.utils.PreferencesHelper
+import akihz.anlaki.dev.data.PreferencesHelper
 import java.util.Date
 import java.util.Locale
 
@@ -16,6 +16,10 @@ class FpsDebugLogger(private val appContext: Context) {
     private var lastPersistMs = 0L
     private var enabled: Boolean = false
 
+    /**
+     * Turns debug logging on or off. Disabling clears the saved log.
+     * @param value true to enable logging.
+     */
     fun setEnabled(value: Boolean) {
         if (enabled == value) return
         if (!value) {
@@ -32,6 +36,10 @@ class FpsDebugLogger(private val appContext: Context) {
         PreferencesHelper.fpsDebugLoggingEnabled = enabled
     }
 
+    /**
+     * Restores the enabled flag and reloads the saved log.
+     * @param enabled whether logging starts on.
+     */
     fun init(enabled: Boolean) {
         this.enabled = enabled
         if (enabled) {
@@ -43,8 +51,13 @@ class FpsDebugLogger(private val appContext: Context) {
         }
     }
 
+    /** Returns true when debug logging is on. */
     fun isEnabled(): Boolean = enabled
 
+    /**
+     * Adds one timestamped line and persists slow or error lines at once.
+     * @param message line to add.
+     */
     @Synchronized
     fun append(message: String) {
         if (!enabled) return
@@ -56,6 +69,7 @@ class FpsDebugLogger(private val appContext: Context) {
         }
     }
 
+    /** Writes the buffer to prefs now. */
     @Synchronized
     fun persist() {
         if (!enabled) return

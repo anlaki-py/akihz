@@ -1,4 +1,4 @@
-package akihz.anlaki.dev.utils
+package akihz.anlaki.dev.presentation
 
 import android.content.Context
 import android.content.Intent
