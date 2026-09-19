@@ -27,7 +27,6 @@ class FpsOverlayController(context: Context) {
     private val appContext = context.applicationContext
     private val handler = Handler(Looper.getMainLooper())
     private val window = FpsOverlayWindow(appContext)
-    private val density = appContext.resources.displayMetrics.density
 
     private var composeView: ComposeView? = null
     private var overlayLifecycle: FpsOverlayLifecycle? = null
@@ -48,6 +47,7 @@ class FpsOverlayController(context: Context) {
     private var pendingStatus: String? = null
     private var cachedRefreshRate = 0.0
     private var cachedRateAtMs = 0L
+    private var positionBeforePanel: Pair<Int, Int>? = null
 
     /** Builds the Compose content, then shows the overlay window. */
     fun attach() {
@@ -66,6 +66,7 @@ class FpsOverlayController(context: Context) {
         pendingForeground = null
         pendingLayers = null
         pendingStatus = null
+        positionBeforePanel = null
 
         val lifecycle = FpsOverlayLifecycle().also { overlayLifecycle = it }
         lifecycle.resume()
@@ -109,6 +110,7 @@ class FpsOverlayController(context: Context) {
         pendingForeground = null
         pendingLayers = null
         pendingStatus = null
+        positionBeforePanel = null
         window.hide()
         composeView?.disposeComposition()
         composeView = null
@@ -269,20 +271,41 @@ class FpsOverlayController(context: Context) {
     }
 
     private fun toggleOptionsPanel() {
-        expanded = !expanded
-        Timber.i("FPS overlay options ${if (expanded) "opened" else "closed"}")
+        if (!expanded) {
+            positionBeforePanel = window.position()
+            expanded = true
+            Timber.i("FPS overlay options opened")
+            window.refit()
+            handler.postDelayed({ keepOnScreen() }, 100)
+            return
+        }
+        expanded = false
+        Timber.i("FPS overlay options closed")
         window.refit()
-        handler.postDelayed({ keepOnScreen() }, 100)
+        val restore = positionBeforePanel
+        positionBeforePanel = null
+        if (restore != null) {
+            handler.postDelayed({
+                window.moveTo(restore.first, restore.second)
+                keepOnScreen()
+            }, 100)
+        } else {
+            handler.postDelayed({ keepOnScreen() }, 100)
+        }
     }
 
     private fun onDragFrame(dxPx: Float, dyPx: Float) {
         // First drag frame pauses text updates until onDragEnd flushes them.
+        // Deltas arrive in physical pixels, same units as window params.
         isDragging = true
+        if (expanded) {
+            positionBeforePanel = null
+        }
         val pos = window.position() ?: return
-        dragRemainderX += dxPx / density
-        dragRemainderY += dyPx / density
-        val dx = dragRemainderX.toInt()
-        val dy = dragRemainderY.toInt()
+        dragRemainderX += dxPx
+        dragRemainderY += dyPx
+        val dx = Math.round(dragRemainderX)
+        val dy = Math.round(dragRemainderY)
         dragRemainderX -= dx
         dragRemainderY -= dy
         if (dx != 0 || dy != 0) {
