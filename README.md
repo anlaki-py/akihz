@@ -14,9 +14,17 @@
   <a href="app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-11%2B-green.svg" alt="Android 11+"></a>
   <a href="https://github.com/anlaki-py/akihz/releases/latest"><img src="https://img.shields.io/github/v/release/anlaki-py/akihz?label=release" alt="Latest release"></a>
   <a href="https://github.com/anlaki-py/akihz/releases"><img src="https://img.shields.io/github/downloads/anlaki-py/akihz/total?label=downloads" alt="Downloads"></a>
+  <a href="https://github.com/anlaki-py/akihz/commits"><img src="https://img.shields.io/github/last-commit/anlaki-py/akihz" alt="Last commit"></a>
+  <a href="https://ko-fi.com/unluky"><img src="https://img.shields.io/badge/Ko--fi-F16061?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+  <a href="https://shizuku.rikka.app/"><img src="https://img.shields.io/badge/Shizuku-required-orange" alt="Shizuku required"></a>
 </p>
 
 </div>
+
+
+
+
+
 
 ---
 
