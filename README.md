@@ -9,11 +9,13 @@
 
   <p>Add the tile to your control center. Tap to switch rate. Long press to open the app. It also shows live app FPS in a small overlay you can drag around.</p>
 
-  <p>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <a href="app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-11%2B-green.svg" alt="Android 11+"></a>
-    <a href="https://github.com/anlaki-py/akihz/releases/latest"><img src="https://img.shields.io/github/v/release/anlaki-py/akihz?label=release" alt="Latest release"></a>
-  </p>
+<p>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-11%2B-green.svg" alt="Android 11+"></a>
+  <a href="https://github.com/anlaki-py/akihz/releases/latest"><img src="https://img.shields.io/github/v/release/anlaki-py/akihz?label=release" alt="Latest release"></a>
+  <a href="https://github.com/anlaki-py/akihz/releases"><img src="https://img.shields.io/github/downloads/anlaki-py/akihz/total?label=downloads" alt="Downloads"></a>
+</p>
+
 </div>
 
 ---
