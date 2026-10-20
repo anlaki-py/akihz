@@ -52,15 +52,22 @@ class KeepAliveService : Service() {
     }
 
     companion object {
-        /** Starts the foreground keep-alive service if Android permits it and the toggle is enabled. */
-        fun start(context: Context) {
-            if (!isKeepAliveEnabled(context)) return
-            runCatching {
+        /**
+         * Starts the foreground keep-alive service if Android permits it and the toggle is enabled.
+         * @return true when Android accepted the start request
+         */
+        fun start(context: Context): Boolean {
+            if (!isKeepAliveEnabled(context)) return false
+            return try {
                 ContextCompat.startForegroundService(
                     context,
                     Intent(context, KeepAliveService::class.java)
                 )
-            }.onFailure { Timber.w(it, "Unable to start keep-alive service") }
+                true
+            } catch (e: Exception) {
+                Timber.w(e, "Unable to start keep-alive service")
+                false
+            }
         }
 
         /** Stops the foreground keep-alive service. */

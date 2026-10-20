@@ -11,8 +11,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import akihz.anlaki.dev.data.ShizukuHelper
 import akihz.anlaki.dev.data.fps.FpsDebugLogger
@@ -29,12 +34,13 @@ import java.util.Objects
 class FpsMonitorService : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val serviceOwner = "fps_monitor_${System.nanoTime()}"
     private var samplingJob: Job? = null
     private var overlay: FpsOverlayController? = null
     private var logger: FpsDebugLogger? = null
     private var lastLoggedForeground: String? = null
-    private var stopping = false
-    private var started = false
+    @Volatile private var stopping = false
+    @Volatile private var started = false
 
     /** Creates the channel and loads prefs for the monitor. */
     override fun onCreate() {
@@ -72,15 +78,21 @@ class FpsMonitorService : Service() {
             )
         }
         overlay = FpsOverlayController(this).also { it.attach() }
-        PreferencesHelper.fpsRunning = true
+        _isRunning.value = true
 
         ShizukuHelper.acquireUserService(
-            owner = OWNER,
+            owner = serviceOwner,
             onConnected = {
                 overlay?.setStatus("Collecting data…")
-                runShell("dumpsys SurfaceFlinger --timestats -clear -enable")
-                logger?.append("TimeStats enabled; beginning 500 ms sampling")
-                startSampling()
+                serviceScope.launch {
+                    timeStatsMutex.withLock {
+                        if (started) {
+                            runShell("dumpsys SurfaceFlinger --timestats -clear -enable")
+                            logger?.append("TimeStats enabled; beginning 500 ms sampling")
+                        }
+                    }
+                    if (started) startSampling()
+                }
             },
             onFailed = { _, message ->
                 overlay?.setStatus(message)
@@ -267,18 +279,30 @@ class FpsMonitorService : Service() {
         stopping = true
         samplingJob?.cancel()
         samplingJob = null
-        if (started) {
-            logger?.append("Monitor stopping")
-            logger?.persist()
-            runShell("dumpsys SurfaceFlinger --timestats -disable")
-            logger?.persist()
-            overlay?.detach()
-            ShizukuHelper.releaseUserService(OWNER)
-            PreferencesHelper.fpsRunning = false
-        }
+        _isRunning.value = false
+
+        val activeOverlay = overlay
+        val activeLogger = logger
+        val wasStarted = started
         overlay = null
         logger = null
         started = false
+
+        if (wasStarted) {
+            activeLogger?.append("Monitor stopping")
+            activeLogger?.persist()
+            activeOverlay?.detach()
+            serviceScope.launch {
+                timeStatsMutex.withLock {
+                    // Leave TimeStats on when a new monitor instance already started.
+                    if (!isRunning.value) {
+                        runShell("dumpsys SurfaceFlinger --timestats -disable")
+                        activeLogger?.persist()
+                    }
+                }
+                ShizukuHelper.releaseUserService(serviceOwner)
+            }
+        }
         super.onDestroy()
     }
 
@@ -302,27 +326,37 @@ class FpsMonitorService : Service() {
         const val EXTRA_ENABLED = "enabled"
         const val EXTRA_SCALE = "scale"
         const val EXTRA_LAYER = "layer"
-        private const val OWNER = "fps_monitor"
+
+        private val _isRunning = MutableStateFlow(false)
+        private val timeStatsMutex = Mutex()
+
+        /** Whether the monitor service is alive in this process. */
+        val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
         /**
          * Starts the monitor as a foreground service.
          * @param context used to start the service
+         * @return true when Android accepted the start request
          */
-        fun start(context: android.content.Context) {
+        fun start(context: android.content.Context): Boolean {
             val intent = Intent(context, FpsMonitorService::class.java)
-            try {
+            return try {
                 androidx.core.content.ContextCompat.startForegroundService(context, intent)
+                true
             } catch (e: Exception) {
                 Timber.w(e, "Unable to start FPS monitor service")
+                false
             }
         }
 
         /**
-         * Requests a monitor stop through the service action.
-         * @param context used to send the stop intent
+         * Stops the monitor service. Safe to call when it is not running.
+         * @param context used to stop the service
          */
         fun stop(context: android.content.Context) {
-            context.startService(Intent(context, FpsMonitorService::class.java).apply { action = ACTION_STOP })
+            runCatching {
+                context.stopService(Intent(context, FpsMonitorService::class.java))
+            }.onFailure { Timber.w(it, "Unable to stop FPS monitor service") }
         }
     }
 }

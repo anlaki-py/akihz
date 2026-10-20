@@ -37,8 +37,9 @@ object FpsMonitorNotification {
             context,
             2,
             Intent(context, MainActivity::class.java).apply {
+                action = "akihz.intent.OPEN_FPS_MONITOR"
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-                putExtra("akihz.extra.DEBUG_PAGE", "fps_monitor")
+                putExtra(MainActivity.EXTRA_OPEN_FPS_MONITOR, true)
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )

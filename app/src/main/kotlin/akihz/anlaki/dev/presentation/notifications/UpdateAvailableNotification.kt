@@ -23,12 +23,13 @@ object UpdateAvailableNotification {
         createChannel(context)
         if (!canNotify(context)) return false
         val intent = Intent(context, MainActivity::class.java).apply {
+            action = "akihz.intent.OPEN_UPDATES"
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra(MainActivity.EXTRA_OPEN_UPDATES, true)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            11,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

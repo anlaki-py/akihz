@@ -175,11 +175,22 @@ class MainActivity : ComponentActivity() {
                     },
                     keepAliveEnabled = keepAliveEnabled,
                     onKeepAliveEnabledChanged = { enabled ->
-                        keepAliveEnabled = enabled
-                        PreferencesHelper.keepAliveEnabled = enabled
                         if (enabled) {
-                            KeepAliveService.start(this@MainActivity)
+                            PreferencesHelper.keepAliveEnabled = true
+                            if (KeepAliveService.start(this@MainActivity)) {
+                                keepAliveEnabled = true
+                            } else {
+                                PreferencesHelper.keepAliveEnabled = false
+                                keepAliveEnabled = false
+                                showDialog(
+                                    "Background service blocked",
+                                    "Android did not allow akiHz to keep its background service running. " +
+                                        "The tile still works, but it may start slower."
+                                )
+                            }
                         } else {
+                            keepAliveEnabled = false
+                            PreferencesHelper.keepAliveEnabled = false
                             KeepAliveService.stop(this@MainActivity)
                         }
                     },
@@ -209,8 +220,12 @@ class MainActivity : ComponentActivity() {
                             PreferencesHelper.welcomeNoticeAccepted = true
                             hasAcceptedWelcomeNotice = true
                             showWelcomeNotice = false
-                            if (keepAliveEnabled) {
-                                KeepAliveService.start(this@MainActivity)
+                            if (keepAliveEnabled && !KeepAliveService.start(this@MainActivity)) {
+                                showDialog(
+                                    "Background service blocked",
+                                    "Android did not allow akiHz to keep its background service running. " +
+                                        "The tile still works, but it may start slower."
+                                )
                             }
                             checkShizukuPermission()
                         }

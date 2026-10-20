@@ -12,6 +12,7 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * SharedPreferences wrapper for all app configuration.
@@ -55,16 +56,29 @@ object PreferencesHelper {
     private const val KEY_FPS_CORNER_RADIUS = "fps_corner_radius"
     private const val KEY_FPS_PILL_OUTLINE = "fps_pill_outline"
     private const val KEY_FPS_SELECTED_LAYER = "fps_selected_layer"
-    private const val KEY_FPS_RUNNING = "fps_running"
     private const val KEY_FPS_DEBUG_LOGGING = "fps_debug_logging"
     private const val KEY_FPS_DEBUG_LOG = "fps_debug_log"
     private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
 
     private lateinit var prefs: SharedPreferences
     private val _lastRateFlow = MutableStateFlow(60f)
+    private val _preferenceChanges = MutableStateFlow(0L)
 
     /** Last successfully selected rate, observed across app and tile components. */
     val lastRateFlow: StateFlow<Float> = _lastRateFlow.asStateFlow()
+
+    /**
+     * Emits after any preference write lands in this process.
+     *
+     * The value is a counter, so listeners see repeated writes of the same
+     * preference. Screens use it to reload state changed by tiles or services.
+     */
+    val preferenceChanges: StateFlow<Long> = _preferenceChanges.asStateFlow()
+
+    private val preferenceChangeListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            _preferenceChanges.update { it + 1 }
+        }
 
     /**
      * Loads prefs on first call. Later calls do nothing.
@@ -74,6 +88,7 @@ object PreferencesHelper {
         if (::prefs.isInitialized) return
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         _lastRateFlow.value = prefs.getFloat(KEY_LAST_RATE, 60f)
+        prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
 
     var lastRate: Float
@@ -244,10 +259,6 @@ object PreferencesHelper {
     var fpsSelectedLayer: String?
         get() = prefs.getString(KEY_FPS_SELECTED_LAYER, null)
         set(value) = prefs.edit { putString(KEY_FPS_SELECTED_LAYER, value) }
-
-    var fpsRunning: Boolean
-        get() = prefs.getBoolean(KEY_FPS_RUNNING, false)
-        set(value) = prefs.edit { putBoolean(KEY_FPS_RUNNING, value) }
 
     var fpsDebugLoggingEnabled: Boolean
         get() = prefs.getBoolean(KEY_FPS_DEBUG_LOGGING, false)
