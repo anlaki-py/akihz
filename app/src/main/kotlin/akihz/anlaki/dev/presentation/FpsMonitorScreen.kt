@@ -50,14 +50,6 @@ fun FpsMonitorScreen(
 
     BackHandler(onBack = onBack)
 
-    // Keep isRunning in sync with the service even when prefs are changed externally.
-    LaunchedEffect(Unit) {
-        while (true) {
-            viewModel.refresh()
-            kotlinx.coroutines.delay(1000)
-        }
-    }
-
     val pickAppLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->

@@ -33,8 +33,9 @@ object KeepAliveNotification {
     fun build(context: Context): Notification {
         val contentIntent = PendingIntent.getActivity(
             context,
-            0,
+            10,
             Intent(context, MainActivity::class.java).apply {
+                action = "akihz.intent.OPEN_KEEP_ALIVE"
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT

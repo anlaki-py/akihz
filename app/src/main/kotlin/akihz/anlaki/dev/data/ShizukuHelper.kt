@@ -3,6 +3,11 @@ package akihz.anlaki.dev.data
 import akihz.anlaki.dev.data.OemSettingsStrategy.Namespace
 import akihz.anlaki.dev.utils.ErrorType
 import akihz.anlaki.dev.utils.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Facade over the Shizuku collaborators.
@@ -13,6 +18,8 @@ import akihz.anlaki.dev.utils.Result
  * stable so existing callers do not change.
  */
 object ShizukuHelper {
+
+    private val cleanupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Returns true when the Shizuku binder answers. */
     fun isBinderReady(): Boolean = ShizukuConnection.isBinderReady()
@@ -49,11 +56,10 @@ object ShizukuHelper {
             onServiceReady = {
                 // Best-effort cleanup of stale refresh_rate_service shells left by old version/bug.
                 // Runs after a short delay so the new service is fully up.
-                try {
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        runCatching { killStaleRefreshServices() }
-                    }, 2000)
-                } catch (_: Exception) {}
+                cleanupScope.launch {
+                    delay(2_000)
+                    runCatching { killStaleRefreshServices() }
+                }
             }
         )
     }

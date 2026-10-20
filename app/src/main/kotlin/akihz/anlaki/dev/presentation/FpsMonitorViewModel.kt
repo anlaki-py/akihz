@@ -16,12 +16,16 @@ import akihz.anlaki.dev.presentation.fps.FpsMonitorService
 import akihz.anlaki.dev.data.PreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val REFRESH_DEBOUNCE_MS = 200L
 
 data class FpsMonitorUiState(
     val isRunning: Boolean = false,
@@ -50,6 +54,18 @@ class FpsMonitorViewModel @Inject constructor(
 
     init {
         refresh()
+        viewModelScope.launch {
+            FpsMonitorService.isRunning.collectLatest { running ->
+                _uiState.update { it.copy(isRunning = running) }
+            }
+        }
+        viewModelScope.launch {
+            // Reload when the tile, the service, or the overlay panel writes FPS prefs.
+            PreferencesHelper.preferenceChanges.collectLatest {
+                delay(REFRESH_DEBOUNCE_MS)
+                refresh()
+            }
+        }
     }
 
     /** Reloads saved prefs into the UI state. */
@@ -57,7 +73,7 @@ class FpsMonitorViewModel @Inject constructor(
         PreferencesHelper.init(appContext)
         _uiState.update {
             it.copy(
-                isRunning = PreferencesHelper.fpsRunning,
+                isRunning = FpsMonitorService.isRunning.value,
                 targetPackage = PreferencesHelper.fpsTargetPackage,
                 targetLabel = PreferencesHelper.fpsTargetLabel,
                 overlayScale = PreferencesHelper.fpsOverlayScale,
@@ -79,43 +95,33 @@ class FpsMonitorViewModel @Inject constructor(
      * @param context used to start the service
      */
     fun startService(context: Context) {
-        PreferencesHelper.init(context)
-        PreferencesHelper.fpsRunning = true
-        FpsMonitorService.start(context)
-        _uiState.update { it.copy(isRunning = true, message = "Monitoring started") }
+        if (!FpsMonitorService.start(context)) {
+            _uiState.update { it.copy(isRunning = false, message = "Could not start FPS monitor") }
+            return
+        }
+        _uiState.update { it.copy(message = "Starting FPS monitor…") }
         viewModelScope.launch {
-            kotlinx.coroutines.delay(300)
-            refresh()
+            delay(1000)
+            if (!FpsMonitorService.isRunning.value) {
+                _uiState.update { it.copy(isRunning = false, message = "FPS monitor did not start") }
+            }
         }
     }
 
     /**
-     * Stops monitoring and marks it stopped.
+     * Stops monitoring and waits for the service to report stopped.
      * @param context used to stop the service
      */
     fun stopService(context: Context) {
-        PreferencesHelper.init(context)
-        PreferencesHelper.fpsRunning = false
+        if (!FpsMonitorService.isRunning.value) return
         FpsMonitorService.stop(context)
-        _uiState.update { it.copy(isRunning = false, message = "Monitoring stopped") }
+        _uiState.update { it.copy(message = "Stopping FPS monitor…") }
         viewModelScope.launch {
-            kotlinx.coroutines.delay(300)
-            refresh()
+            delay(700)
+            if (FpsMonitorService.isRunning.value) {
+                _uiState.update { it.copy(isRunning = true, message = "Could not stop FPS monitor") }
+            }
         }
-    }
-
-    /** Legacy wrapper kept for call sites; delegates to [startService]. */
-    fun startMonitoring(context: Context): Boolean {
-        startService(context)
-        return true
-    }
-
-    /**
-     * Stops monitoring through the shared stop path.
-     * @param context used to stop the service
-     */
-    fun stopMonitoring(context: Context) {
-        stopService(context)
     }
 
     /**
@@ -256,7 +262,7 @@ class FpsMonitorViewModel @Inject constructor(
      * @param fill adds extras to the intent
      */
     private fun sendIfRunning(action: String, fill: Intent.() -> Unit = {}) {
-        if (!_uiState.value.isRunning && !PreferencesHelper.fpsRunning) return
+        if (!FpsMonitorService.isRunning.value) return
         appContext.startService(
             Intent(appContext, FpsMonitorService::class.java).apply {
                 this.action = action

@@ -36,6 +36,7 @@ internal object ShizukuProcessInspector {
             return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
         }
         val myServicePid = runCatching { service.getPid() }.getOrNull()
+            ?: return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service pid unavailable")
         // Use ps to list all matching PIDs (works as shell)
         val psOutput = runCatching { service.runCommand("ps -A -o PID,ARGS") }.getOrNull()
             ?: return Result.error(ErrorType.COMMAND_EXECUTION_FAILED, "ps failed")
