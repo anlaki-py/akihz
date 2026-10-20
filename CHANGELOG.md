@@ -15,6 +15,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Updated Compose BOM from 2026.06.00 to 2026.09.00.
 - Updated core-ktx from 1.15.0 to 1.19.1.
 - Updated Hilt from 2.57.1 to 2.60.1.
+- Updated compileSdk to 37 for the new Compose and core libraries.
 - Play Store description now covers the FPS monitor, tile rate selection, and every supported manufacturer.
 - Backups now skip crash logs and debug output.
 - The FPS Monitor page updates as soon as the service starts or stops.
