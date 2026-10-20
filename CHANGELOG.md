@@ -7,6 +7,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Changed
+
+- Play Store description now covers the FPS monitor, tile rate selection, and every supported manufacturer.
+
 ## [0.0.47] - 2026-09-19
 
 ### Changed
