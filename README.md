@@ -136,9 +136,13 @@ More projects by the developer are available at [anlaki.dev](https://anlaki.dev/
 
 ## Build
 
+Build the universal debug APK:
+
 ```bash
-./gradlew assembleDebug
+./gradlew :app:packageDebugUniversalApk
 ```
+
+The APK is written to `app/build/outputs/apk_from_bundle/debug/app-debug-universal.apk`.
 
 ## License
 
