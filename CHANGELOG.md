@@ -10,6 +10,16 @@ Versions before `0.0.31` are reconstructed from the Git history.
 ### Changed
 
 - Play Store description now covers the FPS monitor, tile rate selection, and every supported manufacturer.
+- Backups now skip crash logs and debug output.
+- The FPS Monitor page updates as soon as the service starts or stops.
+- The keep-alive switch tells you when Android blocks the background service.
+
+### Fixed
+
+- The FPS notification now opens FPS Monitor instead of the debug page.
+- Notifications no longer open the wrong screen or lose their action after another notification updates.
+- FPS Monitor no longer shows as running after the service stops.
+- Starting and stopping FPS Monitor no longer blocks the app's main thread.
 
 ## [0.0.47] - 2026-09-19
 
