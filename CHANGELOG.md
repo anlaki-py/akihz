@@ -9,6 +9,12 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Updated Kotlin from 2.1.0 to 2.4.21.
+- Updated Android Gradle Plugin from 8.13.0 to 9.4.1.
+- Updated Gradle from 9.0.0 to 9.8.2.
+- Updated Compose BOM from 2026.06.00 to 2026.09.00.
+- Updated core-ktx from 1.15.0 to 1.19.1.
+- Updated Hilt from 2.57.1 to 2.60.1.
 - Play Store description now covers the FPS monitor, tile rate selection, and every supported manufacturer.
 - Backups now skip crash logs and debug output.
 - The FPS Monitor page updates as soon as the service starts or stops.

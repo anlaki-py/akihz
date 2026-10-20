@@ -1,11 +1,13 @@
+import com.android.build.api.variant.FilterConfiguration.FilterType.ABI
+
 val baseVersion = "0.0"
+val isCiBuild = project.hasProperty("ciBuild")
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.legacy.kapt)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt.android)
-    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -70,13 +72,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget("17"))
-            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
-        }
-    }
-
     packaging {
         resources {
             excludes += setOf("META-INF/**", "kotlin/**")
@@ -87,19 +82,15 @@ android {
         disable += setOf("ProtectedPermissions")
     }
 
-    kapt {
-        correctErrorTypes = true
-    }
+}
 
-    val isCiBuild = project.hasProperty("ciBuild")
-    applicationVariants.all {
-        outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val versionName = versionName
-            val versionCode = versionCode
-            val buildType = buildType.name
-            val abi = getFilter(com.android.build.OutputFile.ABI) ?: "universal"
-
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val abi = output.filters.find { it.filterType == ABI }?.identifier ?: "universal"
+            val versionName = output.versionName.get()
+            val versionCode = output.versionCode.get()
+            val buildType = variant.buildType ?: "unknown"
             val newName = if (isCiBuild) {
                 "app-$abi-$buildType.apk"
             } else if (buildType == "debug") {
@@ -107,10 +98,19 @@ android {
             } else {
                 "app-v${versionName}(${versionCode})-$abi.apk"
             }
-
-            output.outputFileName = newName
+            output.outputFileName.set(newName)
         }
     }
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+    }
+}
+
+kapt {
+    correctErrorTypes = true
 }
 
 dependencies {
