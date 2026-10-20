@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace = "akihz.anlaki.dev"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "akihz.anlaki.dev"
