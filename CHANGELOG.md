@@ -13,6 +13,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Settings and debug pages have a large title that shrinks as you scroll.
 - Setting rows change shape and color while you press them.
 - Setting rows are separate cards with small gaps, so a group no longer looks like one solid block.
+- Switch rows toggle when you tap the switch or anywhere on the row.
 - The theme picker is a connected button row instead of a radio list.
 - The theme picker stays open while you try each mode. Close it by tapping outside or swiping down.
 - The floating navigation bar uses the same motion as the rest of the app and reads correctly with TalkBack.
