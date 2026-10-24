@@ -167,11 +167,15 @@ fun AkihzApp(
                 .padding(padding)
         ) {
             AppPageSurface(blurEnabled = blurEnabled) {
+                val motionScheme = MaterialTheme.motionScheme
                 AnimatedContent(
                     targetState = detailPage,
                     modifier = Modifier.fillMaxSize(),
                     transitionSpec = {
-                        horizontalPageTransition(targetState != null)
+                        horizontalPageTransition(
+                            movingForward = targetState != null,
+                            motionScheme = motionScheme
+                        )
                     },
                     label = "app page transition"
                 ) { activeDetailPage ->
