@@ -3,7 +3,6 @@ package akihz.anlaki.dev.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
@@ -58,26 +57,23 @@ fun CustomKeyEditor(
                 { onRolesChanged(setting.canRead, it) }
             } else null
         )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                "Values per rate",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            rates.forEach { rate ->
-                OutlinedTextField(
-                    value = setting.values[CustomRefreshProfile.rateKey(rate)].orEmpty(),
-                    onValueChange = { onValueChanged(rate, it) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = enabled,
-                    singleLine = true,
-                    label = { Text("${CustomRefreshProfile.rateLabel(rate)} Hz value") }
+        formItem {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "Values per rate",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                rates.forEach { rate ->
+                    OutlinedTextField(
+                        value = setting.values[CustomRefreshProfile.rateKey(rate)].orEmpty(),
+                        onValueChange = { onValueChanged(rate, it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = enabled,
+                        singleLine = true,
+                        label = { Text("${CustomRefreshProfile.rateLabel(rate)} Hz value") }
+                    )
+                }
             }
         }
         PreferenceTemplate(

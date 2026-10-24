@@ -86,29 +86,26 @@ fun CustomKeysScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             PreferenceGroup(heading = "Info") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        "Experimental, only refresh_rate keys",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        if (state.profile.enabled) "Custom keys are enabled and replace the OEM strategy."
-                        else "Manually select keys containing \"refresh_rate\" that should change when switching refresh rates. Values are never selected automatically.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                formItem {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            "Experimental, only refresh_rate keys",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            if (state.profile.enabled) "Custom keys are enabled and replace the OEM strategy."
+                            else "Manually select keys containing \"refresh_rate\" that should change when switching refresh rates. Values are never selected automatically.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             PreferenceGroup(heading = "Profile rates") {
                 if (state.detectedRates.isEmpty()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    formItem {
                         Text(
                             "No refresh rates detected. Ensure Shizuku is running.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -131,45 +128,40 @@ fun CustomKeysScreen(
             }
 
             PreferenceGroup(heading = "Available refresh_rate keys") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Button(
-                            onClick = viewModel::scan,
-                            enabled = editingEnabled && !state.busy
-                        ) { Text("Scan") }
-                        TextButton(
-                            onClick = { showRawDialog = true },
-                            enabled = editingEnabled
-                        ) { Text("Add key") }
-                        if (state.busy) CircularProgressIndicator(modifier = Modifier.padding(start = 8.dp))
+                formItem {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Button(
+                                onClick = viewModel::scan,
+                                enabled = editingEnabled && !state.busy
+                            ) { Text("Scan") }
+                            TextButton(
+                                onClick = { showRawDialog = true },
+                                enabled = editingEnabled
+                            ) { Text("Add key") }
+                            if (state.busy) CircularProgressIndicator(modifier = Modifier.padding(start = 8.dp))
+                        }
+                        Text(
+                            "Scans all settings namespaces and shows only keys containing \"refresh_rate\".",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
                     }
-                    Text(
-                        "Scans all settings namespaces and shows only keys containing \"refresh_rate\".",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
+                    OutlinedTextField(
+                        value = search,
+                        onValueChange = { search = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Search refresh_rate keys") },
+                        leadingIcon = { androidx.compose.material3.Icon(Icons.Default.Search, contentDescription = null) },
+                        singleLine = true
                     )
                 }
-                OutlinedTextField(
-                    value = search,
-                    onValueChange = { search = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    label = { Text("Search refresh_rate keys") },
-                    leadingIcon = { androidx.compose.material3.Icon(Icons.Default.Search, contentDescription = null) },
-                    singleLine = true
-                )
                 val filtered = state.candidates.filter {
                     (search.isBlank() || it.id.contains(search, true) || it.value.contains(search, true)) &&
                         CustomRefreshProfile.isRefreshRateKey(it.name)
                 }.take(30)
                 if (filtered.isEmpty() && !state.busy) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    formItem {
                         Text(
                             if (state.candidates.isEmpty()) "Tap Scan to discover refresh_rate keys." else "No matching refresh_rate keys.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -205,7 +197,7 @@ fun CustomKeysScreen(
                 }
             } else {
                 PreferenceGroup(heading = "Selected keys") {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    formItem {
                         Text(
                             "No refresh_rate keys selected. Add from available keys above.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -216,38 +208,35 @@ fun CustomKeysScreen(
             }
 
             PreferenceGroup(heading = "Activation") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val validationError = state.profile.validationError()
-                    validationError?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                    }
-                    if (!state.profile.enabled) {
-                        Text("Test a rate before enabling.", style = MaterialTheme.typography.bodyMedium)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            state.profile.rates.forEach { rate ->
-                                TextButton(
-                                    onClick = { viewModel.beginTest(rate) },
-                                    enabled = validationError == null && !state.busy
-                                ) { Text("${CustomRefreshProfile.rateLabel(rate)} Hz") }
-                            }
+                formItem {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val validationError = state.profile.validationError()
+                        validationError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                         }
-                        Button(
-                            onClick = { viewModel.setEnabled(true, onProfileChanged) },
-                            enabled = state.profile.tested && validationError == null && !state.busy,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text(if (state.profile.tested) "Enable custom profile" else "Test required before enable") }
-                    } else {
-                        Text("Custom profile is active and replaces OEM handling.", style = MaterialTheme.typography.bodyMedium)
-                        Button(
-                            onClick = { viewModel.setEnabled(false, onProfileChanged) },
-                            enabled = !state.busy,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text("Disable and restore originals") }
+                        if (!state.profile.enabled) {
+                            Text("Test a rate before enabling.", style = MaterialTheme.typography.bodyMedium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                state.profile.rates.forEach { rate ->
+                                    TextButton(
+                                        onClick = { viewModel.beginTest(rate) },
+                                        enabled = validationError == null && !state.busy
+                                    ) { Text("${CustomRefreshProfile.rateLabel(rate)} Hz") }
+                                }
+                            }
+                            Button(
+                                onClick = { viewModel.setEnabled(true, onProfileChanged) },
+                                enabled = state.profile.tested && validationError == null && !state.busy,
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text(if (state.profile.tested) "Enable custom profile" else "Test required before enable") }
+                        } else {
+                            Text("Custom profile is active and replaces OEM handling.", style = MaterialTheme.typography.bodyMedium)
+                            Button(
+                                onClick = { viewModel.setEnabled(false, onProfileChanged) },
+                                enabled = !state.busy,
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Disable and restore originals") }
+                        }
                     }
                 }
             }

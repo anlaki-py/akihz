@@ -3,16 +3,24 @@
 package akihz.anlaki.dev.presentation.theme
 
 import android.os.Build
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ListItemColors
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
@@ -94,23 +102,61 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerHighest = Color(0xFFCBD5E1)
 )
 
+/** Whether the active theme is dark, available to color helpers outside MaterialTheme. */
+val LocalDarkMode = compositionLocalOf { false }
+
+/**
+ * Surface roles shared by every screen.
+ *
+ * Page containers stay distinct from row cards: rows use [ListItemColors] on
+ * `surfaceBright`, while the page sits on `surfaceContainer` in light mode and
+ * `surface` in dark mode. This keeps cards visible in AMOLED black.
+ */
+object AkihzColors {
+    /** Background behind page content and the top app bar. */
+    val pageContainer: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (LocalDarkMode.current) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        }
+
+    /** Top app bar colors matching the page container. */
+    val topBarColors: TopAppBarColors
+        @Composable
+        get() = if (LocalDarkMode.current) {
+            TopAppBarDefaults.topAppBarColors()
+        } else {
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        }
+
+    /** Row card colors, raised above the page container in every mode. */
+    val listItemColors: ListItemColors
+        @Composable
+        get() = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceBright)
+}
+
 /**
  * App theme with dynamic color support on Android 12+.
  *
  * Uses the Material 3 Expressive theme so every screen shares the same motion
- * scheme and emphasized type scale. Pitch-black mode keeps the base surfaces
- * black while leaving raised containers visible, so grouped settings still read
- * as groups.
+ * scheme and emphasized type scale. AMOLED mode turns only the base background
+ * and surface black, so raised cards remain visible.
  *
  * @param darkTheme whether to use dark theme
- * @param pitchBlackTheme whether dark surfaces should use pure black
+ * @param amoledMode whether dark base surfaces should use pure black
  * @param dynamicColor whether to use Material You dynamic colors (Android 12+)
  * @param content root composable content
  */
 @Composable
 fun AnlakiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    pitchBlackTheme: Boolean = false,
+    amoledMode: Boolean = false,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -119,29 +165,24 @@ fun AnlakiTheme(
             val context = LocalContext.current
             val dynamicScheme =
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            if (darkTheme && pitchBlackTheme) dynamicScheme.withPitchBlackSurfaces() else dynamicScheme
+            if (darkTheme && amoledMode) dynamicScheme.withAmoledSurfaces() else dynamicScheme
         }
-        darkTheme && pitchBlackTheme -> DarkColorScheme.withPitchBlackSurfaces()
+        darkTheme && amoledMode -> DarkColorScheme.withAmoledSurfaces()
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    MaterialExpressiveTheme(
-        colorScheme = colorScheme,
-        shapes = AkihzShapes,
-        motionScheme = MotionScheme.expressive(),
-        content = content
-    )
+    CompositionLocalProvider(LocalDarkMode provides darkTheme) {
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme,
+            shapes = AkihzShapes,
+            motionScheme = MotionScheme.expressive(),
+            content = content
+        )
+    }
 }
 
-private fun ColorScheme.withPitchBlackSurfaces() = copy(
+private fun ColorScheme.withAmoledSurfaces() = copy(
     background = Color.Black,
-    surface = Color.Black,
-    surfaceDim = Color.Black,
-    surfaceBright = Color(0xFF1A1A1A),
-    surfaceContainerLowest = Color.Black,
-    surfaceContainerLow = Color(0xFF0A0A0A),
-    surfaceContainer = Color(0xFF101010),
-    surfaceContainerHigh = Color(0xFF181818),
-    surfaceContainerHighest = Color(0xFF202020)
+    surface = Color.Black
 )

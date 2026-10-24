@@ -28,6 +28,7 @@ import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.domain.update.AppUpdate
 import akihz.anlaki.dev.domain.update.UpdateAvailability
 import akihz.anlaki.dev.domain.update.resolveUpdateAvailability
+import akihz.anlaki.dev.presentation.components.PreferenceGroupScope
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.data.PreferencesHelper
 import akihz.anlaki.dev.presentation.notifications.UpdateNotification
@@ -37,13 +38,13 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * Displays automatic checks, channel selection, and the in-app update action.
+ * Adds automatic checks, channel selection, and the in-app update action.
  *
  * @param currentVersionCode installed application version code
  * @param autoCheckRequest changes when an update notification requests a fresh check
  */
 @Composable
-fun AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
+fun PreferenceGroupScope.AppUpdateSection(currentVersionCode: Long, autoCheckRequest: Int = 0) {
     val context = LocalContext.current
     val repository = remember { GitHubUpdateRepository() }
     val downloader = remember { AppUpdateDownloader(context) }

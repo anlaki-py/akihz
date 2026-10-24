@@ -38,37 +38,51 @@ internal fun HomeDebugSettingsScreen(
             )
         }
         PreferenceGroup(heading = "Refresh-rate buttons") {
-            HomeDebugSlider(
-                "Hz text size", "Changes the refresh-rate label size inside every button.",
-                settings.hzTextSizeSp, "sp", 18f..48f, defaults.hzTextSizeSp, 29, 1f
-            ) { onSettingsChanged(settings.copy(hzTextSizeSp = it)) }
-            HomeDebugSlider(
-                "Button height", "Sets each fixed height; the list scrolls if it no longer fits.",
-                settings.buttonHeightDp, "dp", 48f..160f, defaults.buttonHeightDp, 55, 2f
-            ) { onSettingsChanged(settings.copy(buttonHeightDp = it)) }
-            HomeDebugSlider(
-                "Button width", "Controls how much of the available width each button uses.",
-                settings.buttonWidthPercent, "%", 60f..100f,
-                defaults.buttonWidthPercent, 19, 2f
-            ) { onSettingsChanged(settings.copy(buttonWidthPercent = it)) }
-            HomeDebugSlider(
-                "Button spacing", "Adjusts the vertical gap between neighboring buttons.",
-                settings.buttonSpacingDp, "dp", 0f..32f, defaults.buttonSpacingDp, 31, 1f
-            ) { onSettingsChanged(settings.copy(buttonSpacingDp = it)) }
+            formItem {
+                HomeDebugSlider(
+                    "Hz text size", "Changes the refresh-rate label size inside every button.",
+                    settings.hzTextSizeSp, "sp", 18f..48f, defaults.hzTextSizeSp, 29, 1f
+                ) { onSettingsChanged(settings.copy(hzTextSizeSp = it)) }
+            }
+            formItem {
+                HomeDebugSlider(
+                    "Button height", "Sets each fixed height; the list scrolls if it no longer fits.",
+                    settings.buttonHeightDp, "dp", 48f..160f, defaults.buttonHeightDp, 55, 2f
+                ) { onSettingsChanged(settings.copy(buttonHeightDp = it)) }
+            }
+            formItem {
+                HomeDebugSlider(
+                    "Button width", "Controls how much of the available width each button uses.",
+                    settings.buttonWidthPercent, "%", 60f..100f,
+                    defaults.buttonWidthPercent, 19, 2f
+                ) { onSettingsChanged(settings.copy(buttonWidthPercent = it)) }
+            }
+            formItem {
+                HomeDebugSlider(
+                    "Button spacing", "Adjusts the vertical gap between neighboring buttons.",
+                    settings.buttonSpacingDp, "dp", 0f..32f, defaults.buttonSpacingDp, 31, 1f
+                ) { onSettingsChanged(settings.copy(buttonSpacingDp = it)) }
+            }
         }
         PreferenceGroup(heading = "Expressive shape") {
-            HomeDebugSlider(
-                "Resting corners", "Corner radius used by an unselected button at rest.",
-                settings.restingCornerDp, "dp", 0f..48f, defaults.restingCornerDp, 47, 1f
-            ) { onSettingsChanged(settings.copy(restingCornerDp = it)) }
-            HomeDebugSlider(
-                "Selected corners", "Corner radius used by the active refresh-rate button.",
-                settings.selectedCornerDp, "dp", 0f..48f, defaults.selectedCornerDp, 47, 1f
-            ) { onSettingsChanged(settings.copy(selectedCornerDp = it)) }
-            HomeDebugSlider(
-                "Pressed corners", "Corner radius animated to while a button is held.",
-                settings.pressedCornerDp, "dp", 0f..48f, defaults.pressedCornerDp, 47, 1f
-            ) { onSettingsChanged(settings.copy(pressedCornerDp = it)) }
+            formItem {
+                HomeDebugSlider(
+                    "Resting corners", "Corner radius used by an unselected button at rest.",
+                    settings.restingCornerDp, "dp", 0f..48f, defaults.restingCornerDp, 47, 1f
+                ) { onSettingsChanged(settings.copy(restingCornerDp = it)) }
+            }
+            formItem {
+                HomeDebugSlider(
+                    "Selected corners", "Corner radius used by the active refresh-rate button.",
+                    settings.selectedCornerDp, "dp", 0f..48f, defaults.selectedCornerDp, 47, 1f
+                ) { onSettingsChanged(settings.copy(selectedCornerDp = it)) }
+            }
+            formItem {
+                HomeDebugSlider(
+                    "Pressed corners", "Corner radius animated to while a button is held.",
+                    settings.pressedCornerDp, "dp", 0f..48f, defaults.pressedCornerDp, 47, 1f
+                ) { onSettingsChanged(settings.copy(pressedCornerDp = it)) }
+            }
             PreferenceTemplate(
                 title = "Restore home-screen defaults",
                 description = "Reset every option on this page",
