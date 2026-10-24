@@ -106,6 +106,8 @@ androidComponents {
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
     }
 }
 
@@ -115,7 +117,9 @@ kapt {
 
 dependencies {
     implementation(platform(libs.compose.bom))
-    implementation("androidx.compose.material3:material3")
+    // The BOM still pins Material 3 1.4.0, where the expressive theme and motion
+    // scheme are internal. 1.5.0 exposes them without changing the rest of the BOM.
+    implementation("androidx.compose.material3:material3:1.5.0-beta01")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")

@@ -1,8 +1,9 @@
 package akihz.anlaki.dev.presentation.components
 
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,9 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,8 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 
 internal data class FloatingNavigationItem(
@@ -54,26 +56,25 @@ internal fun FloatingBottomBar(
                 val selected = index == selectedIndex
                 val labelWidth by animateDpAsState(
                     targetValue = if (selected) 80.dp else 0.dp,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     label = "navigation_label_width_$index"
                 )
-                IconButton(
+                Surface(
+                    selected = selected,
                     onClick = item.onClick,
                     modifier = Modifier
                         .width(52.dp + labelWidth)
                         .height(52.dp),
-                    colors = if (selected) {
-                        IconButtonDefaults.filledIconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+                    shape = CircleShape,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.surface
                     } else {
-                        IconButtonDefaults.iconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        Color.Transparent
+                    },
+                    contentColor = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onPrimary
                     }
                 ) {
                     Row(
@@ -85,12 +86,18 @@ internal fun FloatingBottomBar(
                             contentDescription = item.label,
                             modifier = Modifier.size(26.dp)
                         )
-                        if (selected) {
-                            Spacer(modifier = Modifier.width(8.dp))
+                        AnimatedVisibility(
+                            visible = selected,
+                            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec())
+                        ) {
                             Text(
                                 text = item.label,
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 1
+                                style = MaterialTheme.typography.labelLargeEmphasized,
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .clearAndSetSemantics {}
                             )
                         }
                     }

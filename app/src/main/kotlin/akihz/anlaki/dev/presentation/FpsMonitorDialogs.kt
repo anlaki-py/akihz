@@ -25,7 +25,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.fps.OverlayPillColor
 
@@ -113,8 +112,7 @@ internal fun PillColorSheet(
     ) {
         Text(
             text = "Pill color",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineSmallEmphasized,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
         )
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {

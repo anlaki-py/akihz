@@ -1,31 +1,44 @@
 package akihz.anlaki.dev.presentation.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 
 /**
- * Displays a rounded-card preference row with optional icon and switch.
+ * Displays a preference row with optional icon, description, and switch.
+ *
+ * The row morphs its corners while pressed and gives switch rows a real toggle
+ * role, so TalkBack announces the state instead of a plain button.
  *
  * @param title primary preference label
  * @param modifier layout modifier supplied by the caller
@@ -45,76 +58,88 @@ fun PreferenceTemplate(
     onCheckedChange: ((Boolean) -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
-    val clickAction = when {
-        onClick != null -> onClick
-        checked != null && onCheckedChange != null -> {
-            { onCheckedChange(!checked) }
-        }
-        else -> null
+    val isSwitch = checked != null && onCheckedChange != null
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isPressed) 20.dp else 4.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "preference corner"
+    )
+    val pressedColor by animateColorAsState(
+        targetValue = if (isPressed) {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        } else {
+            Color.Transparent
+        },
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "preference press"
+    )
+    val actionModifier = when {
+        isSwitch -> Modifier.toggleable(
+            value = checked!!,
+            interactionSource = interactionSource,
+            indication = LocalIndication.current,
+            role = Role.Switch,
+            onValueChange = onCheckedChange!!
+        )
+        onClick != null -> Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = LocalIndication.current,
+            role = Role.Button,
+            onClick = onClick
+        )
+        else -> Modifier
     }
 
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceBright)
-            .then(if (clickAction != null) Modifier.clickable(onClick = clickAction) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(pressedColor)
     ) {
-        if (icon != null) {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.padding(8.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            if (description != null) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        }
-
-        if (checked != null && onCheckedChange != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                VerticalDivider(
-                    modifier = Modifier
-                        .height(32.dp)
-                        .width(1.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                Switch(
-                    checked = checked,
-                    onCheckedChange = null
-                )
-            }
-        } else if (onClick != null) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        ListItem(
+            headlineContent = { Text(title) },
+            supportingContent = description?.let { text -> { Text(text) } },
+            leadingContent = icon?.let { iconValue ->
+                {
+                    Surface(
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(
+                            imageVector = iconValue,
+                            contentDescription = null,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            },
+            trailingContent = when {
+                isSwitch -> {
+                    {
+                        Switch(
+                            checked = checked!!,
+                            onCheckedChange = null,
+                            modifier = Modifier.clearAndSetSemantics {}
+                        )
+                    }
+                }
+                onClick != null -> {
+                    {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                else -> null
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            modifier = Modifier.then(actionModifier)
+        )
     }
 }

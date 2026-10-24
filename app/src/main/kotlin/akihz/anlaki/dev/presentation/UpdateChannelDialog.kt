@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.domain.update.UpdateChannel
 
@@ -35,8 +34,7 @@ internal fun UpdateChannelDialog(
     ) {
         Text(
             text = "Update channel",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineSmallEmphasized,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
         )
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {
