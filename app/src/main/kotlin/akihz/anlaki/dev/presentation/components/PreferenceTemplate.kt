@@ -56,7 +56,7 @@ fun PreferenceGroupScope.PreferenceTemplate(
                 {
                     Switch(
                         checked = checked,
-                        onCheckedChange = null,
+                        onCheckedChange = if (switchEnabled) onCheckedChange else null,
                         enabled = switchEnabled,
                         modifier = if (switchEnabled) {
                             Modifier.clearAndSetSemantics {}
