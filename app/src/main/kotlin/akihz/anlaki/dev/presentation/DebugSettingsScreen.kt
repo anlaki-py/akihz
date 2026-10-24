@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,11 +55,15 @@ internal fun DebugSettingsScreen(
     }
     BackHandler(onBack = navigateBack)
 
+    val motionScheme = MaterialTheme.motionScheme
     AnimatedContent(
         targetState = page,
         modifier = modifier.fillMaxSize(),
         transitionSpec = {
-            horizontalPageTransition(targetState.ordinal > initialState.ordinal)
+            horizontalPageTransition(
+                movingForward = targetState.ordinal > initialState.ordinal,
+                motionScheme = motionScheme
+            )
         },
         label = "debug page transition"
     ) { currentPage ->
