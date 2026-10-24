@@ -1,12 +1,6 @@
 package akihz.anlaki.dev.presentation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
@@ -37,12 +31,10 @@ fun DiagnosticsSection() {
             icon = Icons.Default.BugReport,
             onClick = { showDebug = !showDebug }
         )
-        AnimatedVisibility(
-            visible = showDebug,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            DebugInfo()
+        if (showDebug) {
+            formItem {
+                DebugInfo()
+            }
         }
     }
 }
@@ -51,11 +43,7 @@ fun DiagnosticsSection() {
 private fun DebugInfo() {
     val strategy = OemSettingsStrategy.resolve()
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
+    Column {
         Text(
             "Detected OEM: ${android.os.Build.MANUFACTURER}",
             style = MaterialTheme.typography.bodySmall

@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,10 +34,7 @@ internal fun PreferenceSlider(
     enabled: Boolean = true
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceBright)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

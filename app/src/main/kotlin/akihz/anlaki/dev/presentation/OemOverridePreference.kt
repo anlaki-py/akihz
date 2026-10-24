@@ -26,12 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import akihz.anlaki.dev.presentation.components.PreferenceGroupScope
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-/** Shows the OEM override picker. */
-internal fun OemOverridePreference(
+/** Adds the OEM override picker row to the surrounding preference group. */
+internal fun PreferenceGroupScope.OemOverridePreference(
     options: List<String>,
     selectedOption: String,
     onOptionSelected: (String) -> Unit

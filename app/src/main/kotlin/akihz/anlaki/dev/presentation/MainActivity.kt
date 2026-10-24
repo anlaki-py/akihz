@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.SideEffect
@@ -27,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.data.PreferencesHelper
@@ -125,9 +125,9 @@ class MainActivity : ComponentActivity() {
 
             AnlakiTheme(
                 darkTheme = darkTheme,
-                pitchBlackTheme = amoledMode
+                amoledMode = amoledMode
             ) {
-                val backgroundColor = MaterialTheme.colorScheme.background
+                val backgroundColor = AkihzColors.pageContainer
                 SideEffect {
                     window.statusBarColor = backgroundColor.toArgb()
                     window.navigationBarColor = backgroundColor.toArgb()

@@ -101,28 +101,32 @@ internal fun FpsOverlaySection(
     onPickColor: () -> Unit
 ) {
     PreferenceGroup(heading = "Overlay") {
-        PreferenceSlider(
-            title = "Overlay size",
-            value = state.overlayScale.toFloat(),
-            valueLabel = "${state.overlayScale}%",
-            description = "Scales the floating FPS pill",
-            onValueChange = { viewModel.setOverlayScale(it.toInt()) },
-            onValueChangeFinished = { viewModel.setOverlayScale(it.toInt()) },
-            valueRange = 50f..200f,
-            steps = 0,
-            increment = 10f
-        )
-        PreferenceSlider(
-            title = "Overlay opacity",
-            value = state.overlayAlpha.toFloat(),
-            valueLabel = "${state.overlayAlpha}%",
-            description = "Fades the pill background only, text stays solid",
-            onValueChange = { viewModel.setOverlayAlpha(it.toInt()) },
-            onValueChangeFinished = { viewModel.setOverlayAlpha(it.toInt()) },
-            valueRange = 40f..100f,
-            steps = 0,
-            increment = 5f
-        )
+        formItem {
+            PreferenceSlider(
+                title = "Overlay size",
+                value = state.overlayScale.toFloat(),
+                valueLabel = "${state.overlayScale}%",
+                description = "Scales the floating FPS pill",
+                onValueChange = { viewModel.setOverlayScale(it.toInt()) },
+                onValueChangeFinished = { viewModel.setOverlayScale(it.toInt()) },
+                valueRange = 50f..200f,
+                steps = 0,
+                increment = 10f
+            )
+        }
+        formItem {
+            PreferenceSlider(
+                title = "Overlay opacity",
+                value = state.overlayAlpha.toFloat(),
+                valueLabel = "${state.overlayAlpha}%",
+                description = "Fades the pill background only, text stays solid",
+                onValueChange = { viewModel.setOverlayAlpha(it.toInt()) },
+                onValueChangeFinished = { viewModel.setOverlayAlpha(it.toInt()) },
+                valueRange = 40f..100f,
+                steps = 0,
+                increment = 5f
+            )
+        }
         PreferenceTemplate(
             title = "Show FPS label",
             description = if (state.showUnit) "Pill shows 60.0 FPS" else "Pill shows 60.0",
@@ -143,22 +147,24 @@ internal fun FpsOverlaySection(
             checked = state.rectShape,
             onCheckedChange = { viewModel.setRectShape(it) }
         )
-        PreferenceSlider(
-            title = "Corner radius",
-            value = state.cornerRadius.toFloat(),
-            valueLabel = "${state.cornerRadius} dp",
-            description = if (state.rectShape) {
-                "Round the rectangle corners, 0 is sharp"
-            } else {
-                "Turn on Rectangular shape to use this"
-            },
-            onValueChange = { viewModel.setCornerRadius(it.toInt()) },
-            onValueChangeFinished = { viewModel.setCornerRadius(it.toInt()) },
-            valueRange = OverlayStyle.RECT_RADIUS_MIN.toFloat()..OverlayStyle.RECT_RADIUS_MAX.toFloat(),
-            steps = OverlayStyle.RECT_RADIUS_MAX - OverlayStyle.RECT_RADIUS_MIN - 1,
-            increment = 1f,
-            enabled = state.rectShape
-        )
+        formItem {
+            PreferenceSlider(
+                title = "Corner radius",
+                value = state.cornerRadius.toFloat(),
+                valueLabel = "${state.cornerRadius} dp",
+                description = if (state.rectShape) {
+                    "Round the rectangle corners, 0 is sharp"
+                } else {
+                    "Turn on Rectangular shape to use this"
+                },
+                onValueChange = { viewModel.setCornerRadius(it.toInt()) },
+                onValueChangeFinished = { viewModel.setCornerRadius(it.toInt()) },
+                valueRange = OverlayStyle.RECT_RADIUS_MIN.toFloat()..OverlayStyle.RECT_RADIUS_MAX.toFloat(),
+                steps = OverlayStyle.RECT_RADIUS_MAX - OverlayStyle.RECT_RADIUS_MIN - 1,
+                increment = 1f,
+                enabled = state.rectShape
+            )
+        }
         PreferenceTemplate(
             title = "Pill outline",
             description = if (state.pillOutline) "Edge is visible" else "Flat pill, no edge",

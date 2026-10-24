@@ -40,6 +40,7 @@ import akihz.anlaki.dev.presentation.components.FloatingBottomBar
 import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
 import akihz.anlaki.dev.presentation.components.AppPageSurface
 import akihz.anlaki.dev.presentation.components.horizontalPageTransition
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -151,7 +152,7 @@ fun AkihzApp(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = AkihzColors.pageContainer,
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,

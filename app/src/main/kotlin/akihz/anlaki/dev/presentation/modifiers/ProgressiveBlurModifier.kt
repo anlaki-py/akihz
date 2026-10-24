@@ -5,7 +5,6 @@ import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.os.PowerManager
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 
 internal enum class BlurDirection { Top, Bottom }
 
@@ -72,7 +72,7 @@ internal fun Modifier.progressiveBlur(
         Build.MANUFACTURER.equals("samsung", ignoreCase = true) &&
             Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM
     }
-    val overlayColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f)
+    val overlayColor = AkihzColors.pageContainer.copy(alpha = 0.65f)
     val blurModifier =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             blurRadius > 0f && !powerSaveMode && !problematicSamsung

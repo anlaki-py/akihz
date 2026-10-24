@@ -109,10 +109,7 @@ internal fun CrashLogScreen(
             // Expanded preview for selected entry
             state.selectedContent?.let { content ->
                 PreferenceGroup(heading = "Preview: ${state.selectedFileName ?: ""}") {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    formItem {
                         Text(
                             text = content,
                             style = MaterialTheme.typography.bodySmall,

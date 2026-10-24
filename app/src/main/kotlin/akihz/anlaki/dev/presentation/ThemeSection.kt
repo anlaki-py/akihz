@@ -108,7 +108,6 @@ fun ThemeSection(
                         checked = selected,
                         onCheckedChange = {
                             if (!selected) onThemeModeChanged(mode)
-                            showThemeOptions = false
                         },
                         modifier = Modifier
                             .weight(weight)
