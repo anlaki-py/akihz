@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
@@ -54,8 +53,7 @@ internal fun OemOverridePreference(
         ) {
             Text(
                 text = "OEM override",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmallEmphasized,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
             )
             Text(

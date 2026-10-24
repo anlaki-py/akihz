@@ -2,7 +2,6 @@ package akihz.anlaki.dev.presentation.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.height
@@ -17,7 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import akihz.anlaki.dev.data.HomeDebugSettings
@@ -48,7 +50,7 @@ fun RefreshRateButton(
             isSelected -> debugSettings.selectedCornerDp.dp
             else -> debugSettings.restingCornerDp.dp
         },
-        animationSpec = spring(),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "refresh rate button shape"
     )
     val containerColor by animateColorAsState(
@@ -57,6 +59,7 @@ fun RefreshRateButton(
         } else {
             MaterialTheme.colorScheme.secondaryContainer
         },
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "refresh rate button container"
     )
     val contentColor by animateColorAsState(
@@ -65,6 +68,7 @@ fun RefreshRateButton(
         } else {
             MaterialTheme.colorScheme.onSecondaryContainer
         },
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "refresh rate button content"
     )
 
@@ -74,7 +78,11 @@ fun RefreshRateButton(
             onClick()
         },
         modifier = modifier
-            .height(debugSettings.buttonHeightDp.dp),
+            .height(debugSettings.buttonHeightDp.dp)
+            .semantics {
+                role = Role.RadioButton
+                this.selected = isSelected
+            },
         shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -84,8 +92,12 @@ fun RefreshRateButton(
     ) {
         Text(
             text = "${hz.toInt()} Hz",
-            fontSize = debugSettings.hzTextSizeSp.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            style = if (isSelected) {
+                MaterialTheme.typography.displaySmallEmphasized
+            } else {
+                MaterialTheme.typography.displaySmall
+            },
+            fontSize = debugSettings.hzTextSizeSp.sp
         )
     }
 }

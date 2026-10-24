@@ -7,6 +7,15 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Changed
+
+- Every screen now uses the Material 3 Expressive look. Motion, headings, and touch feedback follow Android's newest design system.
+- Settings and debug pages have a large title that shrinks as you scroll.
+- Setting rows change shape and color while you press them.
+- The theme picker is a connected button row instead of a radio list.
+- The floating navigation bar uses the same motion as the rest of the app and reads correctly with TalkBack.
+- AMOLED mode keeps grouped settings visible instead of blending every surface into pure black.
+
 ## [0.0.48] - 2026-10-20
 
 ### Dependencies

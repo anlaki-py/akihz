@@ -19,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.OemSettingsStrategy
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
@@ -72,8 +71,7 @@ private fun DebugInfo() {
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Text(
             "Read keys:",
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodySmallEmphasized
         )
         strategy.readKeys.forEach {
             Text(
@@ -83,8 +81,7 @@ private fun DebugInfo() {
         }
         Text(
             "Write keys:",
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodySmallEmphasized
         )
         strategy.writeKeys.forEach {
             Text(

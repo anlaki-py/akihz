@@ -10,7 +10,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -233,8 +232,10 @@ fun AkihzApp(
             }
             AnimatedVisibility(
                 visible = detailPage == null,
-                enter = fadeIn(tween(220)) + slideInVertically(tween(280)) { it / 2 },
-                exit = fadeOut(tween(160)) + slideOutVertically(tween(240)) { it / 2 },
+                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    slideInVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) { it / 2 },
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) +
+                    slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { it / 2 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 FloatingBottomBar(
