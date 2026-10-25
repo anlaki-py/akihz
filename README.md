@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/ic_launcher-playstore.png" alt="akiHz app icon" width="160">
+  <img src="screenshots/icon-512.png" alt="akiHz app icon" width="160">
 
   <h1><strong>akiHz</strong></h1>
 

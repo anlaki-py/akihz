@@ -7,6 +7,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the app icon.
+
 ## [0.0.49] - 2026-10-25
 
 ### Changed
