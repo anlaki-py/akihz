@@ -46,7 +46,7 @@ fun RefreshRateButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius by animateDpAsState(
-        targetValue = if (isPressed) GroupOuterCornerRadius else GroupInnerCornerRadius,
+        targetValue = if (isPressed) HomeGroupOuterCornerRadius else GroupInnerCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "refresh rate button shape"
     )

@@ -7,9 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +16,6 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,7 +54,7 @@ fun TileInclusionButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius by animateDpAsState(
-        targetValue = if (isPressed) GroupOuterCornerRadius else GroupInnerCornerRadius,
+        targetValue = if (isPressed) HomeGroupOuterCornerRadius else GroupInnerCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "tile toggle shape"
     )
@@ -107,12 +104,7 @@ fun TileInclusionButton(
             Icon(
                 imageVector = Icons.Default.GridView,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Tile",
-                style = MaterialTheme.typography.labelMedium
+                modifier = Modifier.size(28.dp)
             )
         }
     }
