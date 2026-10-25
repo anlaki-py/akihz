@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
  * @param onCheckedChange invoked when a switch preference changes
  * @param onClick invoked when an action preference is selected
  */
+@Composable
 fun PreferenceGroupScope.PreferenceTemplate(
     title: String,
     modifier: Modifier = Modifier,
