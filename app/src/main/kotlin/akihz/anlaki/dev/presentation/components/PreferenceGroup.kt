@@ -23,14 +23,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 
 private val GroupCornerRadius = 20.dp
-private val GroupInnerCornerRadius = 4.dp
+private val GroupPressedCornerRadius = 28.dp
 private val GroupItemSpacing = 2.dp
 
 private class PreferenceItem(
@@ -49,7 +48,7 @@ private class PreferenceItem(
 @DslMarker
 annotation class PreferenceGroupDsl
 
-/** Collects the rows and form blocks that make up one preference group. */
+/** Adds rows and form blocks directly to the surrounding preference group. */
 @PreferenceGroupDsl
 interface PreferenceGroupScope {
     /**
@@ -64,6 +63,7 @@ interface PreferenceGroupScope {
      * @param leadingContent optional icon before the text
      * @param trailingContent optional control after the text
      */
+    @Composable
     fun item(
         modifier: Modifier = Modifier,
         onClick: (() -> Unit)? = null,
@@ -81,6 +81,7 @@ interface PreferenceGroupScope {
      * @param modifier layout modifier for the card
      * @param content controls shown inside the card
      */
+    @Composable
     fun formItem(
         modifier: Modifier = Modifier,
         content: @Composable ColumnScope.() -> Unit
@@ -88,8 +89,7 @@ interface PreferenceGroupScope {
 }
 
 private class PreferenceGroupScopeImpl : PreferenceGroupScope {
-    val items = mutableListOf<PreferenceItem>()
-
+    @Composable
     override fun item(
         modifier: Modifier,
         onClick: (() -> Unit)?,
@@ -100,43 +100,49 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
         leadingContent: (@Composable () -> Unit)?,
         trailingContent: (@Composable () -> Unit)?
     ) {
-        items += PreferenceItem(
-            modifier = modifier,
-            onClick = onClick,
-            toggleState = toggleState,
-            onToggle = onToggle,
-            headlineContent = headlineContent,
-            supportingContent = supportingContent,
-            leadingContent = leadingContent,
-            trailingContent = trailingContent,
-            formContent = null
+        PreferenceListItem(
+            item = PreferenceItem(
+                modifier = modifier,
+                onClick = onClick,
+                toggleState = toggleState,
+                onToggle = onToggle,
+                headlineContent = headlineContent,
+                supportingContent = supportingContent,
+                leadingContent = leadingContent,
+                trailingContent = trailingContent,
+                formContent = null
+            )
         )
+        Spacer(modifier = Modifier.height(GroupItemSpacing))
     }
 
+    @Composable
     override fun formItem(
         modifier: Modifier,
         content: @Composable ColumnScope.() -> Unit
     ) {
-        items += PreferenceItem(
-            modifier = modifier,
-            onClick = null,
-            toggleState = null,
-            onToggle = null,
-            headlineContent = null,
-            supportingContent = null,
-            leadingContent = null,
-            trailingContent = null,
-            formContent = content
+        PreferenceFormItem(
+            item = PreferenceItem(
+                modifier = modifier,
+                onClick = null,
+                toggleState = null,
+                onToggle = null,
+                headlineContent = null,
+                supportingContent = null,
+                leadingContent = null,
+                trailingContent = null,
+                formContent = content
+            )
         )
+        Spacer(modifier = Modifier.height(GroupItemSpacing))
     }
 }
 
 /**
  * Groups related settings beneath a section label.
  *
- * Every row is its own card on `surfaceBright`, with 20dp outer corners, 4dp
- * inner corners, and a 2dp gap. The gap is what keeps rows from reading as one
- * merged block.
+ * Every row is its own rounded card on `surfaceBright`, with a 2dp gap that
+ * keeps rows from reading as one merged block.
  *
  * @param heading label describing the preference group
  * @param modifier layout modifier supplied by the caller
@@ -149,7 +155,6 @@ fun PreferenceGroup(
     content: @Composable PreferenceGroupScope.() -> Unit
 ) {
     val scope = PreferenceGroupScopeImpl()
-    scope.content()
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -159,36 +164,17 @@ fun PreferenceGroup(
             modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp)
         )
 
-        val count = scope.items.size
-        scope.items.forEachIndexed { index, item ->
-            if (item.formContent != null) {
-                PreferenceFormItem(
-                    item = item,
-                    shape = preferenceItemShape(index, count)
-                )
-            } else {
-                PreferenceListItem(item = item, index = index, count = count)
-            }
-            if (index != count - 1) {
-                Spacer(modifier = Modifier.height(GroupItemSpacing))
-            }
-        }
+        scope.content()
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 
-private fun preferenceItemShape(index: Int, count: Int): Shape {
-    val top = if (index == 0) GroupCornerRadius else GroupInnerCornerRadius
-    val bottom = if (index == count - 1) GroupCornerRadius else GroupInnerCornerRadius
-    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
-}
-
 @Composable
-private fun PreferenceFormItem(item: PreferenceItem, shape: Shape) {
+private fun PreferenceFormItem(item: PreferenceItem) {
     Surface(
         modifier = item.modifier.fillMaxWidth(),
-        shape = shape,
+        shape = RoundedCornerShape(GroupCornerRadius),
         color = AkihzColors.listItemColors.containerColor
     ) {
         Column(
@@ -200,31 +186,15 @@ private fun PreferenceFormItem(item: PreferenceItem, shape: Shape) {
 }
 
 @Composable
-private fun PreferenceListItem(item: PreferenceItem, index: Int, count: Int) {
-    val isFirst = index == 0
-    val isLast = index == count - 1
+private fun PreferenceListItem(item: PreferenceItem) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val toggleState = item.toggleState
     val onToggle = item.onToggle
-
-    val topCorner by animateDpAsState(
-        targetValue = if (isPressed || count == 1 || isFirst) {
-            GroupCornerRadius
-        } else {
-            GroupInnerCornerRadius
-        },
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isPressed) GroupPressedCornerRadius else GroupCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "preference top corner"
-    )
-    val bottomCorner by animateDpAsState(
-        targetValue = if (isPressed || count == 1 || isLast) {
-            GroupCornerRadius
-        } else {
-            GroupInnerCornerRadius
-        },
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "preference bottom corner"
+        label = "preference corner"
     )
 
     ListItem(
@@ -233,10 +203,10 @@ private fun PreferenceListItem(item: PreferenceItem, index: Int, count: Int) {
             .fillMaxWidth()
             .clip(
                 RoundedCornerShape(
-                    topStart = topCorner,
-                    topEnd = topCorner,
-                    bottomStart = bottomCorner,
-                    bottomEnd = bottomCorner
+                    topStart = cornerRadius,
+                    topEnd = cornerRadius,
+                    bottomStart = cornerRadius,
+                    bottomEnd = cornerRadius
                 )
             )
             .then(
