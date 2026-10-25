@@ -1,10 +1,12 @@
 package akihz.anlaki.dev.presentation
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.content.Intent
+import android.service.quicksettings.TileService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -100,7 +102,8 @@ class MainActivity : ComponentActivity() {
             KeepAliveService.start(this)
         }
         requestNotificationPermissionIfNeeded()
-        handleUpdateIntent(intent)
+        // A recreated activity replays the launch intent; do not jump to a tile page again.
+        handleUpdateIntent(intent, allowTilePreferences = savedInstanceState == null)
 
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
@@ -242,7 +245,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleUpdateIntent(intent)
+        handleUpdateIntent(intent, allowTilePreferences = true)
     }
 
     /** Registers Shizuku listeners and refreshes permission state. */
@@ -304,7 +307,13 @@ class MainActivity : ComponentActivity() {
 
     private fun showError(message: String) = showDialog("Error", message)
 
-    private fun handleUpdateIntent(intent: Intent?) {
+    /**
+     * Routes the launch intent to the page it asks for.
+     *
+     * @param intent launch or new intent, may be null
+     * @param allowTilePreferences whether a Quick Settings long press may navigate
+     */
+    private fun handleUpdateIntent(intent: Intent?, allowTilePreferences: Boolean) {
         if (intent?.getBooleanExtra(EXTRA_OPEN_UPDATES, false) == true) {
             openUpdatesRequest.value += 1
             intent.removeExtra(EXTRA_OPEN_UPDATES)
@@ -312,6 +321,9 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra(EXTRA_OPEN_FPS_MONITOR, false) == true) {
             openFpsMonitorRequest.value += 1
             intent.removeExtra(EXTRA_OPEN_FPS_MONITOR)
+        }
+        if (allowTilePreferences) {
+            handleTilePreferencesIntent(intent)
         }
         val debugPageExtra = intent?.getStringExtra(EXTRA_DEBUG_PAGE)
         val openDebug = intent?.getBooleanExtra(EXTRA_OPEN_DEBUG, false) == true || debugPageExtra != null
@@ -324,6 +336,38 @@ class MainActivity : ComponentActivity() {
             intent?.removeExtra(EXTRA_OPEN_DEBUG)
             intent?.removeExtra(EXTRA_DEBUG_PAGE)
         }
+    }
+
+    /**
+     * Opens the FPS monitor settings when its Quick Settings tile is long-pressed.
+     *
+     * The system launches this activity for a long press and names the pressed
+     * tile in [Intent.EXTRA_COMPONENT_NAME]. Long-pressing the refresh-rate tile
+     * stays on the current page. The extra and action are consumed so an
+     * activity recreation does not repeat the jump.
+     */
+    private fun handleTilePreferencesIntent(intent: Intent?) {
+        if (intent == null || intent.action != TileService.ACTION_QS_TILE_PREFERENCES) return
+        val tile = intent.tilePreferencesComponent()
+        intent.action = null
+        intent.removeExtra(Intent.EXTRA_COMPONENT_NAME)
+        if (tile?.className == FpsMonitorTileService::class.java.name) {
+            openFpsMonitorRequest.value += 1
+        }
+    }
+
+    /** Reads the tile component from a long-press intent on every supported API level. */
+    private fun Intent.tilePreferencesComponent(): ComponentName? {
+        val parcelable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getParcelableExtra(Intent.EXTRA_COMPONENT_NAME, ComponentName::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            getParcelableExtra<ComponentName>(Intent.EXTRA_COMPONENT_NAME)
+        }
+        if (parcelable != null) return parcelable
+        // A few OEM builds store the component as a flattened string instead.
+        return extras?.getString(Intent.EXTRA_COMPONENT_NAME)
+            ?.let { ComponentName.unflattenFromString(it) }
     }
 
     private fun requestNotificationPermissionIfNeeded() {
