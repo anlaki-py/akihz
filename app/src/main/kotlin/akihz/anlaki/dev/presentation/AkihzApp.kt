@@ -205,7 +205,7 @@ fun AkihzApp(
                                     supportedRates = uiState.supportedRates,
                                     currentRate = uiState.currentRate,
                                     excludedTileRates = uiState.excludedTileRates,
-                                    isLoading = uiState.isLoading || !uiState.isServiceBound,
+                                    isLoading = uiState.isLoading,
                                     debugSettings = homeDebugSettings,
                                     onRateSelected = onRateSelected,
                                     onTileRateIncludedChanged = onTileRateIncludedChanged,

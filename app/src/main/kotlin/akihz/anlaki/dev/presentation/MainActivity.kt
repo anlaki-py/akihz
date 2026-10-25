@@ -289,7 +289,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun bindUserServiceAndLoad() {
-        if (isServiceBound) return
+        if (isServiceBound && ShizukuHelper.isUserServiceBound()) return
 
         ShizukuHelper.acquireUserService(
             owner = SHIZUKU_OWNER,
