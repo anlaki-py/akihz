@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,34 +21,32 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import akihz.anlaki.dev.data.HomeDebugSettings
 
 /**
  * Displays a large refresh-rate selection button.
  *
+ * The button belongs to a grouped list, so it keeps the 4dp inner corners and
+ * rounds to 20dp while pressed. The group container supplies the outer corners.
+ *
  * @param hz refresh rate represented by this button
  * @param isSelected whether this rate is currently selected
  * @param onClick invoked when the button is selected
- * @param debugSettings adjustable size and shape values
- * @param modifier layout modifier supplied by the parent
+ * @param fontSizeSp size of the rate label in sp
+ * @param modifier layout modifier supplied by the parent, which also sets the height
  */
 @Composable
 fun RefreshRateButton(
     hz: Float,
     isSelected: Boolean,
     onClick: () -> Unit,
-    debugSettings: HomeDebugSettings,
+    fontSizeSp: Float,
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val cornerRadius by animateDpAsState(
-        targetValue = when {
-            isPressed -> debugSettings.pressedCornerDp.dp
-            isSelected -> debugSettings.selectedCornerDp.dp
-            else -> debugSettings.restingCornerDp.dp
-        },
+        targetValue = if (isPressed) GroupOuterCornerRadius else GroupInnerCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "refresh rate button shape"
     )
@@ -77,12 +74,10 @@ fun RefreshRateButton(
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             onClick()
         },
-        modifier = modifier
-            .height(debugSettings.buttonHeightDp.dp)
-            .semantics {
-                role = Role.RadioButton
-                this.selected = isSelected
-            },
+        modifier = modifier.semantics {
+            role = Role.RadioButton
+            this.selected = isSelected
+        },
         shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -97,7 +92,7 @@ fun RefreshRateButton(
             } else {
                 MaterialTheme.typography.displaySmall
             },
-            fontSize = debugSettings.hzTextSizeSp.sp
+            fontSize = fontSizeSp.sp
         )
     }
 }

@@ -40,9 +40,6 @@ object PreferencesHelper {
     private const val KEY_BUTTON_HEIGHT = "debug_button_height"
     private const val KEY_BUTTON_WIDTH = "debug_button_width"
     private const val KEY_BUTTON_SPACING = "debug_button_spacing"
-    private const val KEY_RESTING_CORNER = "debug_resting_corner"
-    private const val KEY_SELECTED_CORNER = "debug_selected_corner"
-    private const val KEY_PRESSED_CORNER = "debug_pressed_corner"
     private const val KEY_DEBUG_OPTIONS_UNLOCKED = "debug_options_unlocked"
     private const val KEY_WELCOME_NOTICE_ACCEPTED = "welcome_notice_accepted"
     private const val KEY_KEEP_ALIVE_ENABLED = "keep_alive_enabled"
@@ -184,10 +181,7 @@ object PreferencesHelper {
                 hzTextSizeSp = prefs.getFloat(KEY_HZ_TEXT_SIZE, defaults.hzTextSizeSp),
                 buttonHeightDp = prefs.getFloat(KEY_BUTTON_HEIGHT, defaults.buttonHeightDp),
                 buttonWidthPercent = prefs.getFloat(KEY_BUTTON_WIDTH, defaults.buttonWidthPercent),
-                buttonSpacingDp = prefs.getFloat(KEY_BUTTON_SPACING, defaults.buttonSpacingDp),
-                restingCornerDp = prefs.getFloat(KEY_RESTING_CORNER, defaults.restingCornerDp),
-                selectedCornerDp = prefs.getFloat(KEY_SELECTED_CORNER, defaults.selectedCornerDp),
-                pressedCornerDp = prefs.getFloat(KEY_PRESSED_CORNER, defaults.pressedCornerDp)
+                buttonSpacingDp = prefs.getFloat(KEY_BUTTON_SPACING, defaults.buttonSpacingDp)
             )
         }
 
@@ -197,9 +191,6 @@ object PreferencesHelper {
             putFloat(KEY_BUTTON_HEIGHT, value.buttonHeightDp)
             putFloat(KEY_BUTTON_WIDTH, value.buttonWidthPercent)
             putFloat(KEY_BUTTON_SPACING, value.buttonSpacingDp)
-            putFloat(KEY_RESTING_CORNER, value.restingCornerDp)
-            putFloat(KEY_SELECTED_CORNER, value.selectedCornerDp)
-            putFloat(KEY_PRESSED_CORNER, value.pressedCornerDp)
         }
 
     var debugOptionsUnlocked: Boolean
