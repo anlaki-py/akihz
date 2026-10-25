@@ -14,6 +14,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 ### Fixed
 
 - Fixed navigation icons jumping when switching between Home and Settings.
+- Fixed Home refresh-rate controls staying disconnected until the Quick Settings tile was used.
 
 ## [0.0.49] - 2026-10-25
 

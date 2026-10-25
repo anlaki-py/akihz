@@ -141,5 +141,6 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.work.runtime)
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
 }
