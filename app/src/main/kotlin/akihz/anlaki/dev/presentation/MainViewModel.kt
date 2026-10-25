@@ -21,7 +21,6 @@ import javax.inject.Inject
 data class MainUiState(
     val supportedRates: List<Float> = emptyList(),
     val currentRate: Float? = null,
-    val selectedRate: Float? = null,
     val excludedTileRates: Set<Float> = emptySet(),
     val isShizukuReady: Boolean = false,
     val isServiceBound: Boolean = false,
@@ -43,7 +42,7 @@ class MainViewModel @Inject constructor(
             PreferencesHelper.lastRateFlow.collect { rate ->
                 _uiState.update { state ->
                     if (state.isServiceBound) {
-                        state.copy(currentRate = rate, selectedRate = rate)
+                        state.copy(currentRate = rate)
                     } else {
                         state
                     }
@@ -112,7 +111,7 @@ class MainViewModel @Inject constructor(
                 refreshRateRepository.getCurrentRate()
             }
             result.onSuccess { rate ->
-                _uiState.update { it.copy(currentRate = rate, selectedRate = rate) }
+                _uiState.update { it.copy(currentRate = rate) }
             }
         }
     }
@@ -126,13 +125,13 @@ class MainViewModel @Inject constructor(
         if (state.isLoading || !state.isServiceBound || !ShizukuHelper.hasPermission()) return
 
         // Reflect the user's choice immediately; OEM writes can take several IPC round trips.
-        _uiState.update { it.copy(selectedRate = hz, isLoading = true) }
+        _uiState.update { it.copy(currentRate = hz, isLoading = true) }
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 refreshRateRepository.setRate(hz)
             }
             result.onSuccess {
-                _uiState.update { it.copy(currentRate = hz, selectedRate = hz, isLoading = false) }
+                _uiState.update { it.copy(currentRate = hz, isLoading = false) }
             }.onError { _, message ->
                 _uiState.update { it.copy(error = message, isLoading = false) }
                 loadCurrentRate()

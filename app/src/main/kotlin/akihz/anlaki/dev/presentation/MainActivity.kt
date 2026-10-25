@@ -257,6 +257,8 @@ class MainActivity : ComponentActivity() {
         if (hasAcceptedWelcomeNotice) {
             checkShizukuPermission()
         }
+        // Another app may have changed the rate while this screen was away.
+        viewModel.loadCurrentRate()
     }
 
     /** Unregisters Shizuku listeners. */

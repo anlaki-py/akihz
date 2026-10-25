@@ -35,19 +35,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.TileRateSelection
-import akihz.anlaki.dev.presentation.components.GroupOuterCornerRadius
+import akihz.anlaki.dev.presentation.components.HomeGroupOuterCornerRadius
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 import akihz.anlaki.dev.presentation.components.TileInclusionButton
 import akihz.anlaki.dev.presentation.modifiers.BlurDirection
 import akihz.anlaki.dev.presentation.modifiers.progressiveBlur
 import kotlin.math.abs
 
+/** Height of the fade band above the rate groups. The list starts below it. */
+private val ListFadeHeight = 24.dp
+
 /**
  * Shows detected refresh rates and lets the user select one.
  *
  * @param supportedRates refresh rates supported by the current display
- * @param currentRate currently active refresh rate
- * @param selectedRate refresh rate selected in the UI
+ * @param currentRate currently active refresh rate, highlighted in the list
  * @param excludedTileRates rates excluded from Quick Settings tile cycling
  * @param isLoading whether Shizuku or refresh-rate data is still initializing
  * @param onRateSelected called when the user picks a refresh rate
@@ -59,7 +61,6 @@ import kotlin.math.abs
 fun RefreshRateScreen(
     supportedRates: List<Float>,
     currentRate: Float?,
-    selectedRate: Float?,
     excludedTileRates: Set<Float>,
     isLoading: Boolean,
     onRateSelected: (Float) -> Unit,
@@ -68,7 +69,7 @@ fun RefreshRateScreen(
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val listFadeHeightPx = with(LocalDensity.current) { 56.dp.toPx() }
+    val listFadeHeightPx = with(LocalDensity.current) { ListFadeHeight.toPx() }
     val displayedRates = if (debugSettings.showFakeRefreshRates) {
         HomeDebugSettings.previewRates(supportedRates)
     } else {
@@ -89,7 +90,7 @@ fun RefreshRateScreen(
             RateRow(
                 hz = hz,
                 isSupported = isSupported,
-                isSelected = isSupported && selectedRate?.let { abs(hz - it) < 1f } == true,
+                isSelected = isSupported && currentRate?.let { abs(hz - it) < 1f } == true,
                 isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
             )
         }
@@ -119,6 +120,7 @@ fun RefreshRateScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(ListFadeHeight))
                     Row(
                         modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -126,7 +128,7 @@ fun RefreshRateScreen(
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(GroupOuterCornerRadius)),
+                                .clip(RoundedCornerShape(HomeGroupOuterCornerRadius)),
                             verticalArrangement = Arrangement.spacedBy(rowSpacing)
                         ) {
                             rateRows.forEach { row ->
@@ -144,7 +146,7 @@ fun RefreshRateScreen(
                         Column(
                             modifier = Modifier
                                 .width(tileWidth)
-                                .clip(RoundedCornerShape(GroupOuterCornerRadius)),
+                                .clip(RoundedCornerShape(HomeGroupOuterCornerRadius)),
                             verticalArrangement = Arrangement.spacedBy(rowSpacing)
                         ) {
                             rateRows.forEach { row ->

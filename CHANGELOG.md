@@ -19,6 +19,9 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - The floating navigation bar uses the same motion as the rest of the app and reads correctly with TalkBack.
 - AMOLED mode uses true black behind the page, so the background is black and the setting cards stay visible.
 - The home screen rate buttons now stack into one group, and each rate gets a large tile toggle beside it.
+- The home screen now highlights the rate the display is actually using, even after another app changes it.
+- The home rate and tile groups have rounder outer corners, and the list starts below the top fade.
+- Tile toggles show only the icon, without the repeated label.
 - Long-pressing the FPS Monitor tile opens the FPS monitor settings.
 
 ## [0.0.48] - 2026-10-20
