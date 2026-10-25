@@ -56,7 +56,10 @@ fun PreferenceGroupScope.PreferenceTemplate(
                 {
                     Switch(
                         checked = checked,
-                        onCheckedChange = if (switchEnabled) onCheckedChange else null,
+                        // PreferenceListItem owns the gesture for the whole row. Keeping this
+                        // visual Switch non-interactive prevents nested touch handlers from
+                        // swallowing the row's toggle event.
+                        onCheckedChange = null,
                         enabled = switchEnabled,
                         modifier = if (switchEnabled) {
                             Modifier.clearAndSetSemantics {}

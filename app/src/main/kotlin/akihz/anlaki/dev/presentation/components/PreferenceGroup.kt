@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -25,9 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.toggleableState
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 
@@ -243,18 +241,15 @@ private fun PreferenceListItem(item: PreferenceItem, index: Int, count: Int) {
             )
             .then(
                 when {
-                    // The trailing Switch owns its callback. Tapping the switch consumes the
-                    // gesture before this row click runs, so a tap never toggles twice.
-                    toggleState != null && onToggle != null -> Modifier
-                        .semantics {
-                            role = Role.Switch
-                            toggleableState = ToggleableState(toggleState)
-                        }
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = LocalIndication.current,
-                            onClick = { onToggle(!toggleState) }
-                        )
+                    // The row is the sole gesture target. A nested interactive Switch can
+                    // consume the pointer event before the row's state callback runs.
+                    toggleState != null && onToggle != null -> Modifier.toggleable(
+                        value = toggleState,
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        role = Role.Switch,
+                        onValueChange = onToggle
+                    )
                     item.onClick != null -> Modifier.clickable(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
