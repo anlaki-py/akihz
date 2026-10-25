@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 
 private val GroupCornerRadius = 20.dp
-private val GroupPressedCornerRadius = 28.dp
+private val GroupInnerCornerRadius = 4.dp
 private val GroupItemSpacing = 2.dp
 
 private class PreferenceItem(
@@ -113,7 +113,6 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
                 formContent = null
             )
         )
-        Spacer(modifier = Modifier.height(GroupItemSpacing))
     }
 
     @Composable
@@ -134,15 +133,18 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
                 formContent = content
             )
         )
-        Spacer(modifier = Modifier.height(GroupItemSpacing))
     }
 }
 
 /**
  * Groups related settings beneath a section label.
  *
- * Every row is its own rounded card on `surfaceBright`, with a 2dp gap that
- * keeps rows from reading as one merged block.
+ * Rows stack into one block on `surfaceBright` with 20dp outer corners and 4dp
+ * inner corners. A 2dp gap separates the rows. Pressing a row rounds it to the
+ * full 20dp so the row reads as lifted.
+ *
+ * The rows sit inside a clipped column, which is what gives the first and last
+ * row their outer corners without the group having to know its own row count.
  *
  * @param heading label describing the preference group
  * @param modifier layout modifier supplied by the caller
@@ -164,9 +166,16 @@ fun PreferenceGroup(
             modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp)
         )
 
-        scope.content()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(GroupCornerRadius)),
+            verticalArrangement = Arrangement.spacedBy(GroupItemSpacing)
+        ) {
+            scope.content()
+        }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
@@ -174,7 +183,7 @@ fun PreferenceGroup(
 private fun PreferenceFormItem(item: PreferenceItem) {
     Surface(
         modifier = item.modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(GroupCornerRadius),
+        shape = RoundedCornerShape(GroupInnerCornerRadius),
         color = AkihzColors.listItemColors.containerColor
     ) {
         Column(
@@ -192,7 +201,7 @@ private fun PreferenceListItem(item: PreferenceItem) {
     val toggleState = item.toggleState
     val onToggle = item.onToggle
     val cornerRadius by animateDpAsState(
-        targetValue = if (isPressed) GroupPressedCornerRadius else GroupCornerRadius,
+        targetValue = if (isPressed) GroupCornerRadius else GroupInnerCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "preference corner"
     )
