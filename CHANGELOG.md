@@ -7,22 +7,22 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.49] - 2026-10-25
+
 ### Changed
 
-- Every screen now uses the Material 3 Expressive look. Motion, headings, and touch feedback follow Android's newest design system.
-- Settings and debug pages have a large title that shrinks as you scroll.
-- Setting rows change shape and color while you press them.
-- Setting rows are separate cards with small gaps, so a group no longer looks like one solid block.
-- Switch rows toggle when you tap the switch or anywhere on the row.
-- The theme picker is a connected button row instead of a radio list.
-- The theme picker stays open while you try each mode. Close it by tapping outside or swiping down.
-- The floating navigation bar uses the same motion as the rest of the app and reads correctly with TalkBack.
-- AMOLED mode uses true black behind the page, so the background is black and the setting cards stay visible.
-- The home screen rate buttons now stack into one group, and each rate gets a large tile toggle beside it.
-- The home screen now highlights the rate the display is actually using, even after another app changes it.
-- The home rate and tile groups have rounder outer corners, and the list starts below the top fade.
-- Tile toggles show only the icon, without the repeated label.
+- Every screen now uses the Material 3 Expressive design, with new motion, large titles that shrink as you scroll, and buttons that change shape when you press them.
+- The home screen keeps every refresh rate in one list. Tap a rate to apply it, or use the large toggle beside it to choose which rates the Quick Settings tile cycles through.
+- The home rate buttons and tile toggles sit in two groups with round outer corners, so they read as one control.
+- Settings rows are separate cards with small gaps, and tapping anywhere on a switch row works.
+- The theme picker is a connected button row that stays open while you compare modes.
+- The floating navigation bar follows the app's motion and reads correctly with TalkBack.
+- AMOLED mode uses true black behind the page, so the setting cards stay visible.
 - Long-pressing the FPS Monitor tile opens the FPS monitor settings.
+
+### Fixed
+
+- Small issues in refresh rate switching, Quick Settings tile selection, and settings behavior.
 
 ## [0.0.48] - 2026-10-20
 
