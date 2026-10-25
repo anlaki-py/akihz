@@ -1,10 +1,6 @@
 package akihz.anlaki.dev.presentation.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -24,7 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
@@ -62,9 +61,7 @@ internal fun FloatingBottomBar(
                 Surface(
                     selected = selected,
                     onClick = item.onClick,
-                    modifier = Modifier
-                        .width(52.dp + labelWidth)
-                        .height(52.dp),
+                    modifier = Modifier.height(52.dp),
                     shape = CircleShape,
                     color = if (selected) {
                         MaterialTheme.colorScheme.surface
@@ -78,28 +75,31 @@ internal fun FloatingBottomBar(
                     }
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        modifier = Modifier.padding(horizontal = 13.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
                             modifier = Modifier.size(26.dp)
                         )
-                        AnimatedVisibility(
-                            visible = selected,
-                            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-                            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec())
-                        ) {
-                            Text(
-                                text = item.label,
-                                style = MaterialTheme.typography.labelLargeEmphasized,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .clearAndSetSemantics {}
-                            )
-                        }
+                        // Keep the label composed and measured at full width. Clamp its
+                        // reveal width so spring overshoot cannot resize the whole bar.
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.labelLargeEmphasized,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .width(labelWidth.coerceIn(0.dp, 80.dp))
+                                .clipToBounds()
+                                .wrapContentWidth(Alignment.Start, unbounded = true)
+                                .width(80.dp)
+                                .padding(start = 8.dp)
+                                .graphicsLayer {
+                                    alpha = (labelWidth / 80.dp).coerceIn(0f, 1f)
+                                }
+                                .clearAndSetSemantics {}
+                        )
                     }
                 }
                 if (index < items.lastIndex) {

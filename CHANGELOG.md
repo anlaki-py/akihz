@@ -11,6 +11,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 - Updated the app icon.
 
+### Fixed
+
+- Fixed navigation icons jumping when switching between Home and Settings.
+
 ## [0.0.49] - 2026-10-25
 
 ### Changed
