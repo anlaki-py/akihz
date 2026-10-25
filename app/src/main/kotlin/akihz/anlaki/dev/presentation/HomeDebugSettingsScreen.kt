@@ -52,7 +52,7 @@ internal fun HomeDebugSettingsScreen(
             }
             formItem {
                 HomeDebugSlider(
-                    "Button width", "Controls how much of the available width each button uses.",
+                    "Button width", "Controls how much of the available width the button groups use.",
                     settings.buttonWidthPercent, "%", 60f..100f,
                     defaults.buttonWidthPercent, 19, 2f
                 ) { onSettingsChanged(settings.copy(buttonWidthPercent = it)) }
@@ -62,26 +62,6 @@ internal fun HomeDebugSettingsScreen(
                     "Button spacing", "Adjusts the vertical gap between neighboring buttons.",
                     settings.buttonSpacingDp, "dp", 0f..32f, defaults.buttonSpacingDp, 31, 1f
                 ) { onSettingsChanged(settings.copy(buttonSpacingDp = it)) }
-            }
-        }
-        PreferenceGroup(heading = "Expressive shape") {
-            formItem {
-                HomeDebugSlider(
-                    "Resting corners", "Corner radius used by an unselected button at rest.",
-                    settings.restingCornerDp, "dp", 0f..48f, defaults.restingCornerDp, 47, 1f
-                ) { onSettingsChanged(settings.copy(restingCornerDp = it)) }
-            }
-            formItem {
-                HomeDebugSlider(
-                    "Selected corners", "Corner radius used by the active refresh-rate button.",
-                    settings.selectedCornerDp, "dp", 0f..48f, defaults.selectedCornerDp, 47, 1f
-                ) { onSettingsChanged(settings.copy(selectedCornerDp = it)) }
-            }
-            formItem {
-                HomeDebugSlider(
-                    "Pressed corners", "Corner radius animated to while a button is held.",
-                    settings.pressedCornerDp, "dp", 0f..48f, defaults.pressedCornerDp, 47, 1f
-                ) { onSettingsChanged(settings.copy(pressedCornerDp = it)) }
             }
             PreferenceTemplate(
                 title = "Restore home-screen defaults",

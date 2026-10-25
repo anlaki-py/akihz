@@ -28,8 +28,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 
-private val GroupCornerRadius = 20.dp
-private val GroupInnerCornerRadius = 4.dp
 private val GroupItemSpacing = 2.dp
 
 private class PreferenceItem(
@@ -169,7 +167,7 @@ fun PreferenceGroup(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(GroupCornerRadius)),
+                .clip(RoundedCornerShape(GroupOuterCornerRadius)),
             verticalArrangement = Arrangement.spacedBy(GroupItemSpacing)
         ) {
             scope.content()
@@ -201,7 +199,7 @@ private fun PreferenceListItem(item: PreferenceItem) {
     val toggleState = item.toggleState
     val onToggle = item.onToggle
     val cornerRadius by animateDpAsState(
-        targetValue = if (isPressed) GroupCornerRadius else GroupInnerCornerRadius,
+        targetValue = if (isPressed) GroupOuterCornerRadius else GroupInnerCornerRadius,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "preference corner"
     )

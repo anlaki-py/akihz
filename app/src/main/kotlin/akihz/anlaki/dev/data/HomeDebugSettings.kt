@@ -6,10 +6,7 @@ data class HomeDebugSettings(
     val hzTextSizeSp: Float = 44f,
     val buttonHeightDp: Float = 160f,
     val buttonWidthPercent: Float = 100f,
-    val buttonSpacingDp: Float = 12f,
-    val restingCornerDp: Float = 8f,
-    val selectedCornerDp: Float = 32f,
-    val pressedCornerDp: Float = 20f
+    val buttonSpacingDp: Float = 2f
 ) {
     companion object {
         private val fakeRefreshRates = listOf(

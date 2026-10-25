@@ -5,7 +5,7 @@ package akihz.anlaki.dev.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -13,11 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -25,18 +26,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.TileRateSelection
+import akihz.anlaki.dev.presentation.components.GroupOuterCornerRadius
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
+import akihz.anlaki.dev.presentation.components.TileInclusionButton
 import akihz.anlaki.dev.presentation.modifiers.BlurDirection
 import akihz.anlaki.dev.presentation.modifiers.progressiveBlur
 import kotlin.math.abs
@@ -83,6 +84,17 @@ fun RefreshRateScreen(
         }
     } else {
         val includedCount = TileRateSelection.includedRates(supportedRates, excludedTileRates).size
+        val rateRows = displayedRates.map { hz ->
+            val isSupported = supportedRates.any { abs(hz - it) < 0.01f }
+            RateRow(
+                hz = hz,
+                isSupported = isSupported,
+                isSelected = isSupported && selectedRate?.let { abs(hz - it) < 1f } == true,
+                isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
+            )
+        }
+        val rowSpacing = debugSettings.buttonSpacingDp.dp
+        val tileWidth = (debugSettings.buttonHeightDp * 0.5f).coerceIn(56f, 96f).dp
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -91,7 +103,7 @@ fun RefreshRateScreen(
         ) {
             HomeTitle()
             Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -99,55 +111,73 @@ fun RefreshRateScreen(
                         blurRadius = 0f,
                         height = listFadeHeightPx,
                         direction = BlurDirection.Top
-                    ),
-                contentPadding = PaddingValues(bottom = 150.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(
-                    space = debugSettings.buttonSpacingDp.dp,
-                    alignment = Alignment.CenterVertically
-                )
+                    )
             ) {
-                items(displayedRates, key = { it }) { hz ->
-                    val isSupported = supportedRates.any { abs(hz - it) < 0.01f }
-                    val isTileIncluded = TileRateSelection.isIncluded(hz, excludedTileRates)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
-                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        RefreshRateButton(
-                            hz = hz,
-                            isSelected = isSupported && selectedRate?.let {
-                                abs(hz - it) < 1f
-                            } == true,
-                            onClick = { if (isSupported) onRateSelected(hz) },
-                            debugSettings = debugSettings,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Tile",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Switch(
-                                checked = isTileIncluded,
-                                enabled = isSupported && (!isTileIncluded || includedCount > 1),
-                                modifier = Modifier.semantics {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(GroupOuterCornerRadius)),
+                            verticalArrangement = Arrangement.spacedBy(rowSpacing)
+                        ) {
+                            rateRows.forEach { row ->
+                                RefreshRateButton(
+                                    hz = row.hz,
+                                    isSelected = row.isSelected,
+                                    onClick = { if (row.isSupported) onRateSelected(row.hz) },
+                                    fontSizeSp = debugSettings.hzTextSizeSp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(debugSettings.buttonHeightDp.dp)
+                                )
+                            }
+                        }
+                        Column(
+                            modifier = Modifier
+                                .width(tileWidth)
+                                .clip(RoundedCornerShape(GroupOuterCornerRadius)),
+                            verticalArrangement = Arrangement.spacedBy(rowSpacing)
+                        ) {
+                            rateRows.forEach { row ->
+                                TileInclusionButton(
+                                    checked = row.isTileIncluded,
+                                    enabled = row.isSupported &&
+                                        (!row.isTileIncluded || includedCount > 1),
                                     contentDescription =
-                                        "Include ${hz.toInt()} Hz in Quick Settings tile"
-                                },
-                                onCheckedChange = { included ->
-                                    onTileRateIncludedChanged(hz, included)
-                                }
-                            )
+                                        "Include ${row.hz.toInt()} Hz in Quick Settings tile",
+                                    onToggle = {
+                                        onTileRateIncludedChanged(row.hz, !row.isTileIncluded)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(debugSettings.buttonHeightDp.dp)
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(150.dp))
                 }
             }
         }
     }
 }
+
+/** One refresh-rate row shared by the rate buttons and the tile toggles. */
+private data class RateRow(
+    val hz: Float,
+    val isSupported: Boolean,
+    val isSelected: Boolean,
+    val isTileIncluded: Boolean
+)
 
 @Composable
 private fun HomeStateContainer(
