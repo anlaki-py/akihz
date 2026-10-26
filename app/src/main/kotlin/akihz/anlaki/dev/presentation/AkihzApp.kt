@@ -188,11 +188,13 @@ fun AkihzApp(
                     targetState = detailPage,
                     modifier = Modifier.fillMaxSize(),
                     transitionSpec = {
+                        val fromPage = initialState
+                        val toPage = targetState
                         horizontalPageTransition(
                             movingForward = when {
-                                initialState == null -> true
-                                targetState == null -> false
-                                else -> targetState.ordinal > initialState.ordinal
+                                fromPage == null -> true
+                                toPage == null -> false
+                                else -> toPage.ordinal > fromPage.ordinal
                             },
                             motionScheme = motionScheme
                         )
