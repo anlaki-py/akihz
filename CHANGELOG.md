@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.50] - 2026-10-26
+
 ### Added
 
 - Added theme color schemes, dynamic wallpaper colors, and custom theme editing.
