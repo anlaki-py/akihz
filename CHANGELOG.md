@@ -17,6 +17,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Fixed
 
+- Fixed color-mode buttons on narrow screens and Android Back navigation in theme pages.
 - Fixed navigation icons jumping when switching between Home and Settings.
 - Fixed Home refresh-rate controls staying disconnected until the Quick Settings tile was used.
 

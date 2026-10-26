@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +57,12 @@ private enum class AppPage(
     Settings("Settings", Icons.Default.Settings)
 }
 
-private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor, ThemePreferences, ThemePalette }
+internal enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor, ThemePreferences, ThemePalette }
+
+internal fun detailBackDestination(currentPage: DetailPage?): DetailPage? = when (currentPage) {
+    DetailPage.ThemePalette -> DetailPage.ThemePreferences
+    else -> null
+}
 
 /**
  * Hosts the refresh-rate and settings pages with floating tab navigation.
@@ -124,6 +130,13 @@ fun AkihzApp(
     val pagerState = rememberPagerState(pageCount = { AppPage.entries.size })
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
+
+    BackHandler(
+        enabled = detailPage == DetailPage.ThemePreferences ||
+            detailPage == DetailPage.ThemePalette
+    ) {
+        detailPage = detailBackDestination(detailPage)
+    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->

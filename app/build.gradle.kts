@@ -141,6 +141,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.work.runtime)
     implementation(libs.material.components)
+    implementation(libs.huge.icons)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
