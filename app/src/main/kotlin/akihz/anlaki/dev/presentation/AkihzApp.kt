@@ -42,6 +42,9 @@ import akihz.anlaki.dev.presentation.components.AppPageSurface
 import akihz.anlaki.dev.presentation.components.horizontalPageTransition
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
+import akihz.anlaki.dev.presentation.theme.CustomTheme
+import akihz.anlaki.dev.presentation.theme.ThemePaletteScreen
+import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 
@@ -53,7 +56,7 @@ private enum class AppPage(
     Settings("Settings", Icons.Default.Settings)
 }
 
-private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor }
+private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor, ThemePreferences, ThemePalette }
 
 /**
  * Hosts the refresh-rate and settings pages with floating tab navigation.
@@ -64,6 +67,9 @@ private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor }
  * @param onResetToDefaults restores the system refresh-rate defaults
  * @param onCustomProfileChanged refreshes rates after custom profile activation changes
  * @param themeMode currently selected appearance mode
+ * @param dynamicColor whether wallpaper colors override the selected color scheme
+ * @param themeId selected preset or custom theme id
+ * @param customThemes user-created color themes
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param blurEnabled whether progressive edge blur is enabled
  * @param homeDebugSettings current home-screen tuning values
@@ -71,6 +77,9 @@ private enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor }
  * @param debugOptionsUnlocked whether the hidden developer entry has been unlocked
  * @param onDebugOptionsUnlocked persists the developer entry after its unlock gesture
  * @param onThemeModeChanged invoked when the appearance mode changes
+ * @param onDynamicColorChanged invoked when dynamic color changes
+ * @param onThemeIdChanged invoked when the selected color scheme changes
+ * @param onCustomThemesChanged invoked when custom themes change
  * @param onAmoledModeChanged invoked when AMOLED mode changes
  * @param onBlurEnabledChanged invoked when progressive blur changes
  * @param keepAliveEnabled whether the keep-alive notification is enabled
@@ -86,6 +95,9 @@ fun AkihzApp(
     onResetToDefaults: () -> Unit,
     onCustomProfileChanged: () -> Unit,
     themeMode: AppThemeMode,
+    dynamicColor: Boolean,
+    themeId: String,
+    customThemes: List<CustomTheme>,
     amoledMode: Boolean,
     blurEnabled: Boolean,
     homeDebugSettings: HomeDebugSettings,
@@ -93,6 +105,9 @@ fun AkihzApp(
     debugOptionsUnlocked: Boolean,
     onDebugOptionsUnlocked: () -> Unit,
     onThemeModeChanged: (AppThemeMode) -> Unit,
+    onDynamicColorChanged: (Boolean) -> Unit,
+    onThemeIdChanged: (String) -> Unit,
+    onCustomThemesChanged: (List<CustomTheme>) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
     keepAliveEnabled: Boolean = true,
@@ -174,7 +189,11 @@ fun AkihzApp(
                     modifier = Modifier.fillMaxSize(),
                     transitionSpec = {
                         horizontalPageTransition(
-                            movingForward = targetState != null,
+                            movingForward = when {
+                                initialState == null -> true
+                                targetState == null -> false
+                                else -> targetState.ordinal > initialState.ordinal
+                            },
                             motionScheme = motionScheme
                         )
                     },
@@ -196,6 +215,26 @@ fun AkihzApp(
                             onBack = { detailPage = null },
                             modifier = Modifier.fillMaxSize()
                         )
+                        DetailPage.ThemePreferences -> ThemePreferencesScreen(
+                            dynamicColor = dynamicColor,
+                            amoledMode = amoledMode,
+                            blurEnabled = blurEnabled,
+                            onDynamicColorChanged = onDynamicColorChanged,
+                            onAmoledModeChanged = onAmoledModeChanged,
+                            onBlurEnabledChanged = onBlurEnabledChanged,
+                            onOpenColorSchemes = { detailPage = DetailPage.ThemePalette },
+                            onBack = { detailPage = null },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        DetailPage.ThemePalette -> ThemePaletteScreen(
+                            dynamicColor = dynamicColor,
+                            selectedThemeId = themeId,
+                            customThemes = customThemes,
+                            onThemeSelected = onThemeIdChanged,
+                            onCustomThemesChanged = onCustomThemesChanged,
+                            onBack = { detailPage = DetailPage.ThemePreferences },
+                            modifier = Modifier.fillMaxSize()
+                        )
                         null -> HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize()
@@ -215,11 +254,10 @@ fun AkihzApp(
                                     onResetToDefaults = onResetToDefaults,
                                     onOpenCustomKeys = { detailPage = DetailPage.CustomKeys },
                                     themeMode = themeMode,
-                                    amoledMode = amoledMode,
-                                    blurEnabled = blurEnabled,
                                     onThemeModeChanged = onThemeModeChanged,
-                                    onAmoledModeChanged = onAmoledModeChanged,
-                                    onBlurEnabledChanged = onBlurEnabledChanged,
+                                    onOpenThemePreferences = {
+                                        detailPage = DetailPage.ThemePreferences
+                                    },
                                     debugOptionsUnlocked = debugOptionsUnlocked,
                                     onDebugOptionsUnlocked = onDebugOptionsUnlocked,
                                     onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },

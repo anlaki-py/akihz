@@ -107,6 +107,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
+            var dynamicColor by rememberSaveable { mutableStateOf(PreferencesHelper.dynamicColor) }
+            var themeId by rememberSaveable { mutableStateOf(PreferencesHelper.themeId) }
+            var customThemes by remember { mutableStateOf(PreferencesHelper.customThemes) }
             var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
             var blurEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.blurEnabled) }
             var keepAliveEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.keepAliveEnabled) }
@@ -128,7 +131,10 @@ class MainActivity : ComponentActivity() {
 
             AnlakiTheme(
                 darkTheme = darkTheme,
-                amoledMode = amoledMode
+                amoledMode = amoledMode,
+                dynamicColor = dynamicColor,
+                themeId = themeId,
+                customThemes = customThemes
             ) {
                 val backgroundColor = AkihzColors.pageContainer
                 SideEffect {
@@ -152,6 +158,9 @@ class MainActivity : ComponentActivity() {
                     onResetToDefaults = viewModel::resetToDefaults,
                     onCustomProfileChanged = viewModel::onCustomProfileChanged,
                     themeMode = themeMode,
+                    dynamicColor = dynamicColor,
+                    themeId = themeId,
+                    customThemes = customThemes,
                     amoledMode = amoledMode,
                     blurEnabled = blurEnabled,
                     homeDebugSettings = homeDebugSettings,
@@ -167,6 +176,18 @@ class MainActivity : ComponentActivity() {
                     onThemeModeChanged = { mode ->
                         themeMode = mode
                         PreferencesHelper.themeMode = mode
+                    },
+                    onDynamicColorChanged = { enabled ->
+                        dynamicColor = enabled
+                        PreferencesHelper.dynamicColor = enabled
+                    },
+                    onThemeIdChanged = { selectedId ->
+                        themeId = selectedId
+                        PreferencesHelper.themeId = selectedId
+                    },
+                    onCustomThemesChanged = { themes ->
+                        customThemes = themes
+                        PreferencesHelper.customThemes = themes
                     },
                     onAmoledModeChanged = { enabled ->
                         amoledMode = enabled
