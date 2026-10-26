@@ -30,7 +30,8 @@
 
 ## Download
 
-Download the latest APK from [GitHub Releases](https://github.com/anlaki-py/akihz/releases/latest).
+Download the latest APK from [akiHz website](https://akihz.anlaki.dev/) (recommended).
+or download the latest APK from [GitHub Releases](https://github.com/anlaki-py/akihz/releases/latest).
 Most modern phones use the `arm64-v8a` APK; choose the `universal` APK if you
 are unsure which architecture your device uses.
 
