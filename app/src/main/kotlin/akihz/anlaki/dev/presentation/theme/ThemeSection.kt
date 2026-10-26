@@ -1,18 +1,23 @@
 package akihz.anlaki.dev.presentation.theme
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,12 +27,19 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
+import me.rerere.hugeicons.HugeIcons
+import me.rerere.hugeicons.stroke.Moon02
+import me.rerere.hugeicons.stroke.SmartPhone01
+import me.rerere.hugeicons.stroke.Sun01
 
 /**
  * Shows RikkaHub's color-mode selector and the entry to theme preferences.
@@ -43,11 +55,10 @@ fun ThemeSection(
     onOpenThemePreferences: () -> Unit
 ) {
     PreferenceGroup(heading = "Appearance") {
-        formItem(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        formItem {
             Text(
                 text = "Color mode",
-                style = MaterialTheme.typography.titleMediumEmphasized,
-                modifier = Modifier.padding(bottom = 10.dp)
+                style = MaterialTheme.typography.titleMediumEmphasized
             )
             Row(
                 modifier = Modifier
@@ -67,7 +78,7 @@ fun ThemeSection(
                         onCheckedChange = { if (!selected) onThemeModeChanged(mode) },
                         modifier = Modifier
                             .weight(weight)
-                            .heightIn(min = 56.dp)
+                            .heightIn(min = 48.dp)
                             .semantics { role = Role.RadioButton },
                         shapes = when (index) {
                             0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -75,19 +86,15 @@ fun ThemeSection(
                             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                         },
                         colors = ToggleButtonDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                         ),
                         contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
-                        Icon(
-                            imageVector = when (mode) {
-                                AppThemeMode.System -> Icons.Default.SettingsBrightness
-                                AppThemeMode.Light -> Icons.Default.LightMode
-                                AppThemeMode.Dark -> Icons.Default.DarkMode
-                            },
-                            contentDescription = null
+                        ConnectedChoiceLabel(
+                            text = mode.label,
+                            selected = selected,
+                            icon = mode.icon()
                         )
-                        Text(mode.label, maxLines = 1)
                     }
                 }
             }
@@ -99,4 +106,39 @@ fun ThemeSection(
             onClick = onOpenThemePreferences
         )
     }
+}
+
+@Composable
+private fun ConnectedChoiceLabel(
+    text: String,
+    selected: Boolean,
+    icon: ImageVector
+) {
+    AnimatedVisibility(
+        visible = selected,
+        enter = expandHorizontally(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+        exit = shrinkHorizontally(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+    ) {
+        Row {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+            )
+            Spacer(Modifier.width(ToggleButtonDefaults.IconSpacing))
+        }
+    }
+    Text(
+        text = text,
+        autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = 14.sp),
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+private fun AppThemeMode.icon(): ImageVector = when (this) {
+    AppThemeMode.System -> HugeIcons.SmartPhone01
+    AppThemeMode.Light -> HugeIcons.Sun01
+    AppThemeMode.Dark -> HugeIcons.Moon02
 }
