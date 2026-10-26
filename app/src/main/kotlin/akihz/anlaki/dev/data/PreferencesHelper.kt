@@ -9,6 +9,7 @@ import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.domain.update.UpdateChannel
 import akihz.anlaki.dev.domain.update.UpdateCheckFrequency
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
+import akihz.anlaki.dev.presentation.theme.CustomTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,9 @@ object PreferencesHelper {
     private const val KEY_EXCLUDED_TILE_RATES = "excluded_tile_rates"
     private const val KEY_OEM_OVERRIDE = "oem_override"
     private const val KEY_THEME_MODE = "theme_mode"
+    private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+    private const val KEY_THEME_ID = "theme_id"
+    private const val KEY_CUSTOM_THEMES = "custom_themes"
     private const val KEY_AMOLED_MODE = "amoled_mode"
     private const val KEY_BLUR_ENABLED = "blur_enabled"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
@@ -122,6 +126,18 @@ object PreferencesHelper {
             )
         }.getOrDefault(AppThemeMode.System)
         set(value) = prefs.edit { putString(KEY_THEME_MODE, value.name) }
+
+    var dynamicColor: Boolean
+        get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
+        set(value) = prefs.edit { putBoolean(KEY_DYNAMIC_COLOR, value) }
+
+    var themeId: String
+        get() = prefs.getString(KEY_THEME_ID, "sakura") ?: "sakura"
+        set(value) = prefs.edit { putString(KEY_THEME_ID, value) }
+
+    var customThemes: List<CustomTheme>
+        get() = CustomTheme.decodeList(prefs.getString(KEY_CUSTOM_THEMES, null))
+        set(value) = prefs.edit { putString(KEY_CUSTOM_THEMES, CustomTheme.encodeList(value)) }
 
     var amoledMode: Boolean
         get() = prefs.getBoolean(KEY_AMOLED_MODE, false)

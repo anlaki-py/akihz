@@ -12,6 +12,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
+import akihz.anlaki.dev.presentation.theme.ThemeSection
 
 /**
  * Displays appearance, background, engine, update and about preferences.
@@ -21,11 +22,8 @@ import akihz.anlaki.dev.presentation.theme.AppThemeMode
  * @param onResetToDefaults restores system refresh-rate settings
  * @param onOpenCustomKeys opens custom refresh-rate key configuration
  * @param themeMode currently selected appearance mode
- * @param amoledMode whether pure-black dark surfaces are enabled
- * @param blurEnabled whether progressive edge blur is enabled
  * @param onThemeModeChanged invoked when the appearance mode changes
- * @param onAmoledModeChanged invoked when AMOLED mode changes
- * @param onBlurEnabledChanged invoked when progressive blur changes
+ * @param onOpenThemePreferences opens dynamic color and theme preferences
  * @param onOpenDebugSettings opens the hidden home-screen tuning page
  * @param debugOptionsUnlocked whether the persistent developer entry is visible
  * @param onDebugOptionsUnlocked persists the developer entry after six version taps
@@ -39,11 +37,8 @@ fun SettingsScreen(
     onResetToDefaults: () -> Unit,
     onOpenCustomKeys: () -> Unit,
     themeMode: AppThemeMode,
-    amoledMode: Boolean,
-    blurEnabled: Boolean,
     onThemeModeChanged: (AppThemeMode) -> Unit,
-    onAmoledModeChanged: (Boolean) -> Unit,
-    onBlurEnabledChanged: (Boolean) -> Unit,
+    onOpenThemePreferences: () -> Unit,
     debugOptionsUnlocked: Boolean,
     onDebugOptionsUnlocked: () -> Unit,
     onOpenDebugSettings: () -> Unit,
@@ -60,11 +55,8 @@ fun SettingsScreen(
     ) {
         ThemeSection(
             themeMode = themeMode,
-            amoledMode = amoledMode,
-            blurEnabled = blurEnabled,
             onThemeModeChanged = onThemeModeChanged,
-            onAmoledModeChanged = onAmoledModeChanged,
-            onBlurEnabledChanged = onBlurEnabledChanged
+            onOpenThemePreferences = onOpenThemePreferences
         )
         BackgroundSection(
             keepAliveEnabled = keepAliveEnabled,
