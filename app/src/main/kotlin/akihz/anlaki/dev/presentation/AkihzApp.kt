@@ -131,13 +131,14 @@ fun AkihzApp(
     LaunchedEffect(openUpdatesRequest) {
         if (openUpdatesRequest > 0) {
             navigator.open(AppDestination.Root)
-            pagerState.scrollToPage(AppTab.Settings.ordinal)
+            pagerState.requestScrollToPage(AppTab.Settings.ordinal)
         }
     }
 
     LaunchedEffect(openDebugRequest) {
         if (openDebugRequest > 0) {
-            pagerState.scrollToPage(AppTab.Settings.ordinal)
+            // The root pager may be off-screen. Do not wait for its layout before navigating.
+            pagerState.requestScrollToPage(AppTab.Settings.ordinal)
             navigator.open(AppDestination.fromDebugPage(debugPage))
             if (!debugOptionsUnlocked) onDebugOptionsUnlocked()
         }
@@ -145,7 +146,7 @@ fun AkihzApp(
 
     LaunchedEffect(openFpsMonitorRequest) {
         if (openFpsMonitorRequest > 0) {
-            pagerState.scrollToPage(AppTab.Settings.ordinal)
+            pagerState.requestScrollToPage(AppTab.Settings.ordinal)
             navigator.open(AppDestination.FpsMonitor)
         }
     }
