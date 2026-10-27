@@ -2,7 +2,6 @@ package akihz.anlaki.dev.presentation.theme
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
@@ -20,10 +19,8 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  * @param amoledMode whether dark surfaces use pure black
  * @param themedAppIcon whether the launcher icon uses Material colors
  * @param onThemedAppIconChanged persists launcher icon changes
- * @param blurEnabled whether page content blurs under overlays
  * @param onDynamicColorChanged persists dynamic color changes
  * @param onAmoledModeChanged persists AMOLED changes
- * @param onBlurEnabledChanged persists blur changes
  * @param onOpenColorSchemes opens the second-level color scheme page
  * @param onBack returns to Settings
  * @param modifier page modifier
@@ -32,12 +29,10 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 fun ThemePreferencesScreen(
     dynamicColor: Boolean,
     amoledMode: Boolean,
-    blurEnabled: Boolean,
     themedAppIcon: Boolean,
     onThemedAppIconChanged: (Boolean) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
-    onBlurEnabledChanged: (Boolean) -> Unit,
     onOpenColorSchemes: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,13 +74,6 @@ fun ThemePreferencesScreen(
                 icon = Icons.Default.DarkMode,
                 checked = amoledMode,
                 onCheckedChange = onAmoledModeChanged
-            )
-            PreferenceTemplate(
-                title = "Background blur",
-                description = "Blur content beneath the top and bottom overlays",
-                icon = Icons.Default.BlurOn,
-                checked = blurEnabled,
-                onCheckedChange = onBlurEnabledChanged
             )
         }
     }

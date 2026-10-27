@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
@@ -23,7 +24,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import akihz.anlaki.dev.data.HomeDebugSettings
-import akihz.anlaki.dev.presentation.components.AppPageSurface
 import akihz.anlaki.dev.presentation.components.AppTab
 import akihz.anlaki.dev.presentation.components.AppTabs
 import akihz.anlaki.dev.presentation.components.pagePopTransition
@@ -51,7 +51,6 @@ import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
  * @param amoledMode whether pure-black dark surfaces are enabled
  * @param themedAppIcon whether the launcher icon uses Material colors
  * @param onThemedAppIconChanged updates the launcher icon preference
- * @param blurEnabled whether progressive edge blur is enabled
  * @param homeDebugSettings current home-screen tuning values
  * @param onHomeDebugSettingsChanged persists updated home-screen tuning
  * @param debugOptionsUnlocked whether the hidden developer entry has been unlocked
@@ -61,7 +60,6 @@ import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
  * @param onThemeIdChanged invoked when the selected color scheme changes
  * @param onCustomThemesChanged invoked when custom themes change
  * @param onAmoledModeChanged invoked when AMOLED mode changes
- * @param onBlurEnabledChanged invoked when progressive blur changes
  * @param keepAliveEnabled whether the keep-alive notification is enabled
  * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  * @param onErrorDismissed clears an error after it is shown
@@ -82,7 +80,6 @@ fun AkihzApp(
     themeId: String,
     customThemes: List<CustomTheme>,
     amoledMode: Boolean,
-    blurEnabled: Boolean,
     themedAppIcon: Boolean,
     onThemedAppIconChanged: (Boolean) -> Unit,
     homeDebugSettings: HomeDebugSettings,
@@ -94,7 +91,6 @@ fun AkihzApp(
     onThemeIdChanged: (String) -> Unit,
     onCustomThemesChanged: (List<CustomTheme>) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
-    onBlurEnabledChanged: (Boolean) -> Unit,
     keepAliveEnabled: Boolean = true,
     onKeepAliveEnabledChanged: (Boolean) -> Unit = {},
     openUpdatesRequest: Int = 0,
@@ -163,7 +159,7 @@ fun AkihzApp(
             )
         }
     ) { padding ->
-        AppPageSurface(blurEnabled = blurEnabled, modifier = Modifier.padding(padding)) {
+        Box(Modifier.fillMaxSize().padding(padding)) {
             val motionScheme = MaterialTheme.motionScheme
             NavDisplay(
                 backStack = navigator.backStack,
@@ -204,10 +200,8 @@ fun AkihzApp(
                                 onThemedAppIconChanged = onThemedAppIconChanged,
                                 dynamicColor = dynamicColor,
                                 amoledMode = amoledMode,
-                                blurEnabled = blurEnabled,
                                 onDynamicColorChanged = onDynamicColorChanged,
                                 onAmoledModeChanged = onAmoledModeChanged,
-                                onBlurEnabledChanged = onBlurEnabledChanged,
                                 onOpenColorSchemes = { navigator.open(AppDestination.ThemePalette) },
                                 onBack = onBack
                             )

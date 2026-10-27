@@ -33,7 +33,6 @@ object PreferencesHelper {
     private const val KEY_THEME_ID = "theme_id"
     private const val KEY_CUSTOM_THEMES = "custom_themes"
     private const val KEY_AMOLED_MODE = "amoled_mode"
-    private const val KEY_BLUR_ENABLED = "blur_enabled"
     private const val KEY_UPDATE_CHANNEL = "update_channel"
     private const val KEY_UPDATE_CHECK_FREQUENCY = "update_check_frequency"
     private const val KEY_LAST_UPDATE_CHECK_AT = "last_update_check_at"
@@ -148,10 +147,6 @@ object PreferencesHelper {
     var amoledMode: Boolean
         get() = prefs.getBoolean(KEY_AMOLED_MODE, false)
         set(value) = prefs.edit { putBoolean(KEY_AMOLED_MODE, value) }
-
-    var blurEnabled: Boolean
-        get() = prefs.getBoolean(KEY_BLUR_ENABLED, true)
-        set(value) = prefs.edit { putBoolean(KEY_BLUR_ENABLED, value) }
 
     var updateChannel: UpdateChannel
         get() = runCatching {
