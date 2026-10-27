@@ -135,6 +135,17 @@ feature requests. You are welcome to fork it and make your own changes.
 
 More projects by the developer are available at [anlaki.dev](https://anlaki.dev/).
 
+## Error reports
+
+Tap the version row six times to unlock Debug options, then open **Error logs**.
+Use **Copy debug report** to copy recent errors and theme events, or **Share all logs**
+to send every saved report in one text file.
+
+Release builds save app warnings, errors, caught exceptions, and crashes. Android
+process exit records are collected on the next launch, including available ANR
+traces. An activity closing without a process crash may only leave lifecycle events.
+Storage keeps the latest 100 errors, 30 crashes, 30 exits, and two small event logs.
+
 ## Build
 
 Build the universal debug APK:

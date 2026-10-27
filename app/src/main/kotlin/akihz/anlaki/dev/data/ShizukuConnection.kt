@@ -135,6 +135,7 @@ internal object ShizukuConnection {
                 }
                 Timber.i("Shizuku user service connected")
                 runCatching { onServiceReady() }
+                    .onFailure { Timber.e(it, "Shizuku service initialization failed") }
                 callbacks.forEach { it.onConnected() }
             }
 

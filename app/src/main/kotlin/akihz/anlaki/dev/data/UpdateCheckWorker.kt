@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.data
 
+import timber.log.Timber
+
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -22,6 +24,8 @@ class UpdateCheckWorker(
             checkForUpdate()
             Result.success()
         } catch (error: Exception) {
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            Timber.w(error, "Background update check failed")
             if (error.isTransient() && runAttemptCount < MAX_ATTEMPTS) {
                 Result.retry()
             } else {

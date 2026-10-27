@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import timber.log.Timber
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -25,6 +27,7 @@ object BatteryOptimizationHelper {
         runCatching {
             context.startActivity(directRequest)
         }.onFailure {
+            Timber.w(it, "Could not open battery exemption request")
             context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         }
     }

@@ -37,7 +37,7 @@
 - Broadcast receiver `akihz.anlaki.dev.DebugCliReceiver` (`@AndroidEntryPoint`, `android:exported="true"`, `ACTION=akihz.anlaki.dev.DEBUG_CLI`):
   - Always use explicit broadcast: `adb shell am broadcast -n $PKG/akihz.anlaki.dev.DebugCliReceiver -a akihz.anlaki.dev.DEBUG_CLI --es cmd <cmd> [--es arg <value>]`
   - `cmd` values: `list_crashes` (lists `filesDir/crash_logs`), `cat_crash` (`--es arg <filename>` partial match), `create_test_crash`, `clear_crashes`, `trigger_crash [--es arg <msg>]`, `perf_status`, `perf_start`, `perf_stop`, `perf_cat`, `help`.
-  - Results written synchronously to `filesDir/debug_cli_output.txt` and `Timber.i`; read via `adb shell run-as $PKG cat /data/data/$PKG/files/debug_cli_output.txt`.
+  - Results written before broadcast completion to `filesDir/debug_cli_output.txt` and `Timber.i`; read via `adb shell run-as $PKG cat /data/data/$PKG/files/debug_cli_output.txt`.
   - Storage: crashes `filesDir/crash_logs` (`CrashLogStore.saveSync()` synchronous in `AkihzApplication` uncaught handler, `saveCaught()` for manual), perf log `cache/perf/perf-active.log` (`PerfRecorderState` + `PerfLogJson` with `Locale.US` formatting).
   - Raw file access (no UI): `adb shell run-as $PKG ls /data/data/$PKG/files/crash_logs/`, `cat .../crash-*.log`, `cat .../cache/perf/perf-active.log`, `ls /sdcard/Download/akihz/crashes/` and `/akihz/perf/`.
 - Helper script `scripts/debug-cli.sh` (executable, auto-detects `192.168.1.10:5555` or first `adb devices`, respects `ADB`/`ANDROID_SERIAL`):
@@ -45,6 +45,14 @@
   - `./scripts/debug-cli.sh open-crash|open-performance|open-debug <page>`
   - `./scripts/debug-cli.sh pull-crash <file> [dest]|pull-all-crashes [dest]|pull-perf [dest]|logcat|logcat-crash|help`
   - Example: `./scripts/debug-cli.sh create-test-crash && ./scripts/debug-cli.sh list-crashes && ./scripts/debug-cli.sh perf-start && sleep 3 && ./scripts/debug-cli.sh perf-cat && ./scripts/debug-cli.sh perf-stop`
+
+## Error logging
+- Release and debug builds plant `DiagnosticLogTree`. It persists Timber warnings, errors, and logged exceptions to `CrashLogStore`. `Result.Error` also logs failed operations.
+- Debug options > Error logs provides Copy debug report and Share all logs. Clipboard reports are bounded; file sharing includes all retained logs.
+- Storage retains 100 errors, 30 crashes, 30 process exits, and two 64 KB event logs. Theme and lifecycle events help diagnose activity closures without process crashes.
+- `ProcessExitLogCollector` imports Android exit history at startup and when the log page refreshes. Deleted reports are not imported again.
+- Debug CLI adds `create_test_error` and `diagnostic_report`. Existing crash commands remain available. CLI work runs asynchronously and writes its output before the broadcast finishes.
+- Launcher aliases change only from `LauncherIconLifecycleObserver.onStop`, after the app leaves the foreground. Never switch aliases from a theme tap or activity startup; a launcher can close the task even with `DONT_KILL_APP`.
 
 ## Android/Termux Environment
 - Before running local Gradle builds, lint, tests, APK packaging, or Android runtime verification, check if the build tools exist on the system.

@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation.theme
 
+import timber.log.Timber
+
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
@@ -24,7 +26,7 @@ internal enum class LauncherIcon {
     }
 }
 
-/** Changes launcher aliases without disabling MainActivity or stopping app services. */
+/** Changes launcher aliases. Call only after the app leaves the foreground. */
 internal class LauncherIconSwitcher(
     private val packageManager: PackageManager,
     private val components: Map<LauncherIcon, ComponentName>,
@@ -58,6 +60,8 @@ internal class LauncherIconSwitcher(
                 }
             }
         if (changes.isEmpty()) return
+
+        Timber.tag("Theme").i("Applying launcher icon: %s", selected)
 
         if (supportsAtomicChanges()) {
             packageManager.setComponentEnabledSettings(changes.map { (component, state) ->

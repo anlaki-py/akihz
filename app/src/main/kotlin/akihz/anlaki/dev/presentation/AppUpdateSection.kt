@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import timber.log.Timber
+
 import android.Manifest
 import android.app.DownloadManager
 import android.content.pm.PackageManager
@@ -86,6 +88,7 @@ fun PreferenceGroupScope.AppUpdateSection(currentVersionCode: Long, autoCheckReq
                 UpdateAvailableNotification.cancel(context)
             }
             .onFailure {
+                Timber.e(it, "Could not start update download")
                 statusText = "Download failed"
                 message = it.message ?: "Unable to start the download"
             }
@@ -138,6 +141,8 @@ fun PreferenceGroupScope.AppUpdateSection(currentVersionCode: Long, autoCheckReq
                     }
                 }
                 .onFailure {
+                    if (it is kotlinx.coroutines.CancellationException) throw it
+                    Timber.e(it, "Update check failed")
                     statusText = "Update check failed"
                     message = it.message ?: "Unable to check for updates"
                 }

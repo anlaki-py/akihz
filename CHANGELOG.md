@@ -9,6 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Added error logs with warnings, crashes, and Android process exit details.
+- Added one-tap copy and sharing for debug reports.
 - Added back gestures that preview the previous page before you finish swiping.
 - Added a Material app icon that follows the app color mode, with an option under Theme to use the original icon.
 
@@ -20,6 +22,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Fixed
 
+- Fixed theme switching closing the app by updating its icon after you leave.
 - Fixed Theme and Keep alive switches getting stuck after a tap.
 
 ## [0.0.50] - 2026-10-26

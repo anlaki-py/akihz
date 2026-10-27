@@ -79,13 +79,15 @@ class KeepAliveService : Service() {
             return try {
                 PreferencesHelper.init(context)
                 PreferencesHelper.keepAliveEnabled
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                Timber.w(error, "Could not read keep-alive preference")
                 // Fallback to raw SharedPreferences if PreferencesHelper is not yet fully initialized
                 try {
                     val prefs = context.getSharedPreferences("akihz_prefs", Context.MODE_PRIVATE)
                     // If key missing -> default true per spec
                     if (!prefs.contains("keep_alive_enabled")) true else prefs.getBoolean("keep_alive_enabled", true)
-                } catch (_: Exception) {
+                } catch (error: Exception) {
+                    Timber.e(error, "Could not read keep-alive fallback preference")
                     true
                 }
             }

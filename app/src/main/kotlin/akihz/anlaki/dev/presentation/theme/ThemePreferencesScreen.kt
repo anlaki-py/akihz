@@ -49,7 +49,8 @@ fun ThemePreferencesScreen(
                 title = "Material app icon",
                 description = "Use wallpaper colors with the app's light or dark mode. " +
                     "Preset and custom theme colors do not affect the icon. Android 11 uses fixed colors. " +
-                    "Turn off for the original icon. Your launcher may apply its own icon theme.",
+                    "The icon updates after you leave the app. Turn off for the original icon. " +
+                    "Your launcher may apply its own icon theme.",
                 icon = Icons.Default.Apps,
                 checked = themedAppIcon,
                 onCheckedChange = onThemedAppIconChanged

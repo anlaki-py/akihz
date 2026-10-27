@@ -216,6 +216,8 @@ class FpsMonitorService : Service() {
                 overlay?.display(foreground, layers)
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "FPS sampling failed")
             val text = "Monitor error"
             logger?.append("ERROR ${e.javaClass.name}: ${e.message}")
             withContext(Dispatchers.Main) { overlay?.setStatus(text) }

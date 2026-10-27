@@ -57,7 +57,9 @@ internal class FpsOverlayWindow(context: Context) {
         Timber.i("Detaching FPS overlay")
         try {
             windowManager.removeView(view)
-        } catch (_: Exception) {}
+        } catch (error: Exception) {
+            Timber.w(error, "Could not remove FPS overlay")
+        }
         root = null
         params = null
     }
@@ -86,7 +88,9 @@ internal class FpsOverlayWindow(context: Context) {
             val current = params ?: return@postFrameCallback
             try {
                 windowManager.updateViewLayout(view, current)
-            } catch (_: Exception) {}
+            } catch (error: Exception) {
+                Timber.w(error, "Could not move FPS overlay")
+            }
         }
     }
 
@@ -97,7 +101,9 @@ internal class FpsOverlayWindow(context: Context) {
         if (!view.isAttachedToWindow) return
         try {
             windowManager.updateViewLayout(view, p)
-        } catch (_: Exception) {}
+        } catch (error: Exception) {
+            Timber.w(error, "Could not resize FPS overlay")
+        }
     }
 
     /** Clamps the root inside the screen. */
@@ -120,7 +126,9 @@ internal class FpsOverlayWindow(context: Context) {
             p.y = clampedY
             try {
                 windowManager.updateViewLayout(view, p)
-            } catch (_: Exception) {}
+            } catch (error: Exception) {
+                Timber.w(error, "Could not clamp FPS overlay position")
+            }
         }
     }
 

@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.utils
 
+import timber.log.Timber
+
 /**
  * A sealed class representing the result of an operation that can either succeed or fail.
  *
@@ -7,7 +9,12 @@ package akihz.anlaki.dev.utils
  */
 sealed class Result<out T> {
     data class Success<T>(val data: T) : Result<T>()
-    data class Error(val errorType: ErrorType, val message: String = errorType.getUserMessage()) : Result<Nothing>()
+    data class Error(val errorType: ErrorType, val message: String = errorType.getUserMessage()) : Result<Nothing>() {
+        init {
+            // Failed operations often return a Result without throwing an exception.
+            Timber.tag("OperationError").e("%s: %s", errorType, message)
+        }
+    }
 
     val isSuccess: Boolean get() = this is Success
     val isError: Boolean get() = this is Error
