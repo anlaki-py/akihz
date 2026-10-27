@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.width
+import akihz.anlaki.dev.presentation.BackgroundSection
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
 import org.junit.Assert.assertEquals
@@ -39,19 +40,51 @@ class AppNavigationDisplayTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun themeSwitchCanToggleBothWaysWithoutLeavingThePage() {
+    fun allThemeSwitchesCanToggleBothWaysWithoutLeavingThePage() {
         val navigator = AppNavigator(AppDestination.ThemePreferences)
         var dynamicColor by mutableStateOf(false)
+        var amoledMode by mutableStateOf(false)
+        var themedIcon by mutableStateOf(true)
         compose.setContent {
             AnlakiTheme(dynamicColor = false) {
-                ThemePage(navigator, dynamicColor) { dynamicColor = it }
+                ThemePage(
+                    navigator = navigator,
+                    dynamicColor = dynamicColor,
+                    onDynamicColorChanged = { dynamicColor = it },
+                    amoledMode = amoledMode,
+                    onAmoledModeChanged = { amoledMode = it },
+                    themedIcon = themedIcon,
+                    onThemedIconChanged = { themedIcon = it }
+                )
             }
         }
 
-        val row = compose.onNodeWithText("Dynamic color")
-        row.performScrollTo().assertIsOff().performClick().assertIsOn()
-        row.performClick().assertIsOff()
+        compose.onNodeWithText("Material app icon")
+            .performScrollTo().assertIsOn().performClick().assertIsOff().performClick().assertIsOn()
+        listOf("Dynamic color", "Pitch-black AMOLED").forEach { title ->
+            compose.onNodeWithText(title)
+                .performScrollTo().assertIsOff().performClick().assertIsOn().performClick().assertIsOff()
+        }
         compose.runOnIdle { assertEquals(AppDestination.ThemePreferences, navigator.current) }
+    }
+
+    @Test
+    fun keepAliveSwitchCanBeTurnedOffAndBackOnWithoutLeavingSettings() {
+        val navigator = AppNavigator()
+        var enabled by mutableStateOf(true)
+        val changes = mutableListOf<Boolean>()
+        compose.setContent {
+            AnlakiTheme(dynamicColor = false) {
+                KeepAlivePage(navigator, enabled) {
+                    changes.add(it)
+                    enabled = it
+                }
+            }
+        }
+
+        compose.onNodeWithText("Keep alive notification")
+            .assertIsOn().performClick().assertIsOff().performClick().assertIsOn()
+        compose.runOnIdle { assertEquals(listOf(false, true), changes) }
     }
 
     @Test
@@ -141,18 +174,33 @@ class AppNavigationDisplayTest {
 // Pass values across a composable boundary, just as MainActivity does. Reading
 // mutableState directly inside an entry would hide the stale captured-value bug.
 @Composable
-private fun ThemePage(navigator: AppNavigator, dynamicColor: Boolean, onChange: (Boolean) -> Unit) {
+private fun ThemePage(
+    navigator: AppNavigator,
+    dynamicColor: Boolean,
+    onDynamicColorChanged: (Boolean) -> Unit,
+    amoledMode: Boolean,
+    onAmoledModeChanged: (Boolean) -> Unit,
+    themedIcon: Boolean,
+    onThemedIconChanged: (Boolean) -> Unit
+) {
     AppNavigationDisplay(navigator.backStack, onBack = { navigator.pop() }) {
         ThemePreferencesScreen(
             dynamicColor = dynamicColor,
-            amoledMode = false,
-            themedAppIcon = true,
-            onThemedAppIconChanged = {},
-            onDynamicColorChanged = onChange,
-            onAmoledModeChanged = {},
+            amoledMode = amoledMode,
+            themedAppIcon = themedIcon,
+            onThemedAppIconChanged = onThemedIconChanged,
+            onDynamicColorChanged = onDynamicColorChanged,
+            onAmoledModeChanged = onAmoledModeChanged,
             onOpenColorSchemes = {},
             onBack = { navigator.pop() }
         )
+    }
+}
+
+@Composable
+private fun KeepAlivePage(navigator: AppNavigator, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    AppNavigationDisplay(navigator.backStack, onBack = { navigator.pop() }) {
+        BackgroundSection(enabled, onChange)
     }
 }
 
