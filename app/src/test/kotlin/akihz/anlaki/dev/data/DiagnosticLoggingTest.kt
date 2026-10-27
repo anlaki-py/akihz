@@ -27,7 +27,7 @@ class DiagnosticLoggingTest {
 
     @Before
     fun setUp() {
-        store = CrashLogStore(RuntimeEnvironment.getApplication<Application>())
+        store = CrashLogStore(RuntimeEnvironment.getApplication())
         store.deleteAll()
         Timber.uprootAll()
         Timber.plant(DiagnosticLogTree(store))
@@ -64,7 +64,7 @@ class DiagnosticLoggingTest {
     fun `theme events survive a new store and appear beside the crash`() {
         Timber.tag("Theme").i("Color mode: Dark -> Light")
         store.saveSync(Thread.currentThread(), IllegalStateException("Fatal failure"))
-        val restored = CrashLogStore(RuntimeEnvironment.getApplication<Application>())
+        val restored = CrashLogStore(RuntimeEnvironment.getApplication())
         assertTrue(restored.recentReport().contains("Dark -> Light"))
         assertTrue(restored.getAll().single().let(restored::readContent).contains("Fatal failure"))
     }
@@ -96,7 +96,7 @@ class DiagnosticLoggingTest {
         val report = store.recentReport()
         assertTrue(report.length < 181_000)
         assertTrue(report.contains("Older reports omitted"))
-        val bundle = File(RuntimeEnvironment.getApplication<Application>().cacheDir, "test-report.txt")
+        val bundle = File(RuntimeEnvironment.getApplication().cacheDir, "test-report.txt")
         try {
             store.writeBundle(bundle)
             assertTrue(bundle.length() > 300_000)
