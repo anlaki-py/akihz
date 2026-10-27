@@ -14,8 +14,13 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
-- Added a small bounce when switching Home and Settings.
+- Added a sliding, bouncing selection pill when switching Home and Settings.
+- Made back previews follow your swipe steadily with less zoom.
 - Removed background blur and its theme setting.
+
+### Fixed
+
+- Fixed controls that kept showing old values after a tap.
 
 ## [0.0.50] - 2026-10-26
 

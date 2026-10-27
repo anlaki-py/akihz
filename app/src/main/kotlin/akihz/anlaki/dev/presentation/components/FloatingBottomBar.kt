@@ -1,6 +1,10 @@
 package akihz.anlaki.dev.presentation.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,8 +29,16 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
+
+private val ItemWidth = 52.dp
+private val LabelWidth = 80.dp
+private val ItemSpacing = 8.dp
 
 internal data class FloatingNavigationItem(
     val label: String,
@@ -41,6 +53,12 @@ internal fun FloatingBottomBar(
     selectedIndex: Int,
     modifier: Modifier = Modifier
 ) {
+    val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
+    val selectionPosition by animateFloatAsState(
+        targetValue = selectedIndex.toFloat(),
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
+        label = "navigation_selection"
+    )
     Surface(
         modifier = modifier
             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -50,67 +68,65 @@ internal fun FloatingBottomBar(
         contentColor = MaterialTheme.colorScheme.onPrimary,
         shadowElevation = 8.dp
     ) {
-        Row(modifier = Modifier.padding(6.dp)) {
-            items.forEachIndexed { index, item ->
-                val selected = index == selectedIndex
-                val selectionProgress by animateFloatAsState(
-                    targetValue = if (selected) 1f else 0f,
-                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                    label = "navigation_selection_$index"
-                )
-                Surface(
-                    selected = selected,
-                    onClick = item.onClick,
-                    modifier = Modifier.height(52.dp),
-                    shape = CircleShape,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.surface
-                    } else {
-                        Color.Transparent
-                    },
-                    contentColor = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onPrimary
+        Box(Modifier.padding(6.dp)) {
+            // Animate one pill across the bar. Its overshoot never changes touch bounds.
+            Box(
+                Modifier
+                    .size(width = ItemWidth + LabelWidth, height = 52.dp)
+                    .graphicsLayer {
+                        translationX = (ItemWidth + ItemSpacing).toPx() * selectionPosition * direction
                     }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 13.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    .testTag("navigation_indicator")
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+            )
+            Row {
+                items.forEachIndexed { index, item ->
+                    val selected = index == selectedIndex
+                    val boundedPosition = selectionPosition.coerceIn(0f, items.lastIndex.toFloat())
+                    val labelProgress = (1f - abs(boundedPosition - index)).coerceIn(0f, 1f)
+                    val contentColor by animateColorAsState(
+                        targetValue = if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onPrimary,
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                        label = "navigation_color_$index"
+                    )
+                    Surface(
+                        selected = selected,
+                        onClick = item.onClick,
+                        modifier = Modifier.height(52.dp),
+                        shape = CircleShape,
+                        color = Color.Transparent,
+                        contentColor = contentColor
                     ) {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = item.label,
-                            modifier = Modifier
-                                .size(26.dp)
-                                .graphicsLayer {
-                                    // Let the spring overshoot visually without moving the tab's bounds.
-                                    val scale = 1f + 0.08f * selectionProgress
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                        )
-                        // Keep the label composed and measured at full width. Clamp its
-                        // reveal width so spring overshoot cannot resize the whole bar.
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.labelLargeEmphasized,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .width(80.dp * selectionProgress.coerceIn(0f, 1f))
-                                .clipToBounds()
-                                .wrapContentWidth(Alignment.Start, unbounded = true)
-                                .width(80.dp)
-                                .padding(start = 8.dp)
-                                .graphicsLayer {
-                                    alpha = selectionProgress.coerceIn(0f, 1f)
-                                }
-                                .clearAndSetSemantics {}
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 13.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Text(
+                                text = item.label,
+                                style = MaterialTheme.typography.labelLargeEmphasized,
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .width(LabelWidth * labelProgress)
+                                    .clipToBounds()
+                                    .wrapContentWidth(Alignment.Start, unbounded = true)
+                                    .width(LabelWidth)
+                                    .padding(start = 8.dp)
+                                    .graphicsLayer {
+                                        alpha = labelProgress
+                                    }
+                                    .clearAndSetSemantics {}
+                            )
+                        }
                     }
-                }
-                if (index < items.lastIndex) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    if (index < items.lastIndex) {
+                        Spacer(modifier = Modifier.width(ItemSpacing))
+                    }
                 }
             }
         }
