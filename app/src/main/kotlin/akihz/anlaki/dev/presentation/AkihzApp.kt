@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -19,16 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.presentation.components.AppTab
 import akihz.anlaki.dev.presentation.components.AppTabs
-import akihz.anlaki.dev.presentation.components.pagePopTransition
-import akihz.anlaki.dev.presentation.components.pagePushTransition
 import akihz.anlaki.dev.presentation.navigation.AppDestination
+import akihz.anlaki.dev.presentation.navigation.AppNavigationDisplay
 import akihz.anlaki.dev.presentation.navigation.AppNavigator
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
@@ -160,94 +154,82 @@ fun AkihzApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-            val motionScheme = MaterialTheme.motionScheme
-            NavDisplay(
+            AppNavigationDisplay(
                 backStack = navigator.backStack,
-                modifier = Modifier.fillMaxSize(),
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator()
-                ),
-                onBack = { navigateBack(navigator.current) },
-                transitionSpec = { pagePushTransition(motionScheme) },
-                popTransitionSpec = { pagePopTransition(motionScheme) },
-                predictivePopTransitionSpec = { pagePopTransition(motionScheme) },
-                entryProvider = { destination ->
-                    NavEntry(destination) {
-                        val onBack = { navigateBack(destination) }
-                        when (destination) {
-                            AppDestination.CustomKeys -> CustomKeysScreen(
-                                onBack = onBack,
-                                onProfileChanged = onCustomProfileChanged,
-                                viewModel = hiltViewModel(activityOwner)
+                onBack = { navigateBack(navigator.current) }
+            ) { destination ->
+                val onBack = { navigateBack(destination) }
+                when (destination) {
+                    AppDestination.CustomKeys -> CustomKeysScreen(
+                        onBack = onBack,
+                        onProfileChanged = onCustomProfileChanged,
+                        viewModel = hiltViewModel(activityOwner)
+                    )
+                    AppDestination.DebugOptions -> DebugSettingsScreen(
+                        onBack = onBack,
+                        onOpenHomeScreen = { navigator.open(AppDestination.DebugHome) },
+                        onOpenPerformance = { navigator.open(AppDestination.Performance) },
+                        onOpenCrashLogs = { navigator.open(AppDestination.CrashLogs) }
+                    )
+                    AppDestination.DebugHome -> HomeDebugSettingsScreen(
+                        settings = homeDebugSettings,
+                        onSettingsChanged = onHomeDebugSettingsChanged,
+                        onBack = onBack
+                    )
+                    AppDestination.Performance -> PerformanceMonitorScreen(onBack = onBack)
+                    AppDestination.CrashLogs -> CrashLogScreen(onBack = onBack)
+                    AppDestination.FpsMonitor -> FpsMonitorScreen(onBack = onBack)
+                    AppDestination.ThemePreferences -> ThemePreferencesScreen(
+                        themedAppIcon = themedAppIcon,
+                        onThemedAppIconChanged = onThemedAppIconChanged,
+                        dynamicColor = dynamicColor,
+                        amoledMode = amoledMode,
+                        onDynamicColorChanged = onDynamicColorChanged,
+                        onAmoledModeChanged = onAmoledModeChanged,
+                        onOpenColorSchemes = { navigator.open(AppDestination.ThemePalette) },
+                        onBack = onBack
+                    )
+                    AppDestination.ThemePalette -> ThemePaletteScreen(
+                        dynamicColor = dynamicColor,
+                        selectedThemeId = themeId,
+                        customThemes = customThemes,
+                        onThemeSelected = onThemeIdChanged,
+                        onCustomThemesChanged = onCustomThemesChanged,
+                        onBack = onBack
+                    )
+                    AppDestination.Root -> AppTabs(pagerState) { tab ->
+                        when (tab) {
+                            AppTab.Home -> RefreshRateScreen(
+                                supportedRates = uiState.supportedRates,
+                                currentRate = uiState.currentRate,
+                                excludedTileRates = uiState.excludedTileRates,
+                                isLoading = uiState.isLoading,
+                                debugSettings = homeDebugSettings,
+                                onRateSelected = onRateSelected,
+                                onTileRateIncludedChanged = onTileRateIncludedChanged,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            AppDestination.DebugOptions -> DebugSettingsScreen(
-                                onBack = onBack,
-                                onOpenHomeScreen = { navigator.open(AppDestination.DebugHome) },
-                                onOpenPerformance = { navigator.open(AppDestination.Performance) },
-                                onOpenCrashLogs = { navigator.open(AppDestination.CrashLogs) }
+                            AppTab.Settings -> SettingsScreen(
+                                onResetToDefaults = onResetToDefaults,
+                                onOpenCustomKeys = { navigator.open(AppDestination.CustomKeys) },
+                                themeMode = themeMode,
+                                onThemeModeChanged = onThemeModeChanged,
+                                onOpenThemePreferences = {
+                                    navigator.open(AppDestination.ThemePreferences)
+                                },
+                                debugOptionsUnlocked = debugOptionsUnlocked,
+                                onDebugOptionsUnlocked = onDebugOptionsUnlocked,
+                                onOpenDebugSettings = { navigator.open(AppDestination.DebugOptions) },
+                                onOpenFpsMonitor = { navigator.open(AppDestination.FpsMonitor) },
+                                autoCheckRequest = openUpdatesRequest,
+                                keepAliveEnabled = keepAliveEnabled,
+                                onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            AppDestination.DebugHome -> HomeDebugSettingsScreen(
-                                settings = homeDebugSettings,
-                                onSettingsChanged = onHomeDebugSettingsChanged,
-                                onBack = onBack
-                            )
-                            AppDestination.Performance -> PerformanceMonitorScreen(onBack = onBack)
-                            AppDestination.CrashLogs -> CrashLogScreen(onBack = onBack)
-                            AppDestination.FpsMonitor -> FpsMonitorScreen(onBack = onBack)
-                            AppDestination.ThemePreferences -> ThemePreferencesScreen(
-                                themedAppIcon = themedAppIcon,
-                                onThemedAppIconChanged = onThemedAppIconChanged,
-                                dynamicColor = dynamicColor,
-                                amoledMode = amoledMode,
-                                onDynamicColorChanged = onDynamicColorChanged,
-                                onAmoledModeChanged = onAmoledModeChanged,
-                                onOpenColorSchemes = { navigator.open(AppDestination.ThemePalette) },
-                                onBack = onBack
-                            )
-                            AppDestination.ThemePalette -> ThemePaletteScreen(
-                                dynamicColor = dynamicColor,
-                                selectedThemeId = themeId,
-                                customThemes = customThemes,
-                                onThemeSelected = onThemeIdChanged,
-                                onCustomThemesChanged = onCustomThemesChanged,
-                                onBack = onBack
-                            )
-                            AppDestination.Root -> AppTabs(pagerState) { tab ->
-                                when (tab) {
-                                    AppTab.Home -> RefreshRateScreen(
-                                        supportedRates = uiState.supportedRates,
-                                        currentRate = uiState.currentRate,
-                                        excludedTileRates = uiState.excludedTileRates,
-                                        isLoading = uiState.isLoading,
-                                        debugSettings = homeDebugSettings,
-                                        onRateSelected = onRateSelected,
-                                        onTileRateIncludedChanged = onTileRateIncludedChanged,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                    AppTab.Settings -> SettingsScreen(
-                                        onResetToDefaults = onResetToDefaults,
-                                        onOpenCustomKeys = { navigator.open(AppDestination.CustomKeys) },
-                                        themeMode = themeMode,
-                                        onThemeModeChanged = onThemeModeChanged,
-                                        onOpenThemePreferences = {
-                                            navigator.open(AppDestination.ThemePreferences)
-                                        },
-                                        debugOptionsUnlocked = debugOptionsUnlocked,
-                                        onDebugOptionsUnlocked = onDebugOptionsUnlocked,
-                                        onOpenDebugSettings = { navigator.open(AppDestination.DebugOptions) },
-                                        onOpenFpsMonitor = { navigator.open(AppDestination.FpsMonitor) },
-                                        autoCheckRequest = openUpdatesRequest,
-                                        keepAliveEnabled = keepAliveEnabled,
-                                        onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-                            }
                         }
                     }
                 }
-            )
+            }
         }
     }
 }
