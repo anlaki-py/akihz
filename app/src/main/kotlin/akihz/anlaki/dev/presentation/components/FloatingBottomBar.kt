@@ -1,6 +1,6 @@
 package akihz.anlaki.dev.presentation.components
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -53,10 +53,10 @@ internal fun FloatingBottomBar(
         Row(modifier = Modifier.padding(6.dp)) {
             items.forEachIndexed { index, item ->
                 val selected = index == selectedIndex
-                val labelWidth by animateDpAsState(
-                    targetValue = if (selected) 80.dp else 0.dp,
+                val selectionProgress by animateFloatAsState(
+                    targetValue = if (selected) 1f else 0f,
                     animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                    label = "navigation_label_width_$index"
+                    label = "navigation_selection_$index"
                 )
                 Surface(
                     selected = selected,
@@ -81,7 +81,14 @@ internal fun FloatingBottomBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier
+                                .size(26.dp)
+                                .graphicsLayer {
+                                    // Let the spring overshoot visually without moving the tab's bounds.
+                                    val scale = 1f + 0.08f * selectionProgress
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
                         )
                         // Keep the label composed and measured at full width. Clamp its
                         // reveal width so spring overshoot cannot resize the whole bar.
@@ -90,13 +97,13 @@ internal fun FloatingBottomBar(
                             style = MaterialTheme.typography.labelLargeEmphasized,
                             maxLines = 1,
                             modifier = Modifier
-                                .width(labelWidth.coerceIn(0.dp, 80.dp))
+                                .width(80.dp * selectionProgress.coerceIn(0f, 1f))
                                 .clipToBounds()
                                 .wrapContentWidth(Alignment.Start, unbounded = true)
                                 .width(80.dp)
                                 .padding(start = 8.dp)
                                 .graphicsLayer {
-                                    alpha = (labelWidth / 80.dp).coerceIn(0f, 1f)
+                                    alpha = selectionProgress.coerceIn(0f, 1f)
                                 }
                                 .clearAndSetSemantics {}
                         )
