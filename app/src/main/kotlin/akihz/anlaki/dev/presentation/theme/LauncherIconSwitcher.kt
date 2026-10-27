@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
 
 /** Manifest aliases for the normal icon and each Material color mode. */
 internal enum class LauncherIcon {
@@ -58,7 +59,7 @@ internal class LauncherIconSwitcher(
             }
         if (changes.isEmpty()) return
 
-        if (sdkInt >= Build.VERSION_CODES.TIRAMISU) {
+        if (supportsAtomicChanges()) {
             packageManager.setComponentEnabledSettings(changes.map { (component, state) ->
                 PackageManager.ComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
             })
@@ -69,4 +70,7 @@ internal class LauncherIconSwitcher(
             }
         }
     }
+
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
+    private fun supportsAtomicChanges(): Boolean = sdkInt >= Build.VERSION_CODES.TIRAMISU
 }
