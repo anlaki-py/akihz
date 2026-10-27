@@ -19,7 +19,7 @@ import java.io.File
 class ProcessExitLogCollectorTest {
     @Test
     fun `imports system exits once and does not recreate deleted reports`() {
-        val app = RuntimeEnvironment.getApplication<Application>()
+        val app = RuntimeEnvironment.getApplication()
         val context = mockk<Context>()
         val manager = mockk<ActivityManager>()
         val store = mockk<CrashLogStore>()
@@ -47,7 +47,7 @@ class ProcessExitLogCollectorTest {
 
     @Test
     fun `failed write is retried instead of marking the exit imported`() {
-        val app = RuntimeEnvironment.getApplication<Application>()
+        val app = RuntimeEnvironment.getApplication()
         val context = mockk<Context>()
         val manager = mockk<ActivityManager>()
         val store = mockk<CrashLogStore>()
