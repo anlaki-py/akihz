@@ -116,7 +116,6 @@ class MainActivity : ComponentActivity() {
             var themeId by rememberSaveable { mutableStateOf(PreferencesHelper.themeId) }
             var customThemes by remember { mutableStateOf(PreferencesHelper.customThemes) }
             var amoledMode by rememberSaveable { mutableStateOf(PreferencesHelper.amoledMode) }
-            var blurEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.blurEnabled) }
             var keepAliveEnabled by rememberSaveable { mutableStateOf(PreferencesHelper.keepAliveEnabled) }
             var homeDebugSettings by remember {
                 mutableStateOf(PreferencesHelper.homeDebugSettings)
@@ -174,7 +173,6 @@ class MainActivity : ComponentActivity() {
                     themeId = themeId,
                     customThemes = customThemes,
                     amoledMode = amoledMode,
-                    blurEnabled = blurEnabled,
                     homeDebugSettings = homeDebugSettings,
                     onHomeDebugSettingsChanged = { settings ->
                         homeDebugSettings = settings
@@ -206,10 +204,6 @@ class MainActivity : ComponentActivity() {
                     onAmoledModeChanged = { enabled ->
                         amoledMode = enabled
                         PreferencesHelper.amoledMode = enabled
-                    },
-                    onBlurEnabledChanged = { enabled ->
-                        blurEnabled = enabled
-                        PreferencesHelper.blurEnabled = enabled
                     },
                     keepAliveEnabled = keepAliveEnabled,
                     onKeepAliveEnabledChanged = { enabled ->
