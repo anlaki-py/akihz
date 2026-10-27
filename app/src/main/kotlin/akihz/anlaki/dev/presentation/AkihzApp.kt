@@ -77,6 +77,8 @@ internal fun detailBackDestination(currentPage: DetailPage?): DetailPage? = when
  * @param themeId selected preset or custom theme id
  * @param customThemes user-created color themes
  * @param amoledMode whether pure-black dark surfaces are enabled
+ * @param themedAppIcon whether the launcher icon uses Material colors
+ * @param onThemedAppIconChanged updates the launcher icon preference
  * @param blurEnabled whether progressive edge blur is enabled
  * @param homeDebugSettings current home-screen tuning values
  * @param onHomeDebugSettingsChanged persists updated home-screen tuning
@@ -106,6 +108,8 @@ fun AkihzApp(
     customThemes: List<CustomTheme>,
     amoledMode: Boolean,
     blurEnabled: Boolean,
+    themedAppIcon: Boolean,
+    onThemedAppIconChanged: (Boolean) -> Unit,
     homeDebugSettings: HomeDebugSettings,
     onHomeDebugSettingsChanged: (HomeDebugSettings) -> Unit,
     debugOptionsUnlocked: Boolean,
@@ -231,6 +235,8 @@ fun AkihzApp(
                             modifier = Modifier.fillMaxSize()
                         )
                         DetailPage.ThemePreferences -> ThemePreferencesScreen(
+                            themedAppIcon = themedAppIcon,
+                            onThemedAppIconChanged = onThemedAppIconChanged,
                             dynamicColor = dynamicColor,
                             amoledMode = amoledMode,
                             blurEnabled = blurEnabled,

@@ -10,6 +10,7 @@ import akihz.anlaki.dev.data.PerformanceMonitor
 import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.data.UpdateCheckScheduler
 import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.theme.LauncherIconSwitcher
 import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 import akihz.anlaki.dev.presentation.notifications.UpdateNotification
 import dagger.hilt.android.HiltAndroidApp
@@ -46,6 +47,12 @@ class AkihzApplication : Application() {
             }
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        }
+        // Reconcile aliases after restore or an interrupted switch, even for service-only starts.
+        try {
+            LauncherIconSwitcher(this).apply(PreferencesHelper.themedAppIcon, PreferencesHelper.themeMode)
+        } catch (error: RuntimeException) {
+            Timber.w(error, "Could not restore launcher icon")
         }
         installCrashLogger()
         installLifecycleLogger()
