@@ -14,6 +14,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Added a small bounce when switching Home and Settings.
 - Removed background blur and its theme setting.
 
 ## [0.0.50] - 2026-10-26
