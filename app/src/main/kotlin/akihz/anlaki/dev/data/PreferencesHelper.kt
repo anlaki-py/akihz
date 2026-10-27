@@ -27,6 +27,7 @@ object PreferencesHelper {
     private const val KEY_LAST_RATE = "last_rate"
     private const val KEY_EXCLUDED_TILE_RATES = "excluded_tile_rates"
     private const val KEY_OEM_OVERRIDE = "oem_override"
+    private const val KEY_THEMED_APP_ICON = "themed_app_icon"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_DYNAMIC_COLOR = "dynamic_color"
     private const val KEY_THEME_ID = "theme_id"
@@ -126,6 +127,11 @@ object PreferencesHelper {
             )
         }.getOrDefault(AppThemeMode.System)
         set(value) = prefs.edit { putString(KEY_THEME_MODE, value.name) }
+
+    /** Whether the launcher icon uses Material colors. Enabled for new and existing installs. */
+    var themedAppIcon: Boolean
+        get() = prefs.getBoolean(KEY_THEMED_APP_ICON, true)
+        set(value) = prefs.edit { putBoolean(KEY_THEMED_APP_ICON, value) }
 
     var dynamicColor: Boolean
         get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)

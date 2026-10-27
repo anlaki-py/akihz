@@ -7,6 +7,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Added
+
+- Added a Material app icon that follows the app color mode, with an option under Theme to use the original icon.
+
 ## [0.0.50] - 2026-10-26
 
 ### Added

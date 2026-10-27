@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.runtime.Composable
@@ -17,6 +18,8 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  *
  * @param dynamicColor whether wallpaper colors override selected color schemes
  * @param amoledMode whether dark surfaces use pure black
+ * @param themedAppIcon whether the launcher icon uses Material colors
+ * @param onThemedAppIconChanged persists launcher icon changes
  * @param blurEnabled whether page content blurs under overlays
  * @param onDynamicColorChanged persists dynamic color changes
  * @param onAmoledModeChanged persists AMOLED changes
@@ -30,6 +33,8 @@ fun ThemePreferencesScreen(
     dynamicColor: Boolean,
     amoledMode: Boolean,
     blurEnabled: Boolean,
+    themedAppIcon: Boolean,
+    onThemedAppIconChanged: (Boolean) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
     onAmoledModeChanged: (Boolean) -> Unit,
     onBlurEnabledChanged: (Boolean) -> Unit,
@@ -44,6 +49,16 @@ fun ThemePreferencesScreen(
         navigationContentDescription = "Back",
         onNavigationClick = onBack
     ) {
+        PreferenceGroup(heading = "App icon") {
+            PreferenceTemplate(
+                title = "Material app icon",
+                description = "Use wallpaper colors and the app color mode. Turn off for the original icon. " +
+                    "Android 11 uses fallback colors. Your launcher may apply its own icon theme.",
+                icon = Icons.Default.Apps,
+                checked = themedAppIcon,
+                onCheckedChange = onThemedAppIconChanged
+            )
+        }
         PreferenceGroup(heading = "Theme") {
             PreferenceTemplate(
                 title = "Dynamic color",

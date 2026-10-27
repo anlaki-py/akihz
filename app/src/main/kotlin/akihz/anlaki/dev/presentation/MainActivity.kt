@@ -28,12 +28,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import akihz.anlaki.dev.data.ShizukuHelper
+import akihz.anlaki.dev.presentation.theme.LauncherIconSwitcher
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.data.PreferencesHelper
 import rikka.shizuku.Shizuku
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 
 private data class AppDialog(
     val title: String,
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
         private const val SHIZUKU_OWNER = "main_activity"
     }
 
+    private val launcherIconSwitcher by lazy { LauncherIconSwitcher(this) }
     private val viewModel: MainViewModel by viewModels()
     private var isServiceBound = false
     private var hasAcceptedWelcomeNotice = false
@@ -97,6 +100,7 @@ class MainActivity : ComponentActivity() {
         }
 
         PreferencesHelper.init(this)
+        updateLauncherIcon(PreferencesHelper.themedAppIcon, PreferencesHelper.themeMode)
         hasAcceptedWelcomeNotice = PreferencesHelper.welcomeNoticeAccepted
         if (hasAcceptedWelcomeNotice && PreferencesHelper.keepAliveEnabled) {
             KeepAliveService.start(this)
@@ -106,6 +110,7 @@ class MainActivity : ComponentActivity() {
         handleUpdateIntent(intent, allowTilePreferences = savedInstanceState == null)
 
         setContent {
+            var themedAppIcon by rememberSaveable { mutableStateOf(PreferencesHelper.themedAppIcon) }
             var themeMode by rememberSaveable { mutableStateOf(PreferencesHelper.themeMode) }
             var dynamicColor by rememberSaveable { mutableStateOf(PreferencesHelper.dynamicColor) }
             var themeId by rememberSaveable { mutableStateOf(PreferencesHelper.themeId) }
@@ -157,6 +162,13 @@ class MainActivity : ComponentActivity() {
                     onTileRateIncludedChanged = viewModel::setTileRateIncluded,
                     onResetToDefaults = viewModel::resetToDefaults,
                     onCustomProfileChanged = viewModel::onCustomProfileChanged,
+                    themedAppIcon = themedAppIcon,
+                    onThemedAppIconChanged = { enabled ->
+                        if (updateLauncherIcon(enabled, themeMode)) {
+                            PreferencesHelper.themedAppIcon = enabled
+                            themedAppIcon = enabled
+                        }
+                    },
                     themeMode = themeMode,
                     dynamicColor = dynamicColor,
                     themeId = themeId,
@@ -174,8 +186,10 @@ class MainActivity : ComponentActivity() {
                         PreferencesHelper.debugOptionsUnlocked = true
                     },
                     onThemeModeChanged = { mode ->
-                        themeMode = mode
-                        PreferencesHelper.themeMode = mode
+                        if (updateLauncherIcon(themedAppIcon, mode)) {
+                            PreferencesHelper.themeMode = mode
+                            themeMode = mode
+                        }
                     },
                     onDynamicColorChanged = { enabled ->
                         dynamicColor = enabled
@@ -294,6 +308,19 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         ShizukuHelper.releaseUserService(SHIZUKU_OWNER)
+    }
+
+    private fun updateLauncherIcon(themed: Boolean, mode: AppThemeMode): Boolean = try {
+        launcherIconSwitcher.apply(themed, mode)
+        true
+    } catch (error: RuntimeException) {
+        Timber.w(error, "Could not change launcher icon")
+        // Older Android versions can fail after enabling the new alias. Restore the saved choice.
+        runCatching {
+            launcherIconSwitcher.apply(PreferencesHelper.themedAppIcon, PreferencesHelper.themeMode)
+        }.onFailure { Timber.w(it, "Could not restore previous launcher icon") }
+        showDialog("App icon unavailable", "Android could not change the app icon. Try again.")
+        false
     }
 
     private fun checkShizukuPermission() {
