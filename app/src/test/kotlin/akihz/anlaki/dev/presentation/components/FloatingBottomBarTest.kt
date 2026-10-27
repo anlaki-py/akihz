@@ -45,6 +45,7 @@ class FloatingBottomBarTest {
         val start = indicator.getUnclippedBoundsInRoot().left.value
         compose.mainClock.autoAdvance = false
         compose.onNodeWithContentDescription("Settings").performClick()
+        compose.waitForIdle()
         var furthest = start
         repeat(30) {
             compose.mainClock.advanceTimeByFrame()
@@ -74,12 +75,14 @@ class FloatingBottomBarTest {
         }
         val width = compose.onNodeWithTag("navbar").getUnclippedBoundsInRoot().width.value
         compose.mainClock.autoAdvance = false
-        repeat(3) {
+        repeat(3) { attempt ->
             compose.onNodeWithContentDescription("Settings").performClick()
+            compose.runOnIdle { assertEquals("Settings tap $attempt", 1, selected) }
             compose.mainClock.advanceTimeBy(96)
             compose.onNodeWithContentDescription("Settings").assertIsSelected()
             assertEquals(width, compose.onNodeWithTag("navbar").getUnclippedBoundsInRoot().width.value, 1f)
             compose.onNodeWithContentDescription("Home").performClick()
+            compose.runOnIdle { assertEquals("Home tap $attempt", 0, selected) }
             compose.mainClock.advanceTimeBy(96)
             compose.onNodeWithContentDescription("Home").assertIsSelected()
         }

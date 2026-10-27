@@ -100,9 +100,12 @@ class AppNavigationDisplayTest {
         compose.runOnIdle {
             dispatcher.dispatchOnBackStarted(backEvent(0f))
         }
+        compose.waitForIdle()
         compose.mainClock.advanceTimeBy(32)
         listOf(0.25f, 0.5f, 0.25f).forEach { progress ->
             compose.runOnIdle { dispatcher.dispatchOnBackProgressed(backEvent(progress)) }
+            // Drain Android's event queue before advancing the separately paused Compose clock.
+            compose.waitForIdle()
             compose.mainClock.advanceTimeBy(32)
             val fraction = detail.getUnclippedBoundsInRoot().left.value / width
             assertEquals(progress, fraction, 0.04f)
