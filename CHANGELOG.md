@@ -20,7 +20,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Fixed
 
-- Fixed controls that kept showing old values after a tap.
+- Fixed Theme and Keep alive switches getting stuck after a tap.
 
 ## [0.0.50] - 2026-10-26
 
