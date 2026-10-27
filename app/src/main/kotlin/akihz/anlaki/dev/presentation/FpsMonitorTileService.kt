@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import timber.log.Timber
+
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
@@ -144,10 +146,13 @@ class FpsMonitorTileService : TileService() {
                 @Suppress("DEPRECATION")
                 startActivityAndCollapse(intent)
             }
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            Timber.w(error, "Could not open FPS settings from tile")
             try {
                 startActivity(intent)
-            } catch (_: Exception) {}
+            } catch (error: Exception) {
+                Timber.e(error, "FPS settings fallback failed")
+            }
         }
     }
 

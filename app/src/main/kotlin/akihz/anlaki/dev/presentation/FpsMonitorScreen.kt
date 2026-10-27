@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import timber.log.Timber
+
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -57,7 +59,9 @@ fun FpsMonitorScreen(
         try {
             val info = context.packageManager.getActivityInfo(component, 0)
             info.loadLabel(context.packageManager)?.let { label = it.toString() }
-        } catch (_: Exception) {}
+        } catch (error: Exception) {
+            Timber.w(error, "Could not read FPS target app label")
+        }
         viewModel.setTarget(packageName, label)
     }
 
@@ -152,7 +156,8 @@ fun FpsMonitorScreen(
                     }
                     try {
                         pickAppLauncher.launch(picker)
-                    } catch (_: Exception) {
+                    } catch (error: Exception) {
+                        Timber.e(error, "Could not open FPS target picker")
                         viewModel.refresh()
                     }
                 }

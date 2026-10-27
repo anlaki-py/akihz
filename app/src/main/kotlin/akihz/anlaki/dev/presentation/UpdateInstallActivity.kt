@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import timber.log.Timber
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,7 +53,7 @@ class UpdateInstallActivity : ComponentActivity() {
         runCatching {
             UpdateNotification.cancelReady(this)
             downloader.install(downloadId)
-        }
+        }.onFailure { Timber.e(it, "Could not open APK installer") }
         finish()
     }
 

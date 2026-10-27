@@ -72,6 +72,11 @@ class DebugCliReceiver : BroadcastReceiver() {
         "list_crashes" -> listCrashes()
         "cat_crash" -> catCrash(arg)
         "create_test_crash" -> createTestCrash()
+        "create_test_error" -> {
+            Timber.tag("DiagnosticsTest").e(IllegalStateException("Test caught error from CLI"), "Test error")
+            "Test error logged"
+        }
+        "diagnostic_report" -> crashLogStore.recentReport()
         "clear_crashes" -> clearCrashes()
         "perf_status" -> perfStatus()
         "perf_start" -> perfStart()
@@ -201,6 +206,8 @@ class DebugCliReceiver : BroadcastReceiver() {
           list_crashes          - list all crash files
           cat_crash <name>      - cat specific crash file (partial match)
           create_test_crash     - write a fake crash for testing
+          create_test_error     - test persistent release error logging
+          diagnostic_report     - read recent errors and context events
           clear_crashes         - delete all crash files
           trigger_crash [msg]   - write uncaught-style crash log
           perf_status           - show perf recorder state

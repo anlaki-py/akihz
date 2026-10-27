@@ -5,12 +5,14 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import akihz.anlaki.dev.data.CrashLogStore
+import akihz.anlaki.dev.data.DiagnosticLogTree
+import akihz.anlaki.dev.data.ProcessExitLogCollector
 import akihz.anlaki.dev.data.CustomProfileManager
 import akihz.anlaki.dev.data.PerformanceMonitor
 import akihz.anlaki.dev.data.UpdateDownloadStore
 import akihz.anlaki.dev.data.UpdateCheckScheduler
 import akihz.anlaki.dev.data.PreferencesHelper
-import akihz.anlaki.dev.presentation.theme.LauncherIconSwitcher
+import akihz.anlaki.dev.presentation.theme.LauncherIconLifecycleObserver
 import akihz.anlaki.dev.presentation.notifications.UpdateAvailableNotification
 import akihz.anlaki.dev.presentation.notifications.UpdateNotification
 import dagger.hilt.android.HiltAndroidApp
@@ -26,12 +28,18 @@ class AkihzApplication : Application() {
 
     @Inject lateinit var performanceMonitor: PerformanceMonitor
     @Inject lateinit var crashLogStore: CrashLogStore
+    @Inject lateinit var processExitLogCollector: ProcessExitLogCollector
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Sets up prefs, crash logging, lifecycle logging, and update checks. */
     override fun onCreate() {
         super.onCreate()
+        Timber.plant(DiagnosticLogTree(crashLogStore))
+        if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
+        installCrashLogger()
+        Timber.tag("AppLifecycle").i("Process started, pid=%d", android.os.Process.myPid())
+        applicationScope.launch { processExitLogCollector.collect() }
         PreferencesHelper.init(this)
         CustomProfileManager.init(this)
         if (PreferencesHelper.latestAvailableVersionCode <= BuildConfig.VERSION_CODE) {
@@ -45,41 +53,19 @@ class AkihzApplication : Application() {
                 UpdateDownloadStore(this).clear()
                 UpdateNotification.cancelReady(this)
             }
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
-        // Reconcile aliases after restore or an interrupted switch, even for service-only starts.
-        try {
-            LauncherIconSwitcher(this).apply(PreferencesHelper.themedAppIcon, PreferencesHelper.themeMode)
-        } catch (error: RuntimeException) {
-            Timber.w(error, "Could not restore launcher icon")
-        }
-        installCrashLogger()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(LauncherIconLifecycleObserver(this))
         installLifecycleLogger()
     }
 
     private fun installCrashLogger() {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            // Synchronous write: process may die before coroutines run.
-            runCatching { crashLogStore.saveSync(thread, throwable) }
-                .onFailure { Timber.e(it, "saveSync failed") }
-            // Best-effort also log to perf recorder if a session is active.
-            runCatching {
-                // Use blocking check via scope is not reliable here; fire-and-forget is ok
-                // since we already persisted the crash to crash_logs.
-                applicationScope.launch {
-                    performanceMonitor.log(
-                        tag = "uncaught_exception",
-                        message = throwable.javaClass.name + ": " + (throwable.message ?: ""),
-                        data = mapOf(
-                            "thread" to thread.name,
-                            "stack" to throwable.stackTraceToString().take(2_000)
-                        )
-                    )
-                }
+            try {
+                // The disk write completes before Android's handler terminates the process.
+                crashLogStore.saveSync(thread, throwable)
+            } finally {
+                previous?.uncaughtException(thread, throwable)
             }
-            previous?.uncaughtException(thread, throwable)
         }
     }
 
@@ -87,6 +73,7 @@ class AkihzApplication : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             /** Logs a foreground marker to the perf recorder. */
             override fun onStart(owner: LifecycleOwner) {
+                Timber.tag("AppLifecycle").i("App foreground")
                 applicationScope.launch {
                     performanceMonitor.log(tag = "lifecycle", message = "foreground")
                 }
@@ -94,6 +81,7 @@ class AkihzApplication : Application() {
 
             /** Logs a background marker to the perf recorder. */
             override fun onStop(owner: LifecycleOwner) {
+                Timber.tag("AppLifecycle").i("App background")
                 applicationScope.launch {
                     performanceMonitor.log(tag = "lifecycle", message = "background")
                 }

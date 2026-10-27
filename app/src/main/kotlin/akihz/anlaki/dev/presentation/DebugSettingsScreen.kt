@@ -51,8 +51,8 @@ internal fun DebugSettingsScreen(
                 onClick = onOpenPerformance
             )
             PreferenceTemplate(
-                title = "Crash logs",
-                description = "View, copy, save, or share caught crashes and errors",
+                title = "Error logs",
+                description = "Copy or share warnings, errors, crashes, and process exits",
                 icon = Icons.Default.BugReport,
                 onClick = onOpenCrashLogs
             )

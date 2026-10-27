@@ -44,7 +44,7 @@ internal fun CrashLogScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     PreferenceLayout(
-        label = "Crash logs",
+        label = "Error logs",
         modifier = modifier.fillMaxSize(),
         navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
         navigationContentDescription = "Back to debug options",
@@ -57,14 +57,26 @@ internal fun CrashLogScreen(
             Header(state = state)
             PreferenceGroup(heading = "Actions") {
                 PreferenceTemplate(
+                    title = "Copy debug report",
+                    description = "Copy recent errors and events in one report",
+                    icon = Icons.Default.ContentCopy,
+                    onClick = { viewModel.copyDebugReport() }
+                )
+                PreferenceTemplate(
+                    title = "Share all logs",
+                    description = "Share all saved reports and events as a text file",
+                    icon = Icons.Default.Share,
+                    onClick = { viewModel.shareAllLogs() }
+                )
+                PreferenceTemplate(
                     title = "Refresh",
-                    description = "Reload crash files from storage",
+                    description = "Reload errors and Android process exit records",
                     icon = Icons.Default.Refresh,
                     onClick = { viewModel.refresh() }
                 )
                 PreferenceTemplate(
-                    title = "Create test crash",
-                    description = "Write a fake crash to verify save/copy/share",
+                    title = "Create test error",
+                    description = "Check error logging without crashing the app",
                     icon = Icons.Default.BugReport,
                     onClick = { viewModel.logTestCrash() }
                 )
@@ -86,7 +98,7 @@ internal fun CrashLogScreen(
                 )
             } else if (state.entries.isEmpty()) {
                 Text(
-                    text = "No crashes recorded yet.\nCrashes are saved automatically and appear here even after app restart.",
+                    text = "No error reports saved yet. Warnings, errors, and crashes are saved even when performance recording is off.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -139,7 +151,7 @@ internal fun CrashLogScreen(
                         onClick = { viewModel.shareSelected() }
                     )
                     PreferenceTemplate(
-                        title = "Delete this crash",
+                        title = "Delete this report",
                         description = "Remove ${state.selectedFileName ?: ""}",
                         icon = Icons.Default.Delete,
                         onClick = {
@@ -199,11 +211,13 @@ internal fun CrashLogScreen(
 private fun Header(state: CrashLogUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
-            text = if (state.entries.isEmpty()) "No crashes" else "${state.entries.size} crash(s) stored",
+            text = "${state.entries.size} reports stored",
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "Crashes are caught automatically even when the perf recorder is off. Use copy or save to share with the developer.",
+            text = "App warnings, errors, crashes, and Android exit records. " +
+                "Keeps the latest 100 errors, 30 crashes, and 30 exits. " +
+                "Copy a debug report or share all saved logs.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )

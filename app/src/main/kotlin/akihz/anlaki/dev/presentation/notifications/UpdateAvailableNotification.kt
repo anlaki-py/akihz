@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation.notifications
 
+import timber.log.Timber
+
 import android.Manifest
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -45,7 +47,8 @@ object UpdateAvailableNotification {
         return try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
             true
-        } catch (_: SecurityException) {
+        } catch (error: SecurityException) {
+            Timber.w(error, "Update notification permission was revoked")
             // Permission can be revoked after canNotify() and before this call.
             false
         }

@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation.notifications
 
+import timber.log.Timber
+
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -42,7 +44,9 @@ class UpdateDownloadReceiver : BroadcastReceiver() {
                         store.clear()
                     }
                 }
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                Timber.e(error, "Could not prepare downloaded update")
                 UpdateNotification.showFailure(context, "Unable to prepare the downloaded update")
                 store.clear()
             } finally {

@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation.notifications
 
+import timber.log.Timber
+
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -39,6 +41,7 @@ object UpdateNotification {
 
     /** Notifies the user that the downloaded update could not be verified. */
     fun showFailure(context: Context, message: String) {
+        Timber.e("Update failed: %s", message)
         createChannel(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_refresh_rate)

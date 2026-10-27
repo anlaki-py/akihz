@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import akihz.anlaki.dev.data.CrashEntry
 import akihz.anlaki.dev.data.CrashLogStore
+import akihz.anlaki.dev.data.ProcessExitLogCollector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +39,8 @@ data class CrashLogUiState(
 @HiltViewModel
 class CrashLogViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
-    private val crashLogStore: CrashLogStore
+    private val crashLogStore: CrashLogStore,
+    private val processExitLogCollector: ProcessExitLogCollector
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CrashLogUiState(isLoading = true))
@@ -50,7 +52,10 @@ class CrashLogViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            val entries = withContext(Dispatchers.IO) { crashLogStore.getAll() }
+            val entries = withContext(Dispatchers.IO) {
+                processExitLogCollector.collect()
+                crashLogStore.getAll()
+            }
             _uiState.value = _uiState.value.copy(entries = entries, isLoading = false)
         }
     }
@@ -74,11 +79,11 @@ class CrashLogViewModel @Inject constructor(
     /** Copies selected entry text to clipboard. */
     fun copyToClipboard() {
         val content = _uiState.value.selectedContent ?: run {
-            _uiState.value = _uiState.value.copy(message = "No crash selected")
+            _uiState.value = _uiState.value.copy(message = "No report selected")
             return
         }
         val cm = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("crash log", content))
+        cm.setPrimaryClip(ClipData.newPlainText("error log", content))
         _uiState.value = _uiState.value.copy(message = "Copied to clipboard")
     }
 
@@ -87,8 +92,43 @@ class CrashLogViewModel @Inject constructor(
         viewModelScope.launch {
             val content = withContext(Dispatchers.IO) { crashLogStore.readContent(entry) }
             val cm = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            cm.setPrimaryClip(ClipData.newPlainText("crash log", content))
+            cm.setPrimaryClip(ClipData.newPlainText("error log", content))
             _uiState.value = _uiState.value.copy(message = "Copied ${entry.fileName}")
+        }
+    }
+
+    /** Copies recent errors and context in one report, bounded for Android's clipboard. */
+    fun copyDebugReport() {
+        viewModelScope.launch {
+            try {
+                val report = withContext(Dispatchers.IO) { crashLogStore.recentReport() }
+                val clipboard = appContext.getSystemService(ClipboardManager::class.java)
+                clipboard.setPrimaryClip(ClipData.newPlainText("akiHz debug report", report))
+                _uiState.value = _uiState.value.copy(message = "Debug report copied")
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                Timber.e(error, "Could not copy debug report")
+                _uiState.value = _uiState.value.copy(message = "Could not copy report. Try Share all logs.")
+            }
+        }
+    }
+
+    /** Shares every retained error, crash, system exit, and context event in a text file. */
+    fun shareAllLogs() {
+        viewModelScope.launch {
+            try {
+                val uri = withContext(Dispatchers.IO) {
+                    val directory = File(appContext.cacheDir, "share").apply { mkdirs() }
+                    val file = File(directory, "akihz-debug-report.txt")
+                    crashLogStore.writeBundle(file)
+                    FileProvider.getUriForFile(appContext, "${appContext.packageName}.fileprovider", file)
+                }
+                launchShareIntent(uri, "akihz-debug-report.txt")
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                Timber.e(error, "Could not share debug report")
+                _uiState.value = _uiState.value.copy(message = "Could not share debug report")
+            }
         }
     }
 
@@ -111,7 +151,7 @@ class CrashLogViewModel @Inject constructor(
     /** Saves the selected crash to Downloads. */
     fun saveSelectedToDownloads() {
         val name = _uiState.value.selectedFileName ?: run {
-            _uiState.value = _uiState.value.copy(message = "No crash selected")
+            _uiState.value = _uiState.value.copy(message = "No report selected")
             return
         }
         val entry = _uiState.value.entries.firstOrNull { it.fileName == name } ?: run {
@@ -139,7 +179,7 @@ class CrashLogViewModel @Inject constructor(
     /** Shares the selected crash as a temp file. */
     fun shareSelected() {
         val content = _uiState.value.selectedContent ?: run {
-            _uiState.value = _uiState.value.copy(message = "No crash selected")
+            _uiState.value = _uiState.value.copy(message = "No report selected")
             return
         }
         val name = _uiState.value.selectedFileName ?: "crash.log"
@@ -178,14 +218,14 @@ class CrashLogViewModel @Inject constructor(
         }
     }
 
-    /** For testing / manual trigger from debug screen. */
+    /** Exercises the release logging path without crashing the app. */
     fun logTestCrash() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                crashLogStore.saveCaught("test_crash", RuntimeException("Test crash from debug screen"))
+                Timber.tag("DiagnosticsTest").e(IllegalStateException("Test error from debug screen"), "Test caught error")
             }
             refresh()
-            _uiState.value = _uiState.value.copy(message = "Test crash created")
+            _uiState.value = _uiState.value.copy(message = "Test error logged")
         }
     }
 
@@ -228,7 +268,7 @@ class CrashLogViewModel @Inject constructor(
         val target = File(cached, source.name)
         source.copyTo(target, overwrite = true)
         FileProvider.getUriForFile(appContext, "${appContext.packageName}.fileprovider", target)
-    }.getOrNull()
+    }.onFailure { Timber.e(it, "Could not prepare report for sharing") }.getOrNull()
 
     private fun launchShareIntent(uri: Uri, fileName: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -237,7 +277,7 @@ class CrashLogViewModel @Inject constructor(
             putExtra(Intent.EXTRA_SUBJECT, fileName)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        val chooser = Intent.createChooser(intent, "Share crash log").apply {
+        val chooser = Intent.createChooser(intent, "Share error log").apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         appContext.startActivity(chooser)
