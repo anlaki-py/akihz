@@ -106,7 +106,7 @@ class AppNavigatorTest {
 
             val restored = AppNavigator.StateSaver.restore(checkNotNull(saved))
 
-            assertEquals(navigator.backStack, checkNotNull(restored).backStack)
+            assertEquals(navigator.backStack.toList(), checkNotNull(restored).backStack.toList())
         }
     }
 
