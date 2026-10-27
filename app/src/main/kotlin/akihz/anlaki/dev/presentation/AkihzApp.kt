@@ -1,23 +1,11 @@
 package akihz.anlaki.dev.presentation
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -25,47 +13,31 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import akihz.anlaki.dev.data.HomeDebugSettings
-import akihz.anlaki.dev.presentation.components.FloatingBottomBar
-import akihz.anlaki.dev.presentation.components.FloatingNavigationItem
 import akihz.anlaki.dev.presentation.components.AppPageSurface
-import akihz.anlaki.dev.presentation.components.horizontalPageTransition
+import akihz.anlaki.dev.presentation.components.AppTab
+import akihz.anlaki.dev.presentation.components.AppTabs
+import akihz.anlaki.dev.presentation.components.pagePopTransition
+import akihz.anlaki.dev.presentation.components.pagePushTransition
+import akihz.anlaki.dev.presentation.navigation.AppDestination
+import akihz.anlaki.dev.presentation.navigation.AppNavigator
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.presentation.theme.AppThemeMode
 import akihz.anlaki.dev.presentation.theme.CustomTheme
 import akihz.anlaki.dev.presentation.theme.ThemePaletteScreen
 import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-
-private enum class AppPage(
-    val label: String,
-    val icon: ImageVector
-) {
-    Home("Home", Icons.Default.Home),
-    Settings("Settings", Icons.Default.Settings)
-}
-
-internal enum class DetailPage { CustomKeys, DebugOptions, FpsMonitor, ThemePreferences, ThemePalette }
-
-internal fun detailBackDestination(currentPage: DetailPage?): DetailPage? = when (currentPage) {
-    DetailPage.ThemePalette -> DetailPage.ThemePreferences
-    else -> null
-}
 
 /**
- * Hosts the refresh-rate and settings pages with floating tab navigation.
+ * Hosts root tabs and detail pages on the same predictive back stack.
  *
  * @param uiState current refresh-rate screen state
  * @param onRateSelected invoked when the user selects a refresh rate
@@ -94,6 +66,9 @@ internal fun detailBackDestination(currentPage: DetailPage?): DetailPage? = when
  * @param onKeepAliveEnabledChanged invoked when the keep-alive toggle changes
  * @param onErrorDismissed clears an error after it is shown
  * @param openUpdatesRequest changes when Settings should open from an update alert
+ * @param openDebugRequest changes when a CLI request opens a debug page
+ * @param openFpsMonitorRequest changes when a tile request opens FPS Monitor
+ * @param debugPage CLI debug-page name associated with the latest request
  */
 @Composable
 fun AkihzApp(
@@ -128,18 +103,22 @@ fun AkihzApp(
     debugPage: String? = null,
     onErrorDismissed: () -> Unit = {}
 ) {
-    var detailPage by remember { mutableStateOf<DetailPage?>(null) }
-    var debugInitialPage by remember { mutableStateOf(DebugPage.Categories) }
+    val navigator = rememberSaveable(saver = AppNavigator.StateSaver) { AppNavigator() }
     val snackbarHostState = remember { SnackbarHostState() }
-    val pagerState = rememberPagerState(pageCount = { AppPage.entries.size })
-    val scope = rememberCoroutineScope()
-    val haptics = LocalHapticFeedback.current
-
-    BackHandler(
-        enabled = detailPage == DetailPage.ThemePreferences ||
-            detailPage == DetailPage.ThemePalette
-    ) {
-        detailPage = detailBackDestination(detailPage)
+    val pagerState = rememberPagerState(pageCount = { AppTab.entries.size })
+    // Keep guarded refresh-rate tests on the activity's existing ViewModel lifetime.
+    val activityOwner = checkNotNull(LocalViewModelStoreOwner.current)
+    val customKeysViewModel = if (navigator.current == AppDestination.CustomKeys) {
+        hiltViewModel<CustomKeysViewModel>(activityOwner)
+    } else null
+    val navigateBack: (AppDestination) -> Unit = { destination ->
+        if (navigator.current == destination) {
+            if (destination == AppDestination.CustomKeys) {
+                customKeysViewModel?.flushDraft { navigator.pop(destination) }
+            } else {
+                navigator.pop(destination)
+            }
+        }
     }
 
     LaunchedEffect(uiState.error) {
@@ -149,36 +128,25 @@ fun AkihzApp(
         }
     }
 
-    LaunchedEffect(pagerState) {
-        var firstPage = true
-        snapshotFlow { pagerState.currentPage }.collect {
-            if (firstPage) {
-                firstPage = false
-            } else {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            }
-        }
-    }
-
     LaunchedEffect(openUpdatesRequest) {
         if (openUpdatesRequest > 0) {
-            pagerState.animateScrollToPage(AppPage.Settings.ordinal)
+            navigator.open(AppDestination.Root)
+            pagerState.scrollToPage(AppTab.Settings.ordinal)
         }
     }
 
     LaunchedEffect(openDebugRequest) {
         if (openDebugRequest > 0) {
-            debugInitialPage = DebugPage.fromString(debugPage)
-            detailPage = DetailPage.DebugOptions
-            // Ensure debug entry is unlocked when opened via CLI.
+            pagerState.scrollToPage(AppTab.Settings.ordinal)
+            navigator.open(AppDestination.fromDebugPage(debugPage))
             if (!debugOptionsUnlocked) onDebugOptionsUnlocked()
         }
     }
 
     LaunchedEffect(openFpsMonitorRequest) {
         if (openFpsMonitorRequest > 0) {
-            pagerState.animateScrollToPage(AppPage.Settings.ordinal)
-            detailPage = DetailPage.FpsMonitor
+            pagerState.scrollToPage(AppTab.Settings.ordinal)
+            navigator.open(AppDestination.FpsMonitor)
         }
     }
 
@@ -194,129 +162,97 @@ fun AkihzApp(
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            AppPageSurface(blurEnabled = blurEnabled) {
-                val motionScheme = MaterialTheme.motionScheme
-                AnimatedContent(
-                    targetState = detailPage,
-                    modifier = Modifier.fillMaxSize(),
-                    transitionSpec = {
-                        val fromPage = initialState
-                        val toPage = targetState
-                        horizontalPageTransition(
-                            movingForward = when {
-                                fromPage == null -> true
-                                toPage == null -> false
-                                else -> toPage.ordinal > fromPage.ordinal
-                            },
-                            motionScheme = motionScheme
-                        )
-                    },
-                    label = "app page transition"
-                ) { activeDetailPage ->
-                    when (activeDetailPage) {
-                        DetailPage.CustomKeys -> CustomKeysScreen(
-                            onBack = { detailPage = null },
-                            onProfileChanged = onCustomProfileChanged
-                        )
-                        DetailPage.DebugOptions -> DebugSettingsScreen(
-                            settings = homeDebugSettings,
-                            onSettingsChanged = onHomeDebugSettingsChanged,
-                            onBack = { detailPage = null },
-                            modifier = Modifier.fillMaxSize(),
-                            initialPage = debugInitialPage
-                        )
-                        DetailPage.FpsMonitor -> FpsMonitorScreen(
-                            onBack = { detailPage = null },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        DetailPage.ThemePreferences -> ThemePreferencesScreen(
-                            themedAppIcon = themedAppIcon,
-                            onThemedAppIconChanged = onThemedAppIconChanged,
-                            dynamicColor = dynamicColor,
-                            amoledMode = amoledMode,
-                            blurEnabled = blurEnabled,
-                            onDynamicColorChanged = onDynamicColorChanged,
-                            onAmoledModeChanged = onAmoledModeChanged,
-                            onBlurEnabledChanged = onBlurEnabledChanged,
-                            onOpenColorSchemes = { detailPage = DetailPage.ThemePalette },
-                            onBack = { detailPage = null },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        DetailPage.ThemePalette -> ThemePaletteScreen(
-                            dynamicColor = dynamicColor,
-                            selectedThemeId = themeId,
-                            customThemes = customThemes,
-                            onThemeSelected = onThemeIdChanged,
-                            onCustomThemesChanged = onCustomThemesChanged,
-                            onBack = { detailPage = DetailPage.ThemePreferences },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        null -> HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier.fillMaxSize()
-                        ) { pageIndex ->
-                            when (AppPage.entries[pageIndex]) {
-                                AppPage.Home -> RefreshRateScreen(
-                                    supportedRates = uiState.supportedRates,
-                                    currentRate = uiState.currentRate,
-                                    excludedTileRates = uiState.excludedTileRates,
-                                    isLoading = uiState.isLoading,
-                                    debugSettings = homeDebugSettings,
-                                    onRateSelected = onRateSelected,
-                                    onTileRateIncludedChanged = onTileRateIncludedChanged,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                AppPage.Settings -> SettingsScreen(
-                                    onResetToDefaults = onResetToDefaults,
-                                    onOpenCustomKeys = { detailPage = DetailPage.CustomKeys },
-                                    themeMode = themeMode,
-                                    onThemeModeChanged = onThemeModeChanged,
-                                    onOpenThemePreferences = {
-                                        detailPage = DetailPage.ThemePreferences
-                                    },
-                                    debugOptionsUnlocked = debugOptionsUnlocked,
-                                    onDebugOptionsUnlocked = onDebugOptionsUnlocked,
-                                    onOpenDebugSettings = { detailPage = DetailPage.DebugOptions },
-                                    onOpenFpsMonitor = { detailPage = DetailPage.FpsMonitor },
-                                    autoCheckRequest = openUpdatesRequest,
-                                    keepAliveEnabled = keepAliveEnabled,
-                                    onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+        AppPageSurface(blurEnabled = blurEnabled, modifier = Modifier.padding(padding)) {
+            val motionScheme = MaterialTheme.motionScheme
+            NavDisplay(
+                backStack = navigator.backStack,
+                modifier = Modifier.fillMaxSize(),
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator()
+                ),
+                onBack = { navigateBack(navigator.current) },
+                transitionSpec = { pagePushTransition(motionScheme) },
+                popTransitionSpec = { pagePopTransition(motionScheme) },
+                predictivePopTransitionSpec = { pagePopTransition(motionScheme) },
+                entryProvider = { destination ->
+                    NavEntry(destination) {
+                        val onBack = { navigateBack(destination) }
+                        when (destination) {
+                            AppDestination.CustomKeys -> CustomKeysScreen(
+                                onBack = onBack,
+                                onProfileChanged = onCustomProfileChanged,
+                                viewModel = hiltViewModel(activityOwner)
+                            )
+                            AppDestination.DebugOptions -> DebugSettingsScreen(
+                                onBack = onBack,
+                                onOpenHomeScreen = { navigator.open(AppDestination.DebugHome) },
+                                onOpenPerformance = { navigator.open(AppDestination.Performance) },
+                                onOpenCrashLogs = { navigator.open(AppDestination.CrashLogs) }
+                            )
+                            AppDestination.DebugHome -> HomeDebugSettingsScreen(
+                                settings = homeDebugSettings,
+                                onSettingsChanged = onHomeDebugSettingsChanged,
+                                onBack = onBack
+                            )
+                            AppDestination.Performance -> PerformanceMonitorScreen(onBack = onBack)
+                            AppDestination.CrashLogs -> CrashLogScreen(onBack = onBack)
+                            AppDestination.FpsMonitor -> FpsMonitorScreen(onBack = onBack)
+                            AppDestination.ThemePreferences -> ThemePreferencesScreen(
+                                themedAppIcon = themedAppIcon,
+                                onThemedAppIconChanged = onThemedAppIconChanged,
+                                dynamicColor = dynamicColor,
+                                amoledMode = amoledMode,
+                                blurEnabled = blurEnabled,
+                                onDynamicColorChanged = onDynamicColorChanged,
+                                onAmoledModeChanged = onAmoledModeChanged,
+                                onBlurEnabledChanged = onBlurEnabledChanged,
+                                onOpenColorSchemes = { navigator.open(AppDestination.ThemePalette) },
+                                onBack = onBack
+                            )
+                            AppDestination.ThemePalette -> ThemePaletteScreen(
+                                dynamicColor = dynamicColor,
+                                selectedThemeId = themeId,
+                                customThemes = customThemes,
+                                onThemeSelected = onThemeIdChanged,
+                                onCustomThemesChanged = onCustomThemesChanged,
+                                onBack = onBack
+                            )
+                            AppDestination.Root -> AppTabs(pagerState) { tab ->
+                                when (tab) {
+                                    AppTab.Home -> RefreshRateScreen(
+                                        supportedRates = uiState.supportedRates,
+                                        currentRate = uiState.currentRate,
+                                        excludedTileRates = uiState.excludedTileRates,
+                                        isLoading = uiState.isLoading,
+                                        debugSettings = homeDebugSettings,
+                                        onRateSelected = onRateSelected,
+                                        onTileRateIncludedChanged = onTileRateIncludedChanged,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    AppTab.Settings -> SettingsScreen(
+                                        onResetToDefaults = onResetToDefaults,
+                                        onOpenCustomKeys = { navigator.open(AppDestination.CustomKeys) },
+                                        themeMode = themeMode,
+                                        onThemeModeChanged = onThemeModeChanged,
+                                        onOpenThemePreferences = {
+                                            navigator.open(AppDestination.ThemePreferences)
+                                        },
+                                        debugOptionsUnlocked = debugOptionsUnlocked,
+                                        onDebugOptionsUnlocked = onDebugOptionsUnlocked,
+                                        onOpenDebugSettings = { navigator.open(AppDestination.DebugOptions) },
+                                        onOpenFpsMonitor = { navigator.open(AppDestination.FpsMonitor) },
+                                        autoCheckRequest = openUpdatesRequest,
+                                        keepAliveEnabled = keepAliveEnabled,
+                                        onKeepAliveEnabledChanged = onKeepAliveEnabledChanged,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            AnimatedVisibility(
-                visible = detailPage == null,
-                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    slideInVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) { it / 2 },
-                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) +
-                    slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { it / 2 },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                FloatingBottomBar(
-                    items = AppPage.entries.mapIndexed { index, page ->
-                        FloatingNavigationItem(
-                            label = page.label,
-                            icon = page.icon,
-                            onClick = {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            }
-                        )
-                    },
-                    selectedIndex = pagerState.currentPage,
-                    modifier = Modifier.zIndex(1f)
-                )
-            }
+            )
         }
     }
 }

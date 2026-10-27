@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -47,8 +46,6 @@ fun FpsMonitorScreen(
     var showDebugDialog by remember { mutableStateOf(false) }
     var showColorOptions by remember { mutableStateOf(false) }
     var pendingStartAfterPermission by remember { mutableStateOf(false) }
-
-    BackHandler(onBack = onBack)
 
     val pickAppLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()

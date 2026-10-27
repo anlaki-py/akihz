@@ -9,6 +9,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Added back gestures that preview the previous page before you finish swiping.
 - Added a Material app icon that follows the app color mode, with an option under Theme to use the original icon.
 
 ## [0.0.50] - 2026-10-26

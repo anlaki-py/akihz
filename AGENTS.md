@@ -33,7 +33,7 @@
   - `$PKG` is `akihz.anlaki.dev.debug` (debug) or `akihz.anlaki.dev` (release); script auto-detects.
 - MainActivity deep link (auto-unlocks `debugOptionsUnlocked`):
   - `adb shell am start -n $PKG/akihz.anlaki.dev.presentation.MainActivity --es akihz.extra.DEBUG_PAGE crash_logs|performance|home|categories`
-  - Also supports `--es akihz.extra.DEBUG_PAGE crash|perf` via `DebugPage.fromString()`. Uses `openDebugRequest` flow + `debugInitialPage`.
+  - Also supports `--es akihz.extra.DEBUG_PAGE crash|perf` via `AppDestination.fromDebugPage()`. Uses the `openDebugRequest` flow and the shared navigation stack.
 - Broadcast receiver `akihz.anlaki.dev.DebugCliReceiver` (`@AndroidEntryPoint`, `android:exported="true"`, `ACTION=akihz.anlaki.dev.DEBUG_CLI`):
   - Always use explicit broadcast: `adb shell am broadcast -n $PKG/akihz.anlaki.dev.DebugCliReceiver -a akihz.anlaki.dev.DEBUG_CLI --es cmd <cmd> [--es arg <value>]`
   - `cmd` values: `list_crashes` (lists `filesDir/crash_logs`), `cat_crash` (`--es arg <filename>` partial match), `create_test_crash`, `clear_crashes`, `trigger_crash [--es arg <msg>]`, `perf_status`, `perf_start`, `perf_stop`, `perf_cat`, `help`.

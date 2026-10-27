@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +43,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  * Simplified manual workflow for refresh_rate keys.
  * Only keys containing "refresh_rate" are surfaced and editable.
  *
- * @param onBack returns to the standard settings screen
+ * @param onBack saves the draft and returns to the standard settings screen
  * @param onProfileChanged refreshes home and tile rate data
  */
 @Composable
@@ -58,14 +57,11 @@ fun CustomKeysScreen(
     var search by remember { mutableStateOf("") }
     var showRawDialog by remember { mutableStateOf(false) }
     val editingEnabled = !state.profile.enabled
-    val leaveScreen: () -> Unit = { viewModel.flushDraft(onBack) }
-
-    BackHandler(onBack = leaveScreen)
     LaunchedEffect(state.message) {
         state.message?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
     }
     if (!state.warningAcknowledged) {
-        CustomKeysWarning(onAccept = viewModel::acknowledgeWarning, onLeave = leaveScreen)
+        CustomKeysWarning(onAccept = viewModel::acknowledgeWarning, onLeave = onBack)
     }
     state.testSeconds?.let { seconds ->
         TestCountdownDialog(seconds, { viewModel.finishTest(true) }, { viewModel.finishTest(false) })
@@ -82,7 +78,7 @@ fun CustomKeysScreen(
             label = "Custom keys",
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             navigationContentDescription = "Back",
-            onNavigationClick = leaveScreen,
+            onNavigationClick = onBack,
             modifier = Modifier.fillMaxSize()
         ) {
             PreferenceGroup(heading = "Info") {
