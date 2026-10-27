@@ -47,8 +47,9 @@ fun ThemePreferencesScreen(
         PreferenceGroup(heading = "App icon") {
             PreferenceTemplate(
                 title = "Material app icon",
-                description = "Use wallpaper colors and the app color mode. Turn off for the original icon. " +
-                    "Android 11 uses fallback colors. Your launcher may apply its own icon theme.",
+                description = "Use wallpaper colors with the app's light or dark mode. " +
+                    "Preset and custom theme colors do not affect the icon. Android 11 uses fixed colors. " +
+                    "Turn off for the original icon. Your launcher may apply its own icon theme.",
                 icon = Icons.Default.Apps,
                 checked = themedAppIcon,
                 onCheckedChange = onThemedAppIconChanged
