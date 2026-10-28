@@ -10,6 +10,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import akihz.anlaki.dev.data.PreferencesHelper
 import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
@@ -76,7 +77,7 @@ class CuteDinoFontTest {
         compose.waitForIdle()
         val original = typography
         assertFalse(PreferencesHelper.cuteDinoEverywhere)
-        compose.onNodeWithText("Cute Dino everywhere").performClick()
+        compose.onNodeWithText("Cute Dino everywhere").performScrollTo().performClick()
         compose.runOnIdle {
             assertTrue(PreferencesHelper.cuteDinoEverywhere)
             assertEquals(font, typography.bodyLarge.fontFamily)
@@ -86,7 +87,7 @@ class CuteDinoFontTest {
             assertEquals(font, diagnosticFont)
             assertEquals(original.bodyLarge.fontSize, typography.bodyLarge.fontSize)
         }
-        compose.onNodeWithText("Cute Dino everywhere").performClick()
+        compose.onNodeWithText("Cute Dino everywhere").performScrollTo().performClick()
         compose.runOnIdle {
             assertFalse(PreferencesHelper.cuteDinoEverywhere)
             assertEquals(original, typography)

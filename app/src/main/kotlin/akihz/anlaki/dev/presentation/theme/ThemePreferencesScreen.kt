@@ -45,21 +45,10 @@ fun ThemePreferencesScreen(
         navigationContentDescription = "Back",
         onNavigationClick = onBack
     ) {
-        PreferenceGroup(heading = "Font") {
-            PreferenceTemplate(
-                title = "Cute Dino everywhere",
-                description = "Use the home title font for all app text",
-                checked = LocalCuteDinoEnabled.current,
-                onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
-            )
-        }
         PreferenceGroup(heading = "App icon") {
             PreferenceTemplate(
                 title = "Material app icon",
-                description = "Use wallpaper colors with the app's light or dark mode. " +
-                    "Preset and custom theme colors do not affect the icon. Android 11 uses fixed colors. " +
-                    "The icon updates after you leave the app. Turn off for the original icon. " +
-                    "Your launcher may apply its own icon theme.",
+                description = "Use wallpaper colors for the app icon",
                 icon = Icons.Default.Apps,
                 checked = themedAppIcon,
                 onCheckedChange = onThemedAppIconChanged
@@ -85,6 +74,14 @@ fun ThemePreferencesScreen(
                 icon = Icons.Default.DarkMode,
                 checked = amoledMode,
                 onCheckedChange = onAmoledModeChanged
+            )
+        }
+        PreferenceGroup(heading = "Font") {
+            PreferenceTemplate(
+                title = "Cute Dino everywhere",
+                description = "Use the home title font for all app text",
+                checked = LocalCuteDinoEnabled.current,
+                onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
             )
         }
     }

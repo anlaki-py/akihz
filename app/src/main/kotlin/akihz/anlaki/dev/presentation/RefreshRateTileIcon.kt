@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import kotlin.math.roundToInt
@@ -34,19 +35,22 @@ fun createRefreshRateTileIcon(
     )
     val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
-        textAlign = Paint.Align.CENTER
+        textAlign = Paint.Align.LEFT
         this.typeface = typeface
         textSize = INITIAL_TEXT_SIZE_PX
     }
 
     val maximumTextWidth = ICON_SIZE_PX * MAX_TEXT_WIDTH_RATIO
-    val measuredWidth = paint.measureText(text)
-    if (measuredWidth > maximumTextWidth) {
-        paint.textSize *= maximumTextWidth / measuredWidth
+    val bounds = Rect()
+    paint.getTextBounds(text, 0, text.length, bounds)
+    if (bounds.width() > maximumTextWidth) {
+        paint.textSize *= maximumTextWidth / bounds.width()
+        paint.getTextBounds(text, 0, text.length, bounds)
     }
 
-    val fontMetrics = paint.fontMetrics
-    val baseline = ICON_SIZE_PX / 2f - (fontMetrics.ascent + fontMetrics.descent) / 2f
-    Canvas(bitmap).drawText(text, ICON_SIZE_PX / 2f, baseline, paint)
+    // Center the visible digits, excluding the font's side bearings and line spacing.
+    val x = ICON_SIZE_PX / 2f - bounds.exactCenterX()
+    val baseline = ICON_SIZE_PX / 2f - bounds.exactCenterY()
+    Canvas(bitmap).drawText(text, x, baseline, paint)
     return Icon.createWithBitmap(bitmap)
 }
