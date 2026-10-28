@@ -27,6 +27,7 @@ object PreferencesHelper {
     private const val KEY_LAST_RATE = "last_rate"
     private const val KEY_EXCLUDED_TILE_RATES = "excluded_tile_rates"
     private const val KEY_OEM_OVERRIDE = "oem_override"
+    private const val KEY_CUTE_DINO_EVERYWHERE = "debug_cute_dino_everywhere"
     private const val KEY_THEMED_APP_ICON = "themed_app_icon"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_DYNAMIC_COLOR = "dynamic_color"
@@ -131,6 +132,11 @@ object PreferencesHelper {
     var themedAppIcon: Boolean
         get() = prefs.getBoolean(KEY_THEMED_APP_ICON, true)
         set(value) = prefs.edit { putBoolean(KEY_THEMED_APP_ICON, value) }
+
+    /** Uses the bundled Cute Dino font throughout app text when enabled. */
+    var cuteDinoEverywhere: Boolean
+        get() = prefs.getBoolean(KEY_CUTE_DINO_EVERYWHERE, false)
+        set(value) = prefs.edit { putBoolean(KEY_CUTE_DINO_EVERYWHERE, value) }
 
     var dynamicColor: Boolean
         get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)

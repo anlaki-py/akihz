@@ -18,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import akihz.anlaki.dev.presentation.theme.LocalDiagnosticFont
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -125,7 +125,7 @@ internal fun CrashLogScreen(
                         Text(
                             text = content,
                             style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = LocalDiagnosticFont.current,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth()
                         )

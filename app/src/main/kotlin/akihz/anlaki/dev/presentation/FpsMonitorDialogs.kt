@@ -24,7 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import akihz.anlaki.dev.presentation.theme.LocalDiagnosticFont
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.fps.OverlayPillColor
 
@@ -78,7 +78,7 @@ internal fun FpsDebugLogDialog(
                 Text(
                     text = logText,
                     style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = LocalDiagnosticFont.current
                 )
             }
         },
