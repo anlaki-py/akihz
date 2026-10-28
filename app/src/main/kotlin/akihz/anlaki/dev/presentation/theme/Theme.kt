@@ -104,7 +104,7 @@ fun AnlakiTheme(
             colorScheme = colorScheme,
             shapes = AkihzShapes,
             motionScheme = MotionScheme.expressive(),
-            content = content
+            content = { AppFontTheme(content) }
         )
     }
 }

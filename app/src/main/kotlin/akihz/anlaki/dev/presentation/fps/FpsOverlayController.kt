@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation.fps
 
+import akihz.anlaki.dev.presentation.theme.AppFontTheme
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -74,21 +75,23 @@ class FpsOverlayController(context: Context) {
             FpsOverlayViewTrees.install(this, lifecycle, lifecycle, lifecycle)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setContent {
-                FpsOverlayContent(
-                    text = pillText,
-                    style = style,
-                    expanded = expanded,
-                    layers = rows,
-                    onTapPill = { toggleOptionsPanel() },
-                    onDrag = { dxPx, dyPx -> onDragFrame(dxPx, dyPx) },
-                    onDragEnd = { onDragEnd() },
-                    onScaleChange = { style = style.copy(scalePercent = it) },
-                    onScaleDone = { setScale(it) },
-                    onAlphaChange = { style = style.copy(alphaPercent = it) },
-                    onAlphaDone = { setAlpha(it) },
-                    onUnitChange = { setShowUnit(it) },
-                    onLayerSelect = { setSelectedLayer(it) }
-                )
+                AppFontTheme {
+                    FpsOverlayContent(
+                        text = pillText,
+                        style = style,
+                        expanded = expanded,
+                        layers = rows,
+                        onTapPill = { toggleOptionsPanel() },
+                        onDrag = { dxPx, dyPx -> onDragFrame(dxPx, dyPx) },
+                        onDragEnd = { onDragEnd() },
+                        onScaleChange = { style = style.copy(scalePercent = it) },
+                        onScaleDone = { setScale(it) },
+                        onAlphaChange = { style = style.copy(alphaPercent = it) },
+                        onAlphaDone = { setAlpha(it) },
+                        onUnitChange = { setShowUnit(it) },
+                        onLayerSelect = { setSelectedLayer(it) }
+                    )
+                }
             }
         }
         composeView = view

@@ -27,7 +27,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +34,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,6 +42,7 @@ import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.presentation.components.HomeGroupOuterCornerRadius
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 import akihz.anlaki.dev.presentation.components.TileInclusionButton
+import akihz.anlaki.dev.presentation.theme.rememberCuteDinoFont
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import kotlin.math.abs
 
@@ -214,10 +211,7 @@ private fun HomeStateContainer(
 
 @Composable
 private fun HomeTitle() {
-    val assets = LocalContext.current.assets
-    val titleFont = remember(assets) {
-        FontFamily(Font(path = "fonts/cute_dino/Cute Dino.ttf", assetManager = assets))
-    }
+    val titleFont = rememberCuteDinoFont()
     Text(
         text = "akiHz",
         style = MaterialTheme.typography.displayMediumEmphasized,

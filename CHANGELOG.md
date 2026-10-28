@@ -9,6 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Added a Debug option to use Cute Dino for all app text.
+
 - Hold the version number to read what's new or browse the full changelog offline.
 - Hold a tile button beside a refresh rate to see what it does.
 - Added error logs with warnings, crashes, and Android process exit details.
@@ -17,6 +19,9 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Added a Material app icon that follows the app color mode, with an option under Theme to use the original icon.
 
 ### Changed
+
+- The home title now uses Cute Dino.
+- Moved FPS monitoring below Appearance in Settings.
 
 - Added a sliding, bouncing selection pill when switching Home and Settings.
 - Made back previews follow your swipe steadily with less zoom.
