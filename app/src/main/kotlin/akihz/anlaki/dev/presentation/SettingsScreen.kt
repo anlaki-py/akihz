@@ -84,7 +84,7 @@ fun SettingsScreen(
             PreferenceGroup(heading = "Developer") {
                 PreferenceTemplate(
                     title = "Debug options",
-                    description = "Home screen tuning, performance monitoring, and crash logs",
+                    description = "Layout controls and app logs",
                     icon = Icons.Default.DeveloperMode,
                     onClick = onOpenDebugSettings
                 )

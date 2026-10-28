@@ -16,6 +16,7 @@ import akihz.anlaki.dev.data.PreferencesHelper
 import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.presentation.theme.LocalDiagnosticFont
+import akihz.anlaki.dev.presentation.theme.rememberSoftCoreFont
 import akihz.anlaki.dev.presentation.theme.rememberCuteDinoFont
 import org.junit.After
 import org.junit.Before
@@ -52,15 +53,18 @@ class CuteDinoFontTest {
         lateinit var typography: Typography
         lateinit var font: FontFamily
         lateinit var diagnosticFont: FontFamily
+        lateinit var descriptionFont: FontFamily
         compose.setContent {
             AnlakiTheme(dynamicColor = false) {
                 val currentTypography = MaterialTheme.typography
                 val currentFont = rememberCuteDinoFont()
                 val currentDiagnosticFont = LocalDiagnosticFont.current
+                val currentDescriptionFont = rememberSoftCoreFont()
                 SideEffect {
                     typography = currentTypography
                     font = currentFont
                     diagnosticFont = currentDiagnosticFont
+                    descriptionFont = currentDescriptionFont
                 }
                 ThemePreferencesScreen(
                     dynamicColor = false,
@@ -77,6 +81,7 @@ class CuteDinoFontTest {
         compose.waitForIdle()
         val original = typography
         assertFalse(PreferencesHelper.cuteDinoEverywhere)
+        assertEquals(descriptionFont, typography.bodyMedium.fontFamily)
         compose.onNodeWithText("Cute Dino everywhere").performScrollTo().performClick()
         compose.runOnIdle {
             assertTrue(PreferencesHelper.cuteDinoEverywhere)
@@ -85,6 +90,8 @@ class CuteDinoFontTest {
             assertEquals(font, typography.displayMediumEmphasized.fontFamily)
             assertEquals(font, typography.labelSmallEmphasized.fontFamily)
             assertEquals(font, diagnosticFont)
+            assertEquals(descriptionFont, typography.bodyMedium.fontFamily)
+            assertEquals(descriptionFont, typography.bodySmall.fontFamily)
             assertEquals(original.bodyLarge.fontSize, typography.bodyLarge.fontSize)
         }
         compose.onNodeWithText("Cute Dino everywhere").performScrollTo().performClick()
@@ -109,7 +116,11 @@ class CuteDinoFontTest {
             AnlakiTheme(dynamicColor = false) {
                 val typography = MaterialTheme.typography
                 val font = rememberCuteDinoFont()
-                SideEffect { assertEquals(font, typography.bodyMedium.fontFamily) }
+                val descriptionFont = rememberSoftCoreFont()
+                SideEffect {
+                    assertEquals(font, typography.titleMedium.fontFamily)
+                    assertEquals(descriptionFont, typography.bodyMedium.fontFamily)
+                }
             }
         }
         compose.waitForIdle()

@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
 import akihz.anlaki.dev.data.PreferencesHelper
 
@@ -30,7 +31,16 @@ fun rememberCuteDinoFont(): FontFamily {
     }
 }
 
-/** Applies the saved font choice to every type style without changing sizes or spacing. */
+/** Loads the bundled font used for descriptions and supporting text. */
+@Composable
+fun rememberSoftCoreFont(): FontFamily {
+    val assets = LocalContext.current.assets
+    return remember(assets) {
+        FontFamily(Font(path = "fonts/soft_core/soft_core.ttf", assetManager = assets))
+    }
+}
+
+/** Applies the title font choice and Soft Core supporting text without changing sizes or spacing. */
 @Composable
 fun AppFontTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current.applicationContext
@@ -38,9 +48,16 @@ fun AppFontTheme(content: @Composable () -> Unit) {
     val changes by preferences.preferenceChanges.collectAsState()
     val enabled = remember(changes) { preferences.cuteDinoEverywhere }
     val font = rememberCuteDinoFont()
+    val descriptionFont = rememberSoftCoreFont()
     val base = MaterialTheme.typography
-    val typography = remember(base, enabled, font) {
-        if (enabled) base.withFontFamily(font) else base
+    val typography = remember(base, enabled, font, descriptionFont) {
+        val primary = if (enabled) base.withFontFamily(font) else base
+        primary.copy(
+            bodyMedium = primary.bodyMedium.copy(fontFamily = descriptionFont, fontWeight = FontWeight.Normal),
+            bodySmall = primary.bodySmall.copy(fontFamily = descriptionFont, fontWeight = FontWeight.Normal),
+            bodyMediumEmphasized = primary.bodyMediumEmphasized.copy(fontFamily = descriptionFont),
+            bodySmallEmphasized = primary.bodySmallEmphasized.copy(fontFamily = descriptionFont)
+        )
     }
     CompositionLocalProvider(
         LocalCuteDinoEnabled provides enabled,

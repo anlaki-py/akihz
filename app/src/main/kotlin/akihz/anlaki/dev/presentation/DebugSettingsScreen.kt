@@ -38,7 +38,7 @@ internal fun DebugSettingsScreen(
         PreferenceGroup(heading = "Interface") {
             PreferenceTemplate(
                 title = "Home screen",
-                description = "Refresh-rate text, button sizing, spacing, and expressive shapes",
+                description = "Adjust text, buttons, and spacing",
                 icon = Icons.Default.Home,
                 onClick = onOpenHomeScreen
             )
@@ -46,13 +46,13 @@ internal fun DebugSettingsScreen(
         PreferenceGroup(heading = "Diagnostics") {
             PreferenceTemplate(
                 title = "Performance monitoring",
-                description = "Record CPU, memory, threads, and refresh rate to a log file",
+                description = "Record CPU, memory, and refresh rate",
                 icon = Icons.Default.Speed,
                 onClick = onOpenPerformance
             )
             PreferenceTemplate(
                 title = "Error logs",
-                description = "Copy or share warnings, errors, crashes, and process exits",
+                description = "View and share app logs",
                 icon = Icons.Default.BugReport,
                 onClick = onOpenCrashLogs
             )

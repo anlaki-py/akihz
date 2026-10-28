@@ -34,7 +34,7 @@ fun RefreshRateEngineSection(
     PreferenceGroup(heading = "Refresh rate") {
         PreferenceTemplate(
             title = "Custom refresh-rate keys",
-            description = "Experimental discovery and manual key mappings",
+            description = "Find or set refresh-rate keys",
             icon = Icons.Default.Build,
             onClick = onOpenCustomKeys
         )
@@ -48,7 +48,7 @@ fun RefreshRateEngineSection(
         )
         PreferenceTemplate(
             title = "Reset to defaults",
-            description = "Restore adaptive refresh rate (system defaults)",
+            description = "Restore system refresh-rate defaults",
             icon = Icons.Default.RestartAlt,
             onClick = { showResetConfirm = true }
         )

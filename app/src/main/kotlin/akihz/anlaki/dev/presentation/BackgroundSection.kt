@@ -23,14 +23,14 @@ fun BackgroundSection(
     PreferenceGroup(heading = "Background") {
         PreferenceTemplate(
             title = "Keep alive notification",
-            description = "Keep foreground notification for reliable tile switching",
+            description = "Keep tile switching reliable",
             icon = Icons.Default.Notifications,
             checked = keepAliveEnabled,
             onCheckedChange = onKeepAliveEnabledChanged
         )
         PreferenceTemplate(
             title = "Allow background running",
-            description = "Exclude akiHz from Android battery optimization",
+            description = "Disable battery optimization for akiHz",
             icon = Icons.Default.BatterySaver,
             onClick = { BatteryOptimizationHelper.requestExemption(context) }
         )

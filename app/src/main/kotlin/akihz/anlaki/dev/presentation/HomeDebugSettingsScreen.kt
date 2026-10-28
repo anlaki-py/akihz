@@ -30,7 +30,7 @@ internal fun HomeDebugSettingsScreen(
         PreferenceGroup(heading = "Preview data") {
             PreferenceTemplate(
                 title = "Show fake refresh rates",
-                description = "Fill Home with preview-only rates to test scrolling and layout.",
+                description = "Preview extra rates without applying them",
                 checked = settings.showFakeRefreshRates,
                 onCheckedChange = {
                     onSettingsChanged(settings.copy(showFakeRefreshRates = it))
@@ -40,32 +40,32 @@ internal fun HomeDebugSettingsScreen(
         PreferenceGroup(heading = "Refresh-rate buttons") {
             formItem {
                 HomeDebugSlider(
-                    "Hz text size", "Changes the refresh-rate label size inside every button.",
+                    "Hz text size", "Resize rate labels.",
                     settings.hzTextSizeSp, "sp", 18f..48f, defaults.hzTextSizeSp, 29, 1f
                 ) { onSettingsChanged(settings.copy(hzTextSizeSp = it)) }
             }
             formItem {
                 HomeDebugSlider(
-                    "Button height", "Sets each fixed height; the list scrolls if it no longer fits.",
+                    "Button height", "Resize button height.",
                     settings.buttonHeightDp, "dp", 48f..160f, defaults.buttonHeightDp, 55, 2f
                 ) { onSettingsChanged(settings.copy(buttonHeightDp = it)) }
             }
             formItem {
                 HomeDebugSlider(
-                    "Button width", "Controls how much of the available width the button groups use.",
+                    "Button width", "Resize button groups.",
                     settings.buttonWidthPercent, "%", 60f..100f,
                     defaults.buttonWidthPercent, 19, 2f
                 ) { onSettingsChanged(settings.copy(buttonWidthPercent = it)) }
             }
             formItem {
                 HomeDebugSlider(
-                    "Button spacing", "Adjusts the vertical gap between neighboring buttons.",
+                    "Button spacing", "Space between buttons.",
                     settings.buttonSpacingDp, "dp", 0f..32f, defaults.buttonSpacingDp, 31, 1f
                 ) { onSettingsChanged(settings.copy(buttonSpacingDp = it)) }
             }
             PreferenceTemplate(
                 title = "Restore home-screen defaults",
-                description = "Reset every option on this page",
+                description = "Reset this page",
                 icon = Icons.Default.Restore,
                 onClick = { onSettingsChanged(defaults) }
             )
@@ -89,8 +89,7 @@ private fun HomeDebugSlider(
         title = title,
         value = value,
         valueLabel = "${value.toInt()} $unit",
-        description = "$description Default ${default.toInt()} $unit, range " +
-            "${range.start.toInt()} to ${range.endInclusive.toInt()} $unit.",
+        description = "$description Default: ${default.toInt()} $unit",
         onValueChange = onValueChanged,
         onValueChangeFinished = {},
         valueRange = range,

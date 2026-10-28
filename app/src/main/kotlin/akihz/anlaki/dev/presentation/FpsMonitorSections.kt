@@ -67,14 +67,14 @@ internal fun FpsControlsSection(
             description = if (state.isRunning) {
                 "Hide overlay and stop sampling"
             } else {
-                "Show floating FPS pill and sample every 500 ms"
+                "Show FPS, updated every 500 ms"
             },
             icon = if (state.isRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
             onClick = onStartStop
         )
         PreferenceTemplate(
             title = if (state.debugLoggingEnabled) "Turn off debug logging" else "Turn on debug logging",
-            description = "Log Shizuku state, focus lines, and layer stats",
+            description = "Record FPS diagnostics",
             icon = Icons.Default.BugReport,
             onClick = onToggleDebug
         )
@@ -106,7 +106,7 @@ internal fun FpsOverlaySection(
                 title = "Overlay size",
                 value = state.overlayScale.toFloat(),
                 valueLabel = "${state.overlayScale}%",
-                description = "Scales the floating FPS pill",
+                description = "Resize the FPS overlay",
                 onValueChange = { viewModel.setOverlayScale(it.toInt()) },
                 onValueChangeFinished = { viewModel.setOverlayScale(it.toInt()) },
                 valueRange = 50f..200f,
@@ -119,7 +119,7 @@ internal fun FpsOverlaySection(
                 title = "Overlay opacity",
                 value = state.overlayAlpha.toFloat(),
                 valueLabel = "${state.overlayAlpha}%",
-                description = "Fades the pill background only, text stays solid",
+                description = "Fade the background, keep text solid",
                 onValueChange = { viewModel.setOverlayAlpha(it.toInt()) },
                 onValueChangeFinished = { viewModel.setOverlayAlpha(it.toInt()) },
                 valueRange = 40f..100f,
@@ -129,7 +129,7 @@ internal fun FpsOverlaySection(
         }
         PreferenceTemplate(
             title = "Show FPS label",
-            description = if (state.showUnit) "Pill shows 60.0 FPS" else "Pill shows 60.0",
+            description = if (state.showUnit) "60.0 FPS" else "60.0",
             icon = Icons.Default.TextFields,
             checked = state.showUnit,
             onCheckedChange = { viewModel.setShowUnit(it) }
@@ -153,9 +153,9 @@ internal fun FpsOverlaySection(
                 value = state.cornerRadius.toFloat(),
                 valueLabel = "${state.cornerRadius} dp",
                 description = if (state.rectShape) {
-                    "Round the rectangle corners, 0 is sharp"
+                    "Round corners; 0 means square"
                 } else {
-                    "Turn on Rectangular shape to use this"
+                    "Requires rectangular shape"
                 },
                 onValueChange = { viewModel.setCornerRadius(it.toInt()) },
                 onValueChangeFinished = { viewModel.setCornerRadius(it.toInt()) },
@@ -203,14 +203,14 @@ internal fun FpsTargetSection(
         )
         PreferenceTemplate(
             title = "Select app",
-            description = "Pick a launcher activity to pin monitoring to that package",
+            description = "Monitor a specific app",
             icon = Icons.Default.Tune,
             onClick = onSelectApp
         )
         if (state.targetPackage != null) {
             PreferenceTemplate(
                 title = "Use automatic detection",
-                description = "Follow the foreground window again",
+                description = "Follow the foreground app",
                 icon = Icons.Default.AutoAwesome,
                 onClick = { viewModel.clearTarget() }
             )

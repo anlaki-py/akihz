@@ -101,7 +101,7 @@ fun ThemeSection(
         }
         PreferenceTemplate(
             title = "Theme",
-            description = "Dynamic color, color schemes, and AMOLED",
+            description = "Colors, fonts, and app icon",
             icon = Icons.Default.Palette,
             onClick = onOpenThemePreferences
         )

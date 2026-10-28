@@ -41,7 +41,7 @@ fun CustomKeyEditor(
     PreferenceGroup(heading = setting.id) {
         PreferenceTemplate(
             title = "Read for validation",
-            description = "Read key to verify current rate",
+            description = "Read the current rate",
             icon = Icons.Default.Visibility,
             checked = setting.canRead,
             onCheckedChange = if (enabled) {
@@ -50,7 +50,7 @@ fun CustomKeyEditor(
         )
         PreferenceTemplate(
             title = "Write when switching",
-            description = "Write key when applying a rate",
+            description = "Write the selected rate",
             icon = Icons.Default.Edit,
             checked = setting.canWrite,
             onCheckedChange = if (enabled) {

@@ -16,7 +16,7 @@ fun FpsMonitorSection(
     PreferenceGroup(heading = "FPS Monitor") {
         PreferenceTemplate(
             title = "Surface FPS Monitor",
-            description = "Show floating FPS from SurfaceFlinger via Shizuku",
+            description = "Show a floating FPS counter",
             icon = Icons.Default.Speed,
             onClick = onOpenFpsMonitor
         )
