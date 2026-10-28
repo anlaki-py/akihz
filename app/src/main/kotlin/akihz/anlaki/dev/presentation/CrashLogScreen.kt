@@ -58,25 +58,25 @@ internal fun CrashLogScreen(
             PreferenceGroup(heading = "Actions") {
                 PreferenceTemplate(
                     title = "Copy debug report",
-                    description = "Copy recent errors and events in one report",
+                    description = "Copy recent errors and events",
                     icon = Icons.Default.ContentCopy,
                     onClick = { viewModel.copyDebugReport() }
                 )
                 PreferenceTemplate(
                     title = "Share all logs",
-                    description = "Share all saved reports and events as a text file",
+                    description = "Share all logs as text",
                     icon = Icons.Default.Share,
                     onClick = { viewModel.shareAllLogs() }
                 )
                 PreferenceTemplate(
                     title = "Refresh",
-                    description = "Reload errors and Android process exit records",
+                    description = "Reload errors and process exits",
                     icon = Icons.Default.Refresh,
                     onClick = { viewModel.refresh() }
                 )
                 PreferenceTemplate(
                     title = "Create test error",
-                    description = "Check error logging without crashing the app",
+                    description = "Test logging without a crash",
                     icon = Icons.Default.BugReport,
                     onClick = { viewModel.logTestCrash() }
                 )
@@ -134,7 +134,7 @@ internal fun CrashLogScreen(
                 PreferenceGroup(heading = "Preview actions") {
                     PreferenceTemplate(
                         title = "Copy",
-                        description = "Copy full text to clipboard",
+                        description = "Copy the full log",
                         icon = Icons.Default.ContentCopy,
                         onClick = { viewModel.copyToClipboard() }
                     )
@@ -146,7 +146,7 @@ internal fun CrashLogScreen(
                     )
                     PreferenceTemplate(
                         title = "Share",
-                        description = "Open system share sheet",
+                        description = "Share this log",
                         icon = Icons.Default.Share,
                         onClick = { viewModel.shareSelected() }
                     )
@@ -162,7 +162,7 @@ internal fun CrashLogScreen(
                     )
                     PreferenceTemplate(
                         title = "Close preview",
-                        description = "Hide the expanded stack trace",
+                        description = "Hide log details",
                         onClick = { viewModel.clearSelection() }
                     )
                 }

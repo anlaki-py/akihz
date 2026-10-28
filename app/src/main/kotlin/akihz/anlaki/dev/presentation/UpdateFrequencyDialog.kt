@@ -44,7 +44,7 @@ internal fun UpdateFrequencyDialog(
                     supportingContent = {
                         Text(
                             if (frequency == UpdateCheckFrequency.Never) {
-                                "Only check when requested"
+                                "Check manually"
                             } else {
                                 "Check approximately ${frequency.label.lowercase()}"
                             }

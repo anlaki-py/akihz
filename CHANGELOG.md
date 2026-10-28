@@ -21,6 +21,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Shortened descriptions and gave supporting text its own Soft Core font.
+
 - Centered the refresh-rate tile digits using their visible edges.
 - Moved the font option to the bottom of Theme and shortened the app icon description.
 - The home title now uses Cute Dino.

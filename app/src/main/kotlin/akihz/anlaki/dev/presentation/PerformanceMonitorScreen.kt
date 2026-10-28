@@ -69,9 +69,9 @@ internal fun PerformanceMonitorScreen(
                         "Start recording"
                     },
                     description = if (state.recorder is PerfRecorderState.Recording) {
-                        "Finish the current session and unlock Save / Share"
+                        "Stop to save or share"
                     } else {
-                        "Begin sampling CPU, memory, threads, and refresh rate"
+                        "Record CPU, memory, and refresh rate"
                     },
                     onClick = {
                         if (state.recorder is PerfRecorderState.Recording) {
@@ -90,12 +90,12 @@ internal fun PerformanceMonitorScreen(
                     )
                     PreferenceTemplate(
                         title = "Share log",
-                        description = "Open the system share sheet for the log",
+                        description = "Share the recording",
                         onClick = { viewModel.shareLog() }
                     )
                     PreferenceTemplate(
                         title = "Discard",
-                        description = "Delete the recording and return to idle",
+                        description = "Delete the recording",
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.discard() }
                     )

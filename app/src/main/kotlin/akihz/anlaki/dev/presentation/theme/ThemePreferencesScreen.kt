@@ -57,20 +57,20 @@ fun ThemePreferencesScreen(
         PreferenceGroup(heading = "Theme") {
             PreferenceTemplate(
                 title = "Dynamic color",
-                description = "Generate app colors from your wallpaper",
+                description = "Match your wallpaper",
                 icon = Icons.Default.Wallpaper,
                 checked = dynamicColor,
                 onCheckedChange = onDynamicColorChanged
             )
             PreferenceTemplate(
                 title = "Color schemes",
-                description = "Customize the app color scheme",
+                description = "Choose or create a color scheme",
                 icon = Icons.Default.Palette,
                 onClick = onOpenColorSchemes
             )
             PreferenceTemplate(
                 title = "Pitch-black AMOLED",
-                description = "Use pure-black surfaces whenever dark mode is active",
+                description = "Use black backgrounds in dark mode",
                 icon = Icons.Default.DarkMode,
                 checked = amoledMode,
                 onCheckedChange = onAmoledModeChanged
@@ -79,7 +79,7 @@ fun ThemePreferencesScreen(
         PreferenceGroup(heading = "Font") {
             PreferenceTemplate(
                 title = "Cute Dino everywhere",
-                description = "Use the home title font for all app text",
+                description = "Use Cute Dino for titles and controls",
                 checked = LocalCuteDinoEnabled.current,
                 onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
             )
