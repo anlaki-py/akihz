@@ -7,32 +7,28 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.51] - 2026-10-28
+
 ### Added
 
-- Added a Theme option to use Cute Dino for all app text, enabled by default.
-- The refresh-rate tile digits follow the Cute Dino font setting.
-
-- Hold the version number to read what's new or browse the full changelog offline.
+- Added Cute Dino titles and Soft Core descriptions, enabled together by default.
+- Added a Theme switch to restore the default fonts everywhere.
+- Hold the version number to read release notes and the full changelog offline.
 - Hold a tile button beside a refresh rate to see what it does.
 - Added error logs with warnings, crashes, and Android process exit details.
-- Added one-tap copy and sharing for debug reports.
-- Added back gestures that preview the previous page before you finish swiping.
-- Added a Material app icon that follows the app color mode, with an option under Theme to use the original icon.
+- Copy or share debug reports from the error logs page.
+- Added back gestures that preview the previous page.
+- Added a Material app icon that follows wallpaper colors, enabled by default.
 
 ### Changed
 
-- The font switch now controls Cute Dino and Soft Core together, including the home title.
-
-- Shortened descriptions and gave supporting text its own Soft Core font.
-
-- Centered the refresh-rate tile digits using their visible edges.
-- Moved the font option to the bottom of Theme and shortened the app icon description.
-- The home title now uses Cute Dino.
-- Moved FPS monitoring below Appearance in Settings.
-
-- Added a sliding, bouncing selection pill when switching Home and Settings.
-- Made back previews follow your swipe steadily with less zoom.
+- Refresh-rate tile digits follow the font setting and use centered visible edges.
+- Shortened descriptions across the app.
+- Moved FPS monitoring below Appearance and the font option to the bottom of Theme.
+- Added a sliding, bouncing selection pill for Home and Settings.
+- Back previews follow your swipe with less zoom.
 - Removed background blur and its theme setting.
+- Updated the app screenshots.
 
 ### Fixed
 
@@ -587,7 +583,8 @@ The changelog entry for version `0.0.38` was intentionally skipped.
 
 - Added the initial Android application, Shizuku integration, CI, and tests.
 
-[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.33...HEAD
+[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.51...HEAD
+[0.0.51]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.51
 [0.0.33]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.33
 [0.0.32]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.32
 [0.0.31]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.31
