@@ -58,6 +58,7 @@ fun SettingsScreen(
             onThemeModeChanged = onThemeModeChanged,
             onOpenThemePreferences = onOpenThemePreferences
         )
+        FpsMonitorSection(onOpenFpsMonitor = onOpenFpsMonitor)
         BackgroundSection(
             keepAliveEnabled = keepAliveEnabled,
             onKeepAliveEnabledChanged = onKeepAliveEnabledChanged
@@ -78,7 +79,6 @@ fun SettingsScreen(
                 }
             }
         )
-        FpsMonitorSection(onOpenFpsMonitor = onOpenFpsMonitor)
         DiagnosticsSection()
         if (debugOptionsUnlocked) {
             PreferenceGroup(heading = "Developer") {
