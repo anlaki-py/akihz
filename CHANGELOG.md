@@ -23,7 +23,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 - FPS and refresh-rate tiles use centered text that follows the font setting.
 
-- Status bar and notification icons now use a centered bunny.
+- Status bar and notification icons use a larger, centered bunny.
 - The font switch now controls Cute Dino and Soft Core together, including the home title.
 
 - Shortened descriptions and gave supporting text its own Soft Core font.
