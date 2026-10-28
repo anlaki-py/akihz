@@ -28,7 +28,7 @@ object UpdateNotification {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher_monochrome)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("akiHz $versionName is ready")
             .setContentText("Tap to install the verified update")
             .setContentIntent(pendingIntent)
@@ -44,7 +44,7 @@ object UpdateNotification {
         Timber.e("Update failed: %s", message)
         createChannel(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher_monochrome)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("akiHz update failed")
             .setContentText(message)
             .setAutoCancel(true)
