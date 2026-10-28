@@ -133,9 +133,9 @@ object PreferencesHelper {
         get() = prefs.getBoolean(KEY_THEMED_APP_ICON, true)
         set(value) = prefs.edit { putBoolean(KEY_THEMED_APP_ICON, value) }
 
-    /** Uses the bundled Cute Dino font throughout app text when enabled. */
+    /** Uses Cute Dino throughout app text by default, preserving any saved choice. */
     var cuteDinoEverywhere: Boolean
-        get() = prefs.getBoolean(KEY_CUTE_DINO_EVERYWHERE, false)
+        get() = prefs.getBoolean(KEY_CUTE_DINO_EVERYWHERE, true)
         set(value) = prefs.edit { putBoolean(KEY_CUTE_DINO_EVERYWHERE, value) }
 
     var dynamicColor: Boolean

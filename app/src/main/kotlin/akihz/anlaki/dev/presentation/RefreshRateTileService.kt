@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation
 
+import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -34,6 +35,9 @@ class RefreshRateTileService : TileService() {
     private var displayedRate: Float? = null
     private var isConnecting = false
     private var isSwitching = false
+    private val cuteDinoTypeface by lazy {
+        Typeface.createFromAsset(assets, "fonts/cute_dino/Cute Dino.ttf")
+    }
 
     @Inject lateinit var getTileRates: GetTileRatesUseCase
     @Inject lateinit var cycleTileRate: CycleTileRateUseCase
@@ -158,7 +162,7 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "${rate.roundToInt()} Hz"
-        tile.icon = createRefreshRateTileIcon(rate)
+        tile.icon = rateIcon(rate)
         tile.updateTile()
     }
 
@@ -171,7 +175,7 @@ class RefreshRateTileService : TileService() {
         when {
             rate != null -> {
                 tile.subtitle = "${rate.roundToInt()} Hz"
-                tile.icon = createRefreshRateTileIcon(rate)
+                tile.icon = rateIcon(rate)
             }
             tileRates.isNotEmpty() -> {
                 tile.subtitle = "Tap to switch"
@@ -191,7 +195,7 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "Switching to ${rate.roundToInt()} Hz..."
-        tile.icon = createRefreshRateTileIcon(rate)
+        tile.icon = rateIcon(rate)
         tile.updateTile()
     }
 
@@ -202,6 +206,12 @@ class RefreshRateTileService : TileService() {
         tile.subtitle = "Open app first"
         tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
         tile.updateTile()
+    }
+
+    private fun rateIcon(rate: Float): Icon = if (PreferencesHelper.cuteDinoEverywhere) {
+        createRefreshRateTileIcon(rate, cuteDinoTypeface)
+    } else {
+        createRefreshRateTileIcon(rate)
     }
 
     /** Releases the tile service resources. */

@@ -9,7 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
-- Added a Debug option to use Cute Dino for all app text.
+- Added a Theme option to use Cute Dino for all app text, enabled by default.
+- The refresh-rate tile digits follow the Cute Dino font setting.
 
 - Hold the version number to read what's new or browse the full changelog offline.
 - Hold a tile button beside a refresh rate to see what it does.

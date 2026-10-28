@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Wallpaper
+import akihz.anlaki.dev.data.PreferencesHelper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
@@ -44,6 +45,14 @@ fun ThemePreferencesScreen(
         navigationContentDescription = "Back",
         onNavigationClick = onBack
     ) {
+        PreferenceGroup(heading = "Font") {
+            PreferenceTemplate(
+                title = "Cute Dino everywhere",
+                description = "Use the home title font for all app text",
+                checked = LocalCuteDinoEnabled.current,
+                onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
+            )
+        }
         PreferenceGroup(heading = "App icon") {
             PreferenceTemplate(
                 title = "Material app icon",

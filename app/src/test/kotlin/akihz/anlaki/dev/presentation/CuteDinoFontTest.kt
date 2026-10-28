@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.theme.ThemePreferencesScreen
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
 import akihz.anlaki.dev.presentation.theme.LocalDiagnosticFont
 import akihz.anlaki.dev.presentation.theme.rememberCuteDinoFont
@@ -46,6 +47,7 @@ class CuteDinoFontTest {
 
     @Test
     fun switchUpdatesTypographyAndLogsAndRestoresDefaults() {
+        PreferencesHelper.cuteDinoEverywhere = false
         lateinit var typography: Typography
         lateinit var font: FontFamily
         lateinit var diagnosticFont: FontFamily
@@ -59,7 +61,16 @@ class CuteDinoFontTest {
                     font = currentFont
                     diagnosticFont = currentDiagnosticFont
                 }
-                DebugSettingsScreen({}, {}, {}, {})
+                ThemePreferencesScreen(
+                    dynamicColor = false,
+                    amoledMode = false,
+                    themedAppIcon = true,
+                    onThemedAppIconChanged = {},
+                    onDynamicColorChanged = {},
+                    onAmoledModeChanged = {},
+                    onOpenColorSchemes = {},
+                    onBack = {}
+                )
             }
         }
         compose.waitForIdle()
@@ -84,8 +95,15 @@ class CuteDinoFontTest {
     }
 
     @Test
-    fun savedChoiceAppliesToANewTheme() {
-        PreferencesHelper.cuteDinoEverywhere = true
+    fun savedOptOutSurvivesPreferenceInitialization() {
+        PreferencesHelper.cuteDinoEverywhere = false
+        PreferencesHelper.init(RuntimeEnvironment.getApplication())
+        assertFalse(PreferencesHelper.cuteDinoEverywhere)
+    }
+
+    @Test
+    fun fontIsEnabledByDefaultInANewTheme() {
+        assertTrue(PreferencesHelper.cuteDinoEverywhere)
         compose.setContent {
             AnlakiTheme(dynamicColor = false) {
                 val typography = MaterialTheme.typography
