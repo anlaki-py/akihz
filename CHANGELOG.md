@@ -9,6 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Hold the version number to read what's new or browse the full changelog offline.
+- Hold a tile button beside a refresh rate to see what it does.
 - Added error logs with warnings, crashes, and Android process exit details.
 - Added one-tap copy and sharing for debug reports.
 - Added back gestures that preview the previous page before you finish swiping.

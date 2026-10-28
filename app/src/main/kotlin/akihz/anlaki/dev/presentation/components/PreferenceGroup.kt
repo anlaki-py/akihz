@@ -2,7 +2,7 @@ package akihz.anlaki.dev.presentation.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 
@@ -33,6 +32,8 @@ private val GroupItemSpacing = 2.dp
 private class PreferenceItem(
     val modifier: Modifier,
     val onClick: (() -> Unit)?,
+    val onLongClick: (() -> Unit)?,
+    val onLongClickLabel: String?,
     val toggleState: Boolean?,
     val onToggle: ((Boolean) -> Unit)?,
     val headlineContent: (@Composable () -> Unit)?,
@@ -54,6 +55,8 @@ interface PreferenceGroupScope {
      *
      * @param modifier layout modifier for the row
      * @param onClick invoked when the row is tapped
+     * @param onLongClick invoked when an action row is held
+     * @param onLongClickLabel accessibility label for the hold action
      * @param toggleState switch state when the row toggles a value
      * @param onToggle invoked when the row or its switch changes
      * @param headlineContent primary row text
@@ -65,6 +68,8 @@ interface PreferenceGroupScope {
     fun item(
         modifier: Modifier = Modifier,
         onClick: (() -> Unit)? = null,
+        onLongClick: (() -> Unit)? = null,
+        onLongClickLabel: String? = null,
         toggleState: Boolean? = null,
         onToggle: ((Boolean) -> Unit)? = null,
         headlineContent: (@Composable () -> Unit)? = null,
@@ -91,6 +96,8 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
     override fun item(
         modifier: Modifier,
         onClick: (() -> Unit)?,
+        onLongClick: (() -> Unit)?,
+        onLongClickLabel: String?,
         toggleState: Boolean?,
         onToggle: ((Boolean) -> Unit)?,
         headlineContent: (@Composable () -> Unit)?,
@@ -102,6 +109,8 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
             item = PreferenceItem(
                 modifier = modifier,
                 onClick = onClick,
+                onLongClick = onLongClick,
+                onLongClickLabel = onLongClickLabel,
                 toggleState = toggleState,
                 onToggle = onToggle,
                 headlineContent = headlineContent,
@@ -122,6 +131,8 @@ private class PreferenceGroupScopeImpl : PreferenceGroupScope {
             item = PreferenceItem(
                 modifier = modifier,
                 onClick = null,
+                onLongClick = null,
+                onLongClickLabel = null,
                 toggleState = null,
                 onToggle = null,
                 headlineContent = null,
@@ -227,11 +238,13 @@ private fun PreferenceListItem(item: PreferenceItem) {
                         role = Role.Switch,
                         onValueChange = onToggle
                     )
-                    item.onClick != null -> Modifier.clickable(
+                    item.onClick != null -> Modifier.combinedClickable(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
                         role = Role.Button,
-                        onClick = item.onClick
+                        onClick = item.onClick,
+                        onLongClick = item.onLongClick,
+                        onLongClickLabel = item.onLongClickLabel
                     )
                     else -> Modifier
                 }
