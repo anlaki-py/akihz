@@ -21,6 +21,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Centered the refresh-rate tile digits using their visible edges.
+- Moved the font option to the bottom of Theme and shortened the app icon description.
 - The home title now uses Cute Dino.
 - Moved FPS monitoring below Appearance in Settings.
 
