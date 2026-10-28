@@ -79,7 +79,7 @@ fun ThemePreferencesScreen(
         PreferenceGroup(heading = "Font") {
             PreferenceTemplate(
                 title = "Cute Dino everywhere",
-                description = "Use Cute Dino for titles and controls",
+                description = "Cute Dino titles and Soft Core descriptions",
                 checked = LocalCuteDinoEnabled.current,
                 onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
             )

@@ -16,10 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
 import akihz.anlaki.dev.data.PreferencesHelper
 
-/** Whether the saved debug font override is active in this composition. */
+/** Whether the saved custom font pair is active in this composition. */
 val LocalCuteDinoEnabled = staticCompositionLocalOf { false }
 
-/** Font for diagnostic text, respecting the app-wide debug override. */
+/** Font for diagnostic text, respecting the custom font setting. */
 val LocalDiagnosticFont = staticCompositionLocalOf<FontFamily> { FontFamily.Monospace }
 
 /** Loads the bundled title font once per asset manager. */
@@ -40,7 +40,7 @@ fun rememberSoftCoreFont(): FontFamily {
     }
 }
 
-/** Applies the title font choice and Soft Core supporting text without changing sizes or spacing. */
+/** Applies Cute Dino and Soft Core together, or restores the unchanged default typography. */
 @Composable
 fun AppFontTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current.applicationContext
@@ -51,7 +51,8 @@ fun AppFontTheme(content: @Composable () -> Unit) {
     val descriptionFont = rememberSoftCoreFont()
     val base = MaterialTheme.typography
     val typography = remember(base, enabled, font, descriptionFont) {
-        val primary = if (enabled) base.withFontFamily(font) else base
+        if (!enabled) return@remember base
+        val primary = base.withFontFamily(font)
         primary.copy(
             bodyMedium = primary.bodyMedium.copy(fontFamily = descriptionFont, fontWeight = FontWeight.Normal),
             bodySmall = primary.bodySmall.copy(fontFamily = descriptionFont, fontWeight = FontWeight.Normal),
