@@ -1,0 +1,61 @@
+package akihz.anlaki.dev.presentation.tiles
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
+import android.graphics.drawable.Icon
+import akihz.anlaki.dev.data.PreferencesHelper
+
+private const val ICON_SIZE_PX = 96
+private const val MAX_TEXT_WIDTH_RATIO = 0.82f
+private const val INITIAL_TEXT_SIZE_PX = 52f
+
+/** Renders tile text using the app's current font preference. */
+class TileTextIcon(private val context: Context) {
+    private val cuteDinoTypeface by lazy {
+        Typeface.createFromAsset(context.assets, "fonts/cute_dino/Cute Dino.ttf")
+    }
+
+    /**
+     * Draws centered text as a monochrome icon that Android tints for the tile state.
+     *
+     * @param text non-empty text shown inside the tile
+     * @return an icon centered using the visible glyph bounds
+     */
+    fun create(text: String): Icon {
+        val typeface = if (PreferencesHelper.cuteDinoEverywhere) {
+            cuteDinoTypeface
+        } else {
+            Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+        val bitmap = Bitmap.createBitmap(
+            ICON_SIZE_PX,
+            ICON_SIZE_PX,
+            Bitmap.Config.ARGB_8888
+        )
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textAlign = Paint.Align.LEFT
+            this.typeface = typeface
+            textSize = INITIAL_TEXT_SIZE_PX
+        }
+
+        val maximumTextWidth = ICON_SIZE_PX * MAX_TEXT_WIDTH_RATIO
+        val bounds = Rect()
+        paint.getTextBounds(text, 0, text.length, bounds)
+        if (bounds.width() > maximumTextWidth) {
+            paint.textSize *= maximumTextWidth / bounds.width()
+            paint.getTextBounds(text, 0, text.length, bounds)
+        }
+
+        // Center the visible glyphs, excluding the font's side bearings and line spacing.
+        val x = ICON_SIZE_PX / 2f - bounds.exactCenterX()
+        val baseline = ICON_SIZE_PX / 2f - bounds.exactCenterY()
+        Canvas(bitmap).drawText(text, x, baseline, paint)
+        return Icon.createWithBitmap(bitmap)
+    }
+}
