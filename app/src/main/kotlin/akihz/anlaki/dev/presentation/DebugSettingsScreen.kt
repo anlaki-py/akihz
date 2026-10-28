@@ -5,8 +5,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Speed
-import akihz.anlaki.dev.data.PreferencesHelper
-import akihz.anlaki.dev.presentation.theme.LocalCuteDinoEnabled
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
@@ -38,12 +36,6 @@ internal fun DebugSettingsScreen(
         onNavigationClick = onBack
     ) {
         PreferenceGroup(heading = "Interface") {
-            PreferenceTemplate(
-                title = "Cute Dino everywhere",
-                description = "Use the home title font for all app text",
-                checked = LocalCuteDinoEnabled.current,
-                onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
-            )
             PreferenceTemplate(
                 title = "Home screen",
                 description = "Refresh-rate text, button sizing, spacing, and expressive shapes",

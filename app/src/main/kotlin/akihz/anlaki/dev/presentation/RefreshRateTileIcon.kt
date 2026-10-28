@@ -19,9 +19,13 @@ private const val INITIAL_TEXT_SIZE_PX = 52f
  * appropriate color for the tile's current state.
  *
  * @param rate refresh rate to display
+ * @param typeface font used for the rate digits
  * @return an icon sized for use by a Quick Settings tile
  */
-fun createRefreshRateTileIcon(rate: Float): Icon {
+fun createRefreshRateTileIcon(
+    rate: Float,
+    typeface: Typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+): Icon {
     val text = rate.roundToInt().toString()
     val bitmap = Bitmap.createBitmap(
         ICON_SIZE_PX,
@@ -31,7 +35,7 @@ fun createRefreshRateTileIcon(rate: Float): Icon {
     val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        this.typeface = typeface
         textSize = INITIAL_TEXT_SIZE_PX
     }
 
