@@ -6,12 +6,17 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import akihz.anlaki.dev.BuildConfig
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
+import akihz.anlaki.dev.presentation.changelog.ChangelogDialog
 
 private const val SOURCE_CODE_URL = "https://github.com/anlaki-py/akihz"
 private const val DONATION_URL = "https://ko-fi.com/unluky"
@@ -34,13 +39,16 @@ fun AboutSection(onVersionClick: () -> Unit) {
         }
     }
     val versionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
+    var showChangelog by rememberSaveable { mutableStateOf(false) }
 
     PreferenceGroup(heading = "About") {
         PreferenceTemplate(
             title = "akiHz",
             description = "Version $versionName",
             icon = Icons.Default.Info,
-            onClick = onVersionClick
+            onClick = onVersionClick,
+            onLongClick = { showChangelog = true },
+            onLongClickLabel = "Read what's new"
         )
 
         PreferenceTemplate(
@@ -56,5 +64,8 @@ fun AboutSection(onVersionClick: () -> Unit) {
             icon = Icons.Default.Favorite,
             onClick = { uriHandler.openUri(DONATION_URL) }
         )
+    }
+    if (showChangelog) {
+        ChangelogDialog(versionName = versionName, onDismiss = { showChangelog = false })
     }
 }

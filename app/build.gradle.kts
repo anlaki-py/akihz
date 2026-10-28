@@ -10,6 +10,28 @@ plugins {
     alias(libs.plugins.hilt.android)
 }
 
+/** Copies the canonical changelog into every APK, so release notes work offline. */
+@CacheableTask
+abstract class BundleChangelogTask : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sourceFile: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
+    /** Packages the complete source file without maintaining a second checked-in copy. */
+    @TaskAction
+    fun bundle() {
+        sourceFile.get().asFile.copyTo(outputDirectory.file("CHANGELOG.md").get().asFile, overwrite = true)
+    }
+}
+
+val bundleChangelog = tasks.register<BundleChangelogTask>("bundleChangelog") {
+    sourceFile.set(rootProject.layout.projectDirectory.file("CHANGELOG.md"))
+    outputDirectory.set(layout.buildDirectory.dir("generated/changelogAssets"))
+}
+
 android {
     namespace = "akihz.anlaki.dev"
     compileSdk = 37
@@ -104,6 +126,7 @@ android {
 
 androidComponents {
     onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(bundleChangelog, BundleChangelogTask::outputDirectory)
         variant.outputs.forEach { output ->
             val abi = output.filters.find { it.filterType == ABI }?.identifier ?: "universal"
             val versionName = output.versionName.get()

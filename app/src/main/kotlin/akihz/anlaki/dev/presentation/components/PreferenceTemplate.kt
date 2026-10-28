@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
  * @param checked switch state, or null when the row is an action
  * @param onCheckedChange invoked when a switch preference changes
  * @param onClick invoked when an action preference is selected
+ * @param onLongClick invoked when an action preference is held
+ * @param onLongClickLabel accessibility label for the hold action
  */
 @Composable
 fun PreferenceGroupScope.PreferenceTemplate(
@@ -38,13 +40,17 @@ fun PreferenceGroupScope.PreferenceTemplate(
     icon: ImageVector? = null,
     checked: Boolean? = null,
     onCheckedChange: ((Boolean) -> Unit)? = null,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null
 ) {
     val switchEnabled = checked != null && onCheckedChange != null
 
     item(
         modifier = modifier,
         onClick = if (switchEnabled) null else onClick,
+        onLongClick = if (switchEnabled) null else onLongClick,
+        onLongClickLabel = onLongClickLabel,
         toggleState = if (switchEnabled) checked else null,
         onToggle = if (switchEnabled) onCheckedChange else null,
         headlineContent = { Text(title) },
