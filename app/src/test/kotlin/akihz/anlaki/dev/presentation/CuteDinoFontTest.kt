@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -81,7 +82,9 @@ class CuteDinoFontTest {
         compose.waitForIdle()
         val original = typography
         assertFalse(PreferencesHelper.cuteDinoEverywhere)
-        assertEquals(descriptionFont, typography.bodyMedium.fontFamily)
+        assertNotEquals(descriptionFont, typography.bodyMedium.fontFamily)
+        assertNotEquals(descriptionFont, typography.bodySmall.fontFamily)
+        assertNotEquals(font, typography.displayMediumEmphasized.fontFamily)
         compose.onNodeWithText("Cute Dino everywhere").performScrollTo().performClick()
         compose.runOnIdle {
             assertTrue(PreferencesHelper.cuteDinoEverywhere)
@@ -98,6 +101,8 @@ class CuteDinoFontTest {
         compose.runOnIdle {
             assertFalse(PreferencesHelper.cuteDinoEverywhere)
             assertEquals(original, typography)
+            assertNotEquals(descriptionFont, typography.bodyMedium.fontFamily)
+            assertNotEquals(font, typography.displayMediumEmphasized.fontFamily)
             assertEquals(FontFamily.Monospace, diagnosticFont)
         }
     }

@@ -21,6 +21,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- The font switch now controls Cute Dino and Soft Core together, including the home title.
+
 - Shortened descriptions and gave supporting text its own Soft Core font.
 
 - Centered the refresh-rate tile digits using their visible edges.

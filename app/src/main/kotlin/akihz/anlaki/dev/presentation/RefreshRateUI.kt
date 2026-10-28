@@ -42,7 +42,7 @@ import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.presentation.components.HomeGroupOuterCornerRadius
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 import akihz.anlaki.dev.presentation.components.TileInclusionButton
-import akihz.anlaki.dev.presentation.theme.rememberCuteDinoFont
+import akihz.anlaki.dev.presentation.theme.LocalCuteDinoEnabled
 import akihz.anlaki.dev.presentation.theme.AkihzColors
 import kotlin.math.abs
 
@@ -211,12 +211,10 @@ private fun HomeStateContainer(
 
 @Composable
 private fun HomeTitle() {
-    val titleFont = rememberCuteDinoFont()
     Text(
         text = "akiHz",
         style = MaterialTheme.typography.displayMediumEmphasized,
-        fontFamily = titleFont,
-        fontWeight = FontWeight.Normal,
+        fontWeight = if (LocalCuteDinoEnabled.current) FontWeight.Normal else null,
         color = MaterialTheme.colorScheme.onBackground,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth()
