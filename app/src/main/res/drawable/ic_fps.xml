@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static text for the tile picker; the service renders the selected font at runtime. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M9,28 H31 V35 H16 V44 H29 V51 H16 V68 H9 Z M37,28 H51 Q62,28 62,40 Q62,52 51,52 H44 V68 H37 Z M44,35 V45 H50 Q55,45 55,40 Q55,35 50,35 Z M87,28 V35 H75 Q71,35 71,39 Q71,42 75,44 L81,47 Q88,50 88,58 Q88,68 77,68 H66 V61 H77 Q81,61 81,58 Q81,55 77,53 L71,50 Q64,47 64,39 Q64,28 75,28 Z" />
+</vector>

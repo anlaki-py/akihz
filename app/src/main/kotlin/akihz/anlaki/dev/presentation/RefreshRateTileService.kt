@@ -1,7 +1,7 @@
 package akihz.anlaki.dev.presentation
 
-import android.graphics.Typeface
 import android.graphics.drawable.Icon
+import akihz.anlaki.dev.presentation.tiles.TileTextIcon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.widget.Toast
@@ -35,9 +35,7 @@ class RefreshRateTileService : TileService() {
     private var displayedRate: Float? = null
     private var isConnecting = false
     private var isSwitching = false
-    private val cuteDinoTypeface by lazy {
-        Typeface.createFromAsset(assets, "fonts/cute_dino/Cute Dino.ttf")
-    }
+    private val textIcon by lazy { TileTextIcon(this) }
 
     @Inject lateinit var getTileRates: GetTileRatesUseCase
     @Inject lateinit var cycleTileRate: CycleTileRateUseCase
@@ -153,7 +151,7 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_ACTIVE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "Tap to switch"
-        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        tile.icon = textIcon.create("Hz")
         tile.updateTile()
     }
 
@@ -179,11 +177,11 @@ class RefreshRateTileService : TileService() {
             }
             tileRates.isNotEmpty() -> {
                 tile.subtitle = "Tap to switch"
-                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+                tile.icon = textIcon.create("Hz")
             }
             else -> {
                 tile.subtitle = "Open app first"
-                tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+                tile.icon = textIcon.create("Hz")
                 tile.state = Tile.STATE_UNAVAILABLE
             }
         }
@@ -204,15 +202,11 @@ class RefreshRateTileService : TileService() {
         tile.state = Tile.STATE_UNAVAILABLE
         tile.label = getString(R.string.app_name)
         tile.subtitle = "Open app first"
-        tile.icon = Icon.createWithResource(this, R.drawable.ic_refresh_rate)
+        tile.icon = textIcon.create("Hz")
         tile.updateTile()
     }
 
-    private fun rateIcon(rate: Float): Icon = if (PreferencesHelper.cuteDinoEverywhere) {
-        createRefreshRateTileIcon(rate, cuteDinoTypeface)
-    } else {
-        createRefreshRateTileIcon(rate)
-    }
+    private fun rateIcon(rate: Float): Icon = textIcon.create(rate.roundToInt().toString())
 
     /** Releases the tile service resources. */
     override fun onDestroy() {

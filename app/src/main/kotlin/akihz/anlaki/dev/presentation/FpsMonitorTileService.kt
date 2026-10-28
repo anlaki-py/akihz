@@ -1,5 +1,7 @@
 package akihz.anlaki.dev.presentation
 
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.presentation.tiles.TileTextIcon
 import timber.log.Timber
 
 import android.app.PendingIntent
@@ -23,12 +25,14 @@ import akihz.anlaki.dev.presentation.fps.FpsMonitorService
  */
 class FpsMonitorTileService : TileService() {
 
+    private val textIcon by lazy { TileTextIcon(this) }
     private var isStarting = false
     private val handler = Handler(Looper.getMainLooper())
 
     /** Refreshes the tile state when the shade opens. */
     override fun onStartListening() {
         super.onStartListening()
+        PreferencesHelper.init(applicationContext)
         updateTile()
     }
 
@@ -95,21 +99,19 @@ class FpsMonitorTileService : TileService() {
         val tile = qsTile ?: return
         val isRunning = FpsMonitorService.isRunning.value
         tile.label = "FPS Monitor"
+        tile.icon = textIcon.create("FPS")
         when {
             isRunning -> {
                 tile.state = Tile.STATE_ACTIVE
                 tile.subtitle = "On - tap to stop"
-                tile.icon = createFpsTileIcon()
             }
             isStarting -> {
                 tile.state = Tile.STATE_ACTIVE
                 tile.subtitle = "Starting…"
-                tile.icon = createFpsTileIcon()
             }
             else -> {
                 tile.state = Tile.STATE_INACTIVE
                 tile.subtitle = "Off - tap to start"
-                tile.icon = createFpsTileIconInactive()
             }
         }
         // If prerequisites are missing before start, show the hint. Keep stop reachable while running.
