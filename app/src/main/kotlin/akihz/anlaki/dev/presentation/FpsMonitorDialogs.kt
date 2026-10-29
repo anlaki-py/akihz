@@ -4,39 +4,16 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import akihz.anlaki.dev.presentation.theme.LocalDiagnosticFont
-import androidx.compose.ui.unit.dp
-import akihz.anlaki.dev.data.fps.OverlayPillColor
-
-/** Human label for a pill color choice. */
-internal fun pillColorLabel(color: OverlayPillColor): String =
-    when (color) {
-        OverlayPillColor.Theme -> "App theme"
-        OverlayPillColor.Black -> "Black, white text"
-        OverlayPillColor.Green -> "Green, white text"
-        OverlayPillColor.Red -> "Red, white text"
-        OverlayPillColor.White -> "White, black text"
-    }
 
 /** Copies diagnostics text to the clipboard. */
 internal fun copyFpsDiagnostics(context: Context, text: String) {
@@ -90,51 +67,4 @@ internal fun FpsDebugLogDialog(
             TextButton(onClick = onShare) { Text("Share") }
         }
     )
-}
-
-/**
- * Bottom sheet for picking the FPS pill background color.
- *
- * @param selected currently active color
- * @param onSelected invoked when the user picks a color
- * @param onDismiss invoked when the sheet closes without a pick
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun PillColorSheet(
-    selected: OverlayPillColor,
-    onSelected: (OverlayPillColor) -> Unit,
-    onDismiss: () -> Unit
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Text(
-            text = "Pill color",
-            style = MaterialTheme.typography.headlineSmallEmphasized,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
-        )
-        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-            OverlayPillColor.entries.forEach { color ->
-                ListItem(
-                    headlineContent = { Text(pillColorLabel(color)) },
-                    leadingContent = {
-                        RadioButton(
-                            selected = color == selected,
-                            onClick = null
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelected(color) }
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-    }
 }

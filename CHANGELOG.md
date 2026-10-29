@@ -9,6 +9,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- FPS settings in the app now include every pill-menu option and stay in sync.
+
 - Redesigned the FPS pill with Material surfaces, clearer digits, and no dropdown arrow.
 - Added an optional FPS graph with adjustable history, width, and height.
 - Added a pill-only default font, compact spacing, decimals, elevation, and corner controls.
