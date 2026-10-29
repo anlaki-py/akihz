@@ -6,22 +6,22 @@ import akihz.anlaki.dev.data.fps.OverlayPillColor
 import akihz.anlaki.dev.data.fps.OverlayStyle
 
 /** Persisted appearance of the floating FPS counter and optional graph. */
-internal data class FpsPillStyle(
-    val scalePercent: Int,
-    val alphaPercent: Int,
-    val showUnit: Boolean,
-    val pillColor: OverlayPillColor,
-    val rectangularShape: Boolean,
-    val cornerRadius: Int,
-    val pillOutline: Boolean,
-    val graphEnabled: Boolean,
-    val graphSeconds: Int,
-    val graphWidth: Int,
-    val graphHeight: Int,
-    val defaultFont: Boolean,
-    val compact: Boolean,
-    val decimals: Boolean,
-    val raised: Boolean
+data class FpsPillStyle(
+    val scalePercent: Int = 100,
+    val alphaPercent: Int = OverlayStyle.ALPHA_DEFAULT,
+    val showUnit: Boolean = true,
+    val pillColor: OverlayPillColor = OverlayPillColor.Theme,
+    val rectangularShape: Boolean = false,
+    val cornerRadius: Int = OverlayStyle.RECT_RADIUS_DP,
+    val pillOutline: Boolean = true,
+    val graphEnabled: Boolean = false,
+    val graphSeconds: Int = 30,
+    val graphWidth: Int = 180,
+    val graphHeight: Int = 40,
+    val defaultFont: Boolean = false,
+    val compact: Boolean = false,
+    val decimals: Boolean = true,
+    val raised: Boolean = true
 ) {
     companion object {
         /** Loads every value from prefs. */

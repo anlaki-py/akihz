@@ -8,12 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.CropSquare
-import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,9 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
-import akihz.anlaki.dev.presentation.components.PreferenceSlider
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 
 /** Header showing whether monitoring runs. */
@@ -88,94 +82,6 @@ internal fun FpsControlsSection(
 }
 
 /**
- * Overlay look controls bound to the view model.
- *
- * @param state current monitor state
- * @param viewModel receiver of every change
- * @param onPickColor invoked when the color row opens the picker
- */
-@Composable
-internal fun FpsOverlaySection(
-    state: FpsMonitorUiState,
-    viewModel: FpsMonitorViewModel,
-    onPickColor: () -> Unit
-) {
-    PreferenceGroup(heading = "Overlay") {
-        formItem {
-            PreferenceSlider(
-                title = "Overlay size",
-                value = state.overlayScale.toFloat(),
-                valueLabel = "${state.overlayScale}%",
-                description = "Resize the FPS overlay",
-                onValueChange = { viewModel.setOverlayScale(it.toInt()) },
-                onValueChangeFinished = { viewModel.setOverlayScale(it.toInt()) },
-                valueRange = 50f..200f,
-                steps = 0,
-                increment = 10f
-            )
-        }
-        formItem {
-            PreferenceSlider(
-                title = "Overlay opacity",
-                value = state.overlayAlpha.toFloat(),
-                valueLabel = "${state.overlayAlpha}%",
-                description = "Fade the background, keep text solid",
-                onValueChange = { viewModel.setOverlayAlpha(it.toInt()) },
-                onValueChangeFinished = { viewModel.setOverlayAlpha(it.toInt()) },
-                valueRange = 40f..100f,
-                steps = 0,
-                increment = 5f
-            )
-        }
-        PreferenceTemplate(
-            title = "Show FPS label",
-            description = if (state.showUnit) "60.0 FPS" else "60.0",
-            icon = Icons.Default.TextFields,
-            checked = state.showUnit,
-            onCheckedChange = { viewModel.setShowUnit(it) }
-        )
-        PreferenceTemplate(
-            title = "Pill color",
-            description = pillColorLabel(state.pillColor),
-            icon = Icons.Default.Palette,
-            onClick = onPickColor
-        )
-        PreferenceTemplate(
-            title = "Rectangular shape",
-            description = if (state.rectShape) "Rectangle pill" else "Round pill",
-            icon = Icons.Default.CropSquare,
-            checked = state.rectShape,
-            onCheckedChange = { viewModel.setRectShape(it) }
-        )
-        formItem {
-            PreferenceSlider(
-                title = "Corner radius",
-                value = state.cornerRadius.toFloat(),
-                valueLabel = "${state.cornerRadius} dp",
-                description = if (state.rectShape) {
-                    "Round corners; 0 means square"
-                } else {
-                    "Requires rectangular shape"
-                },
-                onValueChange = { viewModel.setCornerRadius(it.toInt()) },
-                onValueChangeFinished = { viewModel.setCornerRadius(it.toInt()) },
-                valueRange = OverlayStyle.RECT_RADIUS_MIN.toFloat()..OverlayStyle.RECT_RADIUS_MAX.toFloat(),
-                steps = OverlayStyle.RECT_RADIUS_MAX - OverlayStyle.RECT_RADIUS_MIN - 1,
-                increment = 1f,
-                enabled = state.rectShape
-            )
-        }
-        PreferenceTemplate(
-            title = "Pill outline",
-            description = if (state.pillOutline) "Edge is visible" else "Flat pill, no edge",
-            icon = Icons.Default.Layers,
-            checked = state.pillOutline,
-            onCheckedChange = { viewModel.setPillOutline(it) }
-        )
-    }
-}
-
-/**
  * Monitor target picker.
  *
  * @param state current monitor state
@@ -231,7 +137,7 @@ internal fun FpsMonitorFootnotes(
 ) {
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Text(
-            text = "Method is OEM-dependent. Xiaomi 12T / HyperOS 2 validated. Static screens show 0.0 FPS. Drag the pill to move it, tap to show layer, size, and opacity options.",
+            text = "Method is OEM-dependent. Xiaomi 12T / HyperOS 2 validated. Static screens show 0.0 FPS. Drag the pill to move it, tap to change its appearance, graph, or measured layer.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )
