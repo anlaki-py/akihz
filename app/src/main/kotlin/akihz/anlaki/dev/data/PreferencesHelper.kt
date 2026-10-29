@@ -248,6 +248,46 @@ object PreferencesHelper {
             putInt(KEY_FPS_OVERLAY_ALPHA, value.coerceIn(OverlayStyle.ALPHA_MIN, OverlayStyle.ALPHA_MAX))
         }
 
+    /** Whether the FPS pill includes a history graph. */
+    var fpsGraphEnabled: Boolean
+        get() = prefs.getBoolean("fps_graph_enabled", false)
+        set(value) = prefs.edit { putBoolean("fps_graph_enabled", value) }
+
+    /** Visible FPS history in seconds, from 10 to 60. */
+    var fpsGraphSeconds: Int
+        get() = prefs.getInt("fps_graph_seconds", 30).coerceIn(10, 60)
+        set(value) = prefs.edit { putInt("fps_graph_seconds", value.coerceIn(10, 60)) }
+
+    /** Graph width before overlay scaling, from 120 to 280 dp. */
+    var fpsGraphWidth: Int
+        get() = prefs.getInt("fps_graph_width", 180).coerceIn(120, 280)
+        set(value) = prefs.edit { putInt("fps_graph_width", value.coerceIn(120, 280)) }
+
+    /** Graph height before overlay scaling, from 24 to 80 dp. */
+    var fpsGraphHeight: Int
+        get() = prefs.getInt("fps_graph_height", 40).coerceIn(24, 80)
+        set(value) = prefs.edit { putInt("fps_graph_height", value.coerceIn(24, 80)) }
+
+    /** Uses the system font in the FPS pill without changing the app font. */
+    var fpsDefaultFont: Boolean
+        get() = prefs.getBoolean("fps_default_font", false)
+        set(value) = prefs.edit { putBoolean("fps_default_font", value) }
+
+    /** Uses smaller FPS digits and less padding. */
+    var fpsCompact: Boolean
+        get() = prefs.getBoolean("fps_compact", false)
+        set(value) = prefs.edit { putBoolean("fps_compact", value) }
+
+    /** Shows one decimal place in the FPS reading. */
+    var fpsDecimals: Boolean
+        get() = prefs.getBoolean("fps_decimals", true)
+        set(value) = prefs.edit { putBoolean("fps_decimals", value) }
+
+    /** Shows a Material elevation shadow behind the FPS pill. */
+    var fpsRaised: Boolean
+        get() = prefs.getBoolean("fps_raised", true)
+        set(value) = prefs.edit { putBoolean("fps_raised", value) }
+
     var fpsShowUnit: Boolean
         get() = prefs.getBoolean(KEY_FPS_SHOW_UNIT, true)
         set(value) = prefs.edit { putBoolean(KEY_FPS_SHOW_UNIT, value) }

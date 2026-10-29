@@ -9,7 +9,9 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
-- The FPS overlay and menu now follow the app theme, with rounded controls and clearer text.
+- Redesigned the FPS pill with Material surfaces, clearer digits, and no dropdown arrow.
+- Added an optional FPS graph with adjustable history, width, and height.
+- Added a pill-only default font, compact spacing, decimals, elevation, and corner controls.
 - Added an app-theme color option for the FPS counter and color choices in its menu.
 
 ## [0.0.52] - 2026-10-29
