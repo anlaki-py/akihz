@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import akihz.anlaki.dev.presentation.fps.FpsAppearanceControls
 import akihz.anlaki.dev.presentation.components.PreferenceLayout
 import rikka.shizuku.Shizuku
 
@@ -46,7 +47,6 @@ fun FpsMonitorScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDebugDialog by remember { mutableStateOf(false) }
-    var showColorOptions by remember { mutableStateOf(false) }
     var pendingStartAfterPermission by remember { mutableStateOf(false) }
 
     val pickAppLauncher = rememberLauncherForActivityResult(
@@ -140,10 +140,10 @@ fun FpsMonitorScreen(
                 onViewLog = { showDebugDialog = true }
             )
 
-            FpsOverlaySection(
-                state = state,
-                viewModel = viewModel,
-                onPickColor = { showColorOptions = true }
+            FpsAppearanceControls(
+                style = state.overlayStyle,
+                onPreview = viewModel::setOverlayStyle,
+                onCommit = viewModel::setOverlayStyle
             )
 
             FpsTargetSection(
@@ -168,17 +168,6 @@ fun FpsMonitorScreen(
                 onConsume = { viewModel.consumeMessage() }
             )
         }
-    }
-
-    if (showColorOptions) {
-        PillColorSheet(
-            selected = state.pillColor,
-            onSelected = {
-                viewModel.setPillColor(it)
-                showColorOptions = false
-            },
-            onDismiss = { showColorOptions = false }
-        )
     }
 
     if (showDebugDialog) {

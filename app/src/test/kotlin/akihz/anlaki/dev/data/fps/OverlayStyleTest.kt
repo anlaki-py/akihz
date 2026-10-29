@@ -1,7 +1,6 @@
 package akihz.anlaki.dev.data.fps
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OverlayStyleTest {
@@ -42,16 +41,6 @@ class OverlayStyleTest {
     }
 
     @Test
-    fun `edge follows text color and stays visible`() {
-        val edgeOnWhite = OverlayStyle.strokeColor(OverlayPillColor.White)
-        val edgeOnBlack = OverlayStyle.strokeColor(OverlayPillColor.Black)
-
-        assertEquals(0xFF000000.toInt() and 0x00FFFFFF, edgeOnWhite and 0x00FFFFFF)
-        assertEquals(0xFFFFFFFF.toInt() and 0x00FFFFFF, edgeOnBlack and 0x00FFFFFF)
-        assertTrue(((edgeOnWhite ushr 24) and 0xFF) > 0)
-    }
-
-    @Test
     fun `shape maps to pill or rectangle radius`() {
         assertEquals(999, OverlayStyle.pillRadiusDp(false))
         assertEquals(10, OverlayStyle.pillRadiusDp(true))
@@ -80,9 +69,34 @@ class OverlayStyleTest {
     }
 
     @Test
-    fun `unknown stored color falls back to black`() {
-        assertEquals(OverlayPillColor.Black, OverlayPillColor.fromStoredValue(null))
-        assertEquals(OverlayPillColor.Black, OverlayPillColor.fromStoredValue("Purple"))
+    fun `missing or unknown stored color follows app theme`() {
+        assertEquals(OverlayPillColor.Theme, OverlayPillColor.fromStoredValue(null))
+        assertEquals(OverlayPillColor.Theme, OverlayPillColor.fromStoredValue("Purple"))
         assertEquals(OverlayPillColor.Red, OverlayPillColor.fromStoredValue("Red"))
+    }
+
+    @Test
+    fun `saved explicit colors survive the theme default change`() {
+        for (color in OverlayPillColor.entries) {
+            assertEquals(color, OverlayPillColor.fromStoredValue(color.name))
+        }
+    }
+
+    @Test
+    fun `theme pill uses supplied palette and keeps text opaque`() {
+        val background = 0xFFEADDFF.toInt()
+        val foreground = 0x0021005D
+        val fill = OverlayStyle.pillColor(OverlayPillColor.Theme, 80, background)
+        assertEquals(0xCCEADDFF.toInt(), fill)
+        assertEquals(0xFF21005D.toInt(), OverlayStyle.textColor(OverlayPillColor.Theme, foreground))
+    }
+
+    @Test
+    fun `explicit color ignores theme palette`() {
+        assertEquals(
+            OverlayStyle.pillColor(OverlayPillColor.Green, 80),
+            OverlayStyle.pillColor(OverlayPillColor.Green, 80, 0xFFEADDFF.toInt())
+        )
+        assertEquals(0xFF000000.toInt(), OverlayStyle.textColor(OverlayPillColor.White, 0xFFFFFFFF.toInt()))
     }
 }
