@@ -1,7 +1,6 @@
 package akihz.anlaki.dev.data.fps
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OverlayStyleTest {
@@ -39,16 +38,6 @@ class OverlayStyleTest {
         for (color in OverlayPillColor.entries) {
             assertEquals(255, (OverlayStyle.textColor(color) ushr 24) and 0xFF)
         }
-    }
-
-    @Test
-    fun `edge follows text color and stays visible`() {
-        val edgeOnWhite = OverlayStyle.strokeColor(OverlayPillColor.White)
-        val edgeOnBlack = OverlayStyle.strokeColor(OverlayPillColor.Black)
-
-        assertEquals(0xFF000000.toInt() and 0x00FFFFFF, edgeOnWhite and 0x00FFFFFF)
-        assertEquals(0xFFFFFFFF.toInt() and 0x00FFFFFF, edgeOnBlack and 0x00FFFFFF)
-        assertTrue(((edgeOnWhite ushr 24) and 0xFF) > 0)
     }
 
     @Test
@@ -100,7 +89,6 @@ class OverlayStyleTest {
         val fill = OverlayStyle.pillColor(OverlayPillColor.Theme, 80, background)
         assertEquals(0xCCEADDFF.toInt(), fill)
         assertEquals(0xFF21005D.toInt(), OverlayStyle.textColor(OverlayPillColor.Theme, foreground))
-        assertEquals(0x9921005D.toInt(), OverlayStyle.strokeColor(OverlayPillColor.Theme, foreground))
     }
 
     @Test

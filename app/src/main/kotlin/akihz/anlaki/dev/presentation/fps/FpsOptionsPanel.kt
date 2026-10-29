@@ -2,13 +2,8 @@
 
 package akihz.anlaki.dev.presentation.fps
 
-import akihz.anlaki.dev.data.fps.OverlayPillColor
-import akihz.anlaki.dev.data.fps.OverlayStyle
-import akihz.anlaki.dev.presentation.components.PreferenceGroup
-import akihz.anlaki.dev.presentation.components.PreferenceSlider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -21,13 +16,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,19 +36,16 @@ internal fun FpsOptionsPanel(
     style: FpsPillStyle,
     layers: List<FpsLayerRow>,
     onDismiss: () -> Unit,
-    onScaleChange: (Int) -> Unit,
-    onScaleDone: (Int) -> Unit,
-    onAlphaChange: (Int) -> Unit,
-    onAlphaDone: (Int) -> Unit,
-    onUnitChange: (Boolean) -> Unit,
-    onColorChange: (OverlayPillColor) -> Unit,
-    onLayerSelect: (String?) -> Unit
+    onStylePreview: (FpsPillStyle) -> Unit,
+    onStyleCommit: (FpsPillStyle) -> Unit,
+    onLayerSelect: (String?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
     Surface(
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.width(minOf(340, configuration.screenWidthDp).dp)
+        modifier = modifier.width(minOf(340, (configuration.screenWidthDp - 12).coerceAtLeast(1)).dp)
     ) {
         Column {
             Row(
@@ -78,52 +68,7 @@ internal fun FpsOptionsPanel(
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
             ) {
-                PreferenceGroup(heading = "Appearance") {
-                    formItem {
-                        Text("Color", style = MaterialTheme.typography.bodyLarge)
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            OverlayPillColor.entries.forEach { color ->
-                                FilterChip(
-                                    selected = style.pillColor == color,
-                                    onClick = { onColorChange(color) },
-                                    label = { Text(if (color == OverlayPillColor.Theme) "App theme" else color.name) }
-                                )
-                            }
-                        }
-                    }
-                    formItem {
-                        PreferenceSlider(
-                            title = "Size",
-                            value = style.scalePercent.toFloat(),
-                            valueLabel = "${style.scalePercent}%",
-                            description = "Scale the floating counter",
-                            onValueChange = { onScaleChange(it.toInt()) },
-                            onValueChangeFinished = { onScaleDone(it.toInt()) },
-                            valueRange = FpsOverlayController.SCALE_MIN.toFloat()..FpsOverlayController.SCALE_MAX.toFloat(),
-                            steps = 0,
-                            increment = 10f
-                        )
-                    }
-                    formItem {
-                        PreferenceSlider(
-                            title = "Opacity",
-                            value = style.alphaPercent.toFloat(),
-                            valueLabel = "${style.alphaPercent}%",
-                            description = "Fade the background, keep text solid",
-                            onValueChange = { onAlphaChange(it.toInt()) },
-                            onValueChangeFinished = { onAlphaDone(it.toInt()) },
-                            valueRange = OverlayStyle.ALPHA_MIN.toFloat()..OverlayStyle.ALPHA_MAX.toFloat(),
-                            steps = 0,
-                            increment = 5f
-                        )
-                    }
-                    item(
-                        toggleState = style.showUnit,
-                        onToggle = onUnitChange,
-                        headlineContent = { Text("Show FPS label") },
-                        trailingContent = { Switch(checked = style.showUnit, onCheckedChange = null) }
-                    )
-                }
+                FpsAppearanceControls(style, onStylePreview, onStyleCommit)
                 FpsLayerChoices(layers, onLayerSelect)
             }
         }

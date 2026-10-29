@@ -48,8 +48,6 @@ object OverlayStyle {
     private const val TEXT_ON_DARK = 0xFFFFFFFF.toInt()
     private const val TEXT_ON_LIGHT = 0xFF000000.toInt()
 
-    private const val STROKE_ALPHA = 0x99
-
     /**
      * Converts an opacity percent to an alpha byte.
      *
@@ -87,18 +85,6 @@ object OverlayStyle {
             OverlayPillColor.White -> TEXT_ON_LIGHT
             else -> TEXT_ON_DARK
         }
-
-    /**
-     * Builds the pill edge color from the text color at fixed 60 percent alpha.
-     *
-     * The edge ignores the opacity setting so it stays visible at low opacity.
-     *
-     * @param color selected pill color
-     * @param themeColor app theme foreground used for the Theme option
-     * @return ARGB edge color
-     */
-    fun strokeColor(color: OverlayPillColor, themeColor: Int = TEXT_ON_DARK): Int =
-        (STROKE_ALPHA shl 24) or (textColor(color, themeColor) and 0x00FFFFFF)
 
     /**
      * Clamps a rectangle corner radius to the supported range.
