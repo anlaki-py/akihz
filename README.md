@@ -3,11 +3,11 @@
 
   <h1><strong>akiHz</strong></h1>
 
-  <h3>Android refresh rate switcher (FOSS)</h3>
+  <h3>Android refresh-rate controls and FPS monitoring (FOSS)</h3>
 
-  <p><strong>akiHz</strong> (pronounced "akiHertz") is a lightweight, open-source Android app built for daily use. It changes your display refresh rate fast and keeps the controls ready. It uses <a href="https://shizuku.rikka.app/">Shizuku</a>. No root required.</p>
+  <p><strong>akiHz</strong> (pronounced "akiHertz") is an open-source Android app for switching display refresh rates and monitoring app FPS. It uses <a href="https://shizuku.rikka.app/">Shizuku</a>, with no root required.</p>
 
-  <p>Add the tile to your control center. Tap to switch rate. Long press to open the app. It also shows live app FPS in a small overlay you can drag around.</p>
+  <p>Choose your refresh rates, switch them from Quick Settings, and track FPS in a floating counter with an optional graph. Material 3 Expressive controls, app themes, and pill settings let you choose how it looks.</p>
 
 <p>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
@@ -21,24 +21,19 @@
 
 </div>
 
-
-
-
-
-
 ---
 
 ## Download
 
-Download the latest APK from [akiHz website](https://akihz.anlaki.dev/) (recommended).
-or download the latest APK from [GitHub Releases](https://github.com/anlaki-py/akihz/releases/latest).
+Download the latest APK from the [akiHz website](https://akihz.anlaki.dev/)
+or [GitHub Releases](https://github.com/anlaki-py/akihz/releases/latest).
 Most modern phones use the `arm64-v8a` APK; choose the `universal` APK if you
 are unsure which architecture your device uses.
 
 ## Requirements
 
 - [Shizuku](https://shizuku.rikka.app/) installed, running, and authorized
-- A display that supports more than one refresh rate
+- A display that supports more than one refresh rate for rate switching
 - No root access required
 
 ## Supported Android versions
@@ -57,24 +52,61 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 
 ## Features
 
-- Tap the control center tile to cycle rates. Long press to open the app.
-- Choose which rates the tile cycles through on Home.
-- Stays ready in the background with a foreground service. Includes a shortcut to disable battery optimization.
-- Changes rate as soon as you tap. Adds no delay.
-- Reads your display supported refresh rates instead of using fixed values.
-- Uses the correct system settings keys per manufacturer.
-- Shows live app FPS from SurfaceFlinger in a floating pill. Drag to move. Tap for options. Start and stop from the FPS tile.
-- Checks GitHub daily, every three days, or weekly. Notifies once per release.
-- Pick a device profile in Settings if auto detection fails.
-- Uses pure `#000000` surfaces in dark mode when AMOLED mode is on.
+- Refresh-rate controls on Home, with a choice of which rates the Quick Settings tile cycles through.
+- A draggable FPS counter with an optional graph, app or layer selection, and saved appearance settings.
+- Material 3 Expressive styling, wallpaper colors, preset and custom themes, and optional custom fonts.
+- Stable and beta update channels, scheduled checks, and in-app APK downloads.
+- Background controls, manufacturer overrides, custom refresh-rate keys, and exportable diagnostic logs.
 
 ## FPS monitoring
 
-The overlay shows real presented app FPS, not screen Hz. A 120 Hz screen can still show a 30 FPS game. The app reads SurfaceFlinger TimeStats `averageFPS` through Shizuku and samples about twice per second.
+The overlay shows app FPS reported by SurfaceFlinger. A 120 Hz screen can still
+show a 30 FPS game. akiHz reads TimeStats through Shizuku about twice per second;
+static screens can report 0 FPS.
 
-Start it from **Settings → FPS Monitor** or from the FPS tile in your control center. It needs Shizuku and overlay permission. Drag the pill to move it. Tap it for size and layer options.
+Open **Settings → FPS Monitor → Surface FPS Monitor**, or use the **FPS Monitor**
+Quick Settings tile. Grant Shizuku, overlay, and notification permissions when
+asked. Drag the pill to move it; tap anywhere on it to open its menu.
 
-The method is tested on Xiaomi 12T with Android 15 and HyperOS 2. Full notes are in the Gist [Real-Time FPS Monitoring with SurfaceFlinger TimeStats on Android 15 / HyperOS 2](https://gist.github.com/anlaki-py/d9c8cf06cd54149d522adb8e665bfbd0).
+The app's FPS page and the pill menu share these controls. Changes are saved and
+stay in sync:
+
+| Controls | Options |
+|:---|:---|
+| Counter | Size, FPS label, decimals, and compact spacing |
+| Font | Follow the app font or use the system font for the pill only |
+| Graph | Show or hide history, choose 10, 30, or 60 seconds, and adjust width and height |
+| Surface | App theme or a fixed color, background opacity, shadow, outline, and corner radius |
+
+The graph resets when the measured app or layer changes. Gaps in sampling are
+left visible. You can select a target app from the FPS page or choose a measured
+layer from the pill menu.
+
+The method has been tested on Xiaomi 12T with Android 15 and HyperOS 2. Results
+can vary by device. Full notes are in the Gist
+[Real-Time FPS Monitoring with SurfaceFlinger TimeStats on Android 15 / HyperOS 2](https://gist.github.com/anlaki-py/d9c8cf06cd54149d522adb8e665bfbd0).
+
+## Appearance
+
+Choose System, Light, or Dark mode under **Settings → Appearance**. Open **Theme**
+for the rest:
+
+- Match your wallpaper with dynamic color, or choose and edit color schemes.
+- Use pitch-black backgrounds in dark mode with the AMOLED option.
+- Use the Material app icon or switch back to the original icon.
+- Use Cute Dino titles and Soft Core descriptions, or restore the default fonts.
+
+Quick Settings tile text follows the app font setting. The FPS overlay and its
+menu follow the app theme; the pill also has its own font and color choices.
+
+## Updates and release notes
+
+Under **Settings → Updates**, choose Stable or Beta and check for updates manually
+or on a daily, three-day, or weekly schedule. The app can download an APK and
+verify its SHA-256 checksum before offering installation.
+
+Hold the version row in Settings to read release notes or browse the bundled
+changelog offline.
 
 ## Supported devices
 
@@ -82,7 +114,7 @@ I have only tested akiHz on my Xiaomi phone. The app includes support for
 several other manufacturers and many other devices should work, but none are
 tested or guaranteed.
 
-If auto-detection fails, try **Settings → Advanced → OEM override** and select
+If auto-detection fails, try **Settings → Refresh rate → OEM override** and select
 your manufacturer manually.
 
 ## Install
@@ -106,11 +138,11 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 
 ## Usage
 
-1. Open Shizuku and start it (wireless debugging or ADB)
+1. Open Shizuku and start it with wireless debugging or ADB.
 2. Open akiHz and grant Shizuku permission. Grant notification and overlay permission when asked.
-3. Select a refresh rate from the buttons, or add the **akiHz** tile to your Quick Settings panel and tap it to cycle
-4. To see FPS, open **Settings → FPS Monitor** and press Start, or add the **FPS Monitor** tile to Quick Settings and tap it. Drag the pill to move it, tap it for size and layer options.
-5. For more reliable background operation, open **Settings → Background → Allow background running** and approve the Android prompt
+3. Select a refresh rate on Home. Use the tile buttons beside rates to choose which ones the **akiHz** Quick Settings tile cycles through.
+4. Open **Settings → FPS Monitor → Surface FPS Monitor** to start monitoring and customize the counter, graph, and surface. The **FPS Monitor** tile also starts and stops monitoring.
+5. Under **Settings → Background**, enable **Keep alive notification** if you want the refresh-rate controls kept ready. Use **Allow background running** to request a battery-optimization exemption.
 
 ## FAQ
 
@@ -118,15 +150,16 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 Android blocks normal apps from changing refresh-rate settings directly. Shizuku grants akiHz the privileged access needed to update the correct OEM-specific keys.
 
 **Does the Quick Settings tile work when the app is closed?**  
-Yes. akiHz uses an ongoing foreground service to keep its Quick Settings controls ready. Android displays a persistent notification while it runs. If your device still restricts it, use **Settings → Advanced → Allow background running** to request a battery-optimization exemption.
+Yes. With **Keep alive notification** enabled, akiHz uses a foreground service to keep its Quick Settings controls ready. Android displays a persistent notification while it runs. If your device still restricts it, use **Settings → Background → Allow background running** to request a battery-optimization exemption.
 
 **My phone is not switching rates correctly? What should I try?**
-1. Confirm Shizuku is running and akiHz has permission  
-2. Try **Settings → Advanced → OEM override** and pick your manufacturer  
-3. If it still does not work, fork the project and investigate support for your device
+
+1. Confirm Shizuku is running and akiHz has permission.
+2. Try **Settings → Refresh rate → OEM override** and pick your manufacturer.
+3. If it still does not work, fork the project and investigate support for your device.
 
 **Is akiHz safe?**  
-The app is MIT-licensed and fully open source. It only changes display refresh-rate related system settings; review the code on GitHub if you want to verify behavior.
+The app is MIT-licensed and open source. Refresh-rate controls write system settings through Shizuku. FPS monitoring reads SurfaceFlinger data and uses overlay permission to display the counter. Review the source to assess its behavior on your device.
 
 ## Contributions and support
 
