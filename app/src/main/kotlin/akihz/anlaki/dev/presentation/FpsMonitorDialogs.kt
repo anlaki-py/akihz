@@ -31,6 +31,7 @@ import akihz.anlaki.dev.data.fps.OverlayPillColor
 /** Human label for a pill color choice. */
 internal fun pillColorLabel(color: OverlayPillColor): String =
     when (color) {
+        OverlayPillColor.Theme -> "App theme"
         OverlayPillColor.Black -> "Black, white text"
         OverlayPillColor.Green -> "Green, white text"
         OverlayPillColor.Red -> "Red, white text"

@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation.fps
 
-import akihz.anlaki.dev.presentation.theme.AppFontTheme
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -74,8 +73,14 @@ class FpsOverlayController(context: Context) {
         val view = ComposeView(appContext).apply {
             FpsOverlayViewTrees.install(this, lifecycle, lifecycle, lifecycle)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            // Theme, font, and slider changes can resize the overlay after its first layout.
+            addOnLayoutChangeListener { view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
+                    view.post { keepOnScreen() }
+                }
+            }
             setContent {
-                AppFontTheme {
+                FpsOverlayTheme {
                     FpsOverlayContent(
                         text = pillText,
                         style = style,
@@ -89,6 +94,7 @@ class FpsOverlayController(context: Context) {
                         onAlphaChange = { style = style.copy(alphaPercent = it) },
                         onAlphaDone = { setAlpha(it) },
                         onUnitChange = { setShowUnit(it) },
+                        onColorChange = { setPillColor(it) },
                         onLayerSelect = { setSelectedLayer(it) }
                     )
                 }

@@ -80,9 +80,35 @@ class OverlayStyleTest {
     }
 
     @Test
-    fun `unknown stored color falls back to black`() {
-        assertEquals(OverlayPillColor.Black, OverlayPillColor.fromStoredValue(null))
-        assertEquals(OverlayPillColor.Black, OverlayPillColor.fromStoredValue("Purple"))
+    fun `missing or unknown stored color follows app theme`() {
+        assertEquals(OverlayPillColor.Theme, OverlayPillColor.fromStoredValue(null))
+        assertEquals(OverlayPillColor.Theme, OverlayPillColor.fromStoredValue("Purple"))
         assertEquals(OverlayPillColor.Red, OverlayPillColor.fromStoredValue("Red"))
+    }
+
+    @Test
+    fun `saved explicit colors survive the theme default change`() {
+        for (color in OverlayPillColor.entries) {
+            assertEquals(color, OverlayPillColor.fromStoredValue(color.name))
+        }
+    }
+
+    @Test
+    fun `theme pill uses supplied palette and keeps text opaque`() {
+        val background = 0xFFEADDFF.toInt()
+        val foreground = 0x0021005D
+        val fill = OverlayStyle.pillColor(OverlayPillColor.Theme, 80, background)
+        assertEquals(0xCCEADDFF.toInt(), fill)
+        assertEquals(0xFF21005D.toInt(), OverlayStyle.textColor(OverlayPillColor.Theme, foreground))
+        assertEquals(0x9921005D.toInt(), OverlayStyle.strokeColor(OverlayPillColor.Theme, foreground))
+    }
+
+    @Test
+    fun `explicit color ignores theme palette`() {
+        assertEquals(
+            OverlayStyle.pillColor(OverlayPillColor.Green, 80),
+            OverlayStyle.pillColor(OverlayPillColor.Green, 80, 0xFFEADDFF.toInt())
+        )
+        assertEquals(0xFF000000.toInt(), OverlayStyle.textColor(OverlayPillColor.White, 0xFFFFFFFF.toInt()))
     }
 }
