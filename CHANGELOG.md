@@ -7,6 +7,13 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.52] - 2026-10-29
+
+### Changed
+
+- FPS and refresh-rate tiles use centered text that follows the font setting.
+- Status bar and notification icons use a larger, centered bunny.
+
 ## [0.0.51] - 2026-10-28
 
 ### Added

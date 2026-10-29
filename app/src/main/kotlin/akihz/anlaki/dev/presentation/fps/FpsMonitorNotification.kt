@@ -50,7 +50,7 @@ object FpsMonitorNotification {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_refresh_rate)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("FPS Monitor")
             .setContentText(contentText)
             .setContentIntent(openIntent)
