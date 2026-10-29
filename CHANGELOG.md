@@ -7,6 +7,19 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.53] - 2026-10-29
+
+### Added
+
+- Added an optional FPS graph with adjustable history, width, and height.
+- Added a pill-only default font, compact spacing, decimals, shadow, and corner controls.
+
+### Changed
+
+- Redesigned the FPS pill and menu to follow the app theme, with clearer digits and no dropdown arrow.
+- FPS settings in the app and pill menu now share the same controls and stay in sync.
+- Updated the screenshots and README image links.
+
 ## [0.0.52] - 2026-10-29
 
 ### Changed

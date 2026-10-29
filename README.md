@@ -47,13 +47,13 @@ akiHz supports **Android 11 and newer (API 30+)** and currently targets API 36.
 
 ## Screenshots
 
-| Home (light) | Home (dark) |
+| Home | Settings |
 |:---:|:---:|
-| ![Home screen in light theme](screenshots/home_light.jpg) | ![Home screen in dark theme](screenshots/home_dark.jpg) |
+| ![Home screen](screenshots/home.png) | ![Settings screen](screenshots/settings.png) |
 
-| Settings (light) | Settings (dark) |
+| FPS overlay | Quick Settings tiles |
 |:---:|:---:|
-| ![Settings screen in light theme](screenshots/settings_light.jpg) | ![Settings screen in dark theme](screenshots/settings_dark.jpg) |
+| ![FPS overlay](screenshots/fps_overlay.png) | ![Quick Settings tiles](screenshots/quick_settings_tiles.png) |
 
 ## Features
 

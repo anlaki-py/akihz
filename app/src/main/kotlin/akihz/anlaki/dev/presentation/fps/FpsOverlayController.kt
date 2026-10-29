@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation.fps
 
-import akihz.anlaki.dev.presentation.theme.AppFontTheme
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -10,9 +9,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.data.fps.FpsHistory
+import akihz.anlaki.dev.data.fps.FpsSample
 import akihz.anlaki.dev.data.fps.LayerStat
-import akihz.anlaki.dev.data.fps.OverlayPillColor
-import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.data.fps.TimeStatsParser
 import java.util.Locale
 import timber.log.Timber
@@ -31,6 +30,9 @@ class FpsOverlayController(context: Context) {
 
     private var composeView: ComposeView? = null
     private var overlayLifecycle: FpsOverlayLifecycle? = null
+    private val history = FpsHistory()
+    private var samples by mutableStateOf(emptyList<FpsSample>())
+    private var graphRefreshRate by mutableStateOf(60.0)
     private var pillText by mutableStateOf("Connecting…")
     private var rows by mutableStateOf(listOf(FpsLayerRow(null, "Auto", true)))
     private var style by mutableStateOf(FpsPillStyle.load())
@@ -59,6 +61,8 @@ class FpsOverlayController(context: Context) {
         Timber.i("Attaching FPS overlay")
         style = FpsPillStyle.load()
         selectedLayer = PreferencesHelper.fpsSelectedLayer
+        history.clear()
+        samples = emptyList()
         pillText = "Connecting…"
         rows = listOf(FpsLayerRow(null, "Auto", selectedLayer == null))
         expanded = false
@@ -74,21 +78,29 @@ class FpsOverlayController(context: Context) {
         val view = ComposeView(appContext).apply {
             FpsOverlayViewTrees.install(this, lifecycle, lifecycle, lifecycle)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            // Theme, font, and slider changes can resize the overlay after its first layout.
+            addOnLayoutChangeListener { view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
+                    view.post { keepOnScreen() }
+                }
+            }
             setContent {
-                AppFontTheme {
+                FpsOverlayTheme {
                     FpsOverlayContent(
                         text = pillText,
+                        samples = samples,
+                        refreshRate = graphRefreshRate,
                         style = style,
                         expanded = expanded,
                         layers = rows,
                         onTapPill = { toggleOptionsPanel() },
                         onDrag = { dxPx, dyPx -> onDragFrame(dxPx, dyPx) },
                         onDragEnd = { onDragEnd() },
-                        onScaleChange = { style = style.copy(scalePercent = it) },
-                        onScaleDone = { setScale(it) },
-                        onAlphaChange = { style = style.copy(alphaPercent = it) },
-                        onAlphaDone = { setAlpha(it) },
-                        onUnitChange = { setShowUnit(it) },
+                        onStylePreview = { style = it },
+                        onStyleCommit = { updated ->
+                            style = updated
+                            updated.save()
+                        },
                         onLayerSelect = { setSelectedLayer(it) }
                     )
                 }
@@ -135,7 +147,11 @@ class FpsOverlayController(context: Context) {
             pendingStatus = text
             return
         }
-        handler.post { pillText = text }
+        handler.post {
+            history.clear()
+            samples = emptyList()
+            pillText = text
+        }
     }
 
     /**
@@ -167,9 +183,13 @@ class FpsOverlayController(context: Context) {
             return
         }
         val chosen = chooseOverlayLayer(layers, selectedLayer)
-        val shownFps = TimeStatsParser.displayFps(chosen.fps, displayRefreshRate())
+        val refreshRate = displayRefreshRate()
+        val shownFps = TimeStatsParser.displayFps(chosen.fps, refreshRate)
+        val sampleTime = android.os.SystemClock.elapsedRealtime()
         val text = FpsPillRenderer.formatFps(shownFps, style.showUnit)
         handler.post {
+            samples = history.record("$foreground/${chosen.stableName}", sampleTime, shownFps)
+            graphRefreshRate = refreshRate
             pillText = text
             rows = layerRows(layers)
         }
@@ -195,6 +215,8 @@ class FpsOverlayController(context: Context) {
      * @param stableName layer name, or null for Auto
      */
     fun setSelectedLayer(stableName: String?) {
+        history.clear()
+        samples = emptyList()
         selectedLayer = stableName
         PreferencesHelper.fpsSelectedLayer = stableName
         Timber.i("FPS layer selected: ${stableName ?: "Auto"}")
@@ -205,7 +227,12 @@ class FpsOverlayController(context: Context) {
 
     /** Reloads the picked layer from prefs and updates the radio state. */
     fun updateSelectedLayerFromPrefs() {
-        selectedLayer = PreferencesHelper.fpsSelectedLayer
+        val savedLayer = PreferencesHelper.fpsSelectedLayer
+        if (savedLayer != selectedLayer) {
+            history.clear()
+            samples = emptyList()
+        }
+        selectedLayer = savedLayer
         handler.post {
             rows = rows.map { it.copy(selected = it.stableName == selectedLayer) }
         }
@@ -219,58 +246,6 @@ class FpsOverlayController(context: Context) {
     fun applyStyleFromPrefs() {
         style = FpsPillStyle.load()
         Timber.i("FPS overlay style alpha=${style.alphaPercent} unit=${style.showUnit} color=${style.pillColor}")
-    }
-
-    /**
-     * Updates the pill fill opacity, keeping text fully opaque.
-     *
-     * @param percent opacity from [OverlayStyle.ALPHA_MIN] to [OverlayStyle.ALPHA_MAX]
-     */
-    fun setAlpha(percent: Int) {
-        val clamped = percent.coerceIn(OverlayStyle.ALPHA_MIN, OverlayStyle.ALPHA_MAX)
-        style = style.copy(alphaPercent = clamped)
-        PreferencesHelper.fpsOverlayAlpha = clamped
-        Timber.i("FPS overlay alpha $clamped%")
-    }
-
-    /**
-     * Shows or hides the FPS label next to the value.
-     *
-     * @param enabled true for "60.0 FPS", false for "60.0"
-     */
-    fun setShowUnit(enabled: Boolean) {
-        style = style.copy(showUnit = enabled)
-        PreferencesHelper.fpsShowUnit = enabled
-    }
-
-    /**
-     * Changes the pill background color.
-     *
-     * @param color new pill color
-     */
-    fun setPillColor(color: OverlayPillColor) {
-        style = style.copy(pillColor = color)
-        PreferencesHelper.fpsPillColor = color
-    }
-
-    /**
-     * Switches the pill between pill and rectangle shape.
-     *
-     * @param rectangular true for rectangle, false for pill
-     */
-    fun setRectShape(rectangular: Boolean) {
-        style = style.copy(rectangularShape = rectangular)
-        PreferencesHelper.fpsRectShape = rectangular
-    }
-
-    /**
-     * Shows or hides the pill outline.
-     *
-     * @param enabled true to draw the edge, false for a flat pill
-     */
-    fun setPillOutline(enabled: Boolean) {
-        style = style.copy(pillOutline = enabled)
-        PreferencesHelper.fpsPillOutline = enabled
     }
 
     private fun toggleOptionsPanel() {
@@ -326,7 +301,7 @@ class FpsOverlayController(context: Context) {
         val status = pendingStatus
         pendingStatus = null
         if (status != null) {
-            handler.post { pillText = status }
+            setStatus(status)
         }
         if (hasPendingDisplay) {
             hasPendingDisplay = false

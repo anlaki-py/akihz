@@ -6,6 +6,7 @@ import java.util.Locale
  * Pill color options for the floating FPS overlay.
  */
 enum class OverlayPillColor {
+    Theme,
     Black,
     Green,
     Red,
@@ -16,10 +17,10 @@ enum class OverlayPillColor {
          * Parses a stored color name.
          *
          * @param value raw stored name
-         * @return matching color, or [Black] when unknown
+         * @return matching color, or [Theme] when unknown
          */
         fun fromStoredValue(value: String?): OverlayPillColor =
-            entries.firstOrNull { it.name == value } ?: Black
+            entries.firstOrNull { it.name == value } ?: Theme
     }
 }
 
@@ -47,8 +48,6 @@ object OverlayStyle {
     private const val TEXT_ON_DARK = 0xFFFFFFFF.toInt()
     private const val TEXT_ON_LIGHT = 0xFF000000.toInt()
 
-    private const val STROKE_ALPHA = 0x99
-
     /**
      * Converts an opacity percent to an alpha byte.
      *
@@ -65,10 +64,11 @@ object OverlayStyle {
      *
      * @param color selected pill color
      * @param percent opacity from [ALPHA_MIN] to [ALPHA_MAX]
+     * @param themeColor app theme fill used for the Theme option
      * @return ARGB fill color
      */
-    fun pillColor(color: OverlayPillColor, percent: Int): Int {
-        val base = fillBase(color)
+    fun pillColor(color: OverlayPillColor, percent: Int, themeColor: Int = FILL_BLACK): Int {
+        val base = fillBase(color, themeColor)
         return (alphaByte(percent) shl 24) or (base and 0x00FFFFFF)
     }
 
@@ -76,21 +76,15 @@ object OverlayStyle {
      * Returns the pill text color, always fully opaque.
      *
      * @param color selected pill color
+     * @param themeColor app theme foreground used for the Theme option
      * @return ARGB text color
      */
-    fun textColor(color: OverlayPillColor): Int =
-        if (color == OverlayPillColor.White) TEXT_ON_LIGHT else TEXT_ON_DARK
-
-    /**
-     * Builds the pill edge color from the text color at fixed 60 percent alpha.
-     *
-     * The edge ignores the opacity setting so it stays visible at low opacity.
-     *
-     * @param color selected pill color
-     * @return ARGB edge color
-     */
-    fun strokeColor(color: OverlayPillColor): Int =
-        (STROKE_ALPHA shl 24) or (textColor(color) and 0x00FFFFFF)
+    fun textColor(color: OverlayPillColor, themeColor: Int = TEXT_ON_DARK): Int =
+        when (color) {
+            OverlayPillColor.Theme -> themeColor or 0xFF000000.toInt()
+            OverlayPillColor.White -> TEXT_ON_LIGHT
+            else -> TEXT_ON_DARK
+        }
 
     /**
      * Clamps a rectangle corner radius to the supported range.
@@ -125,8 +119,9 @@ object OverlayStyle {
             String.format(Locale.US, "%.1f", fps)
         }
 
-    private fun fillBase(color: OverlayPillColor): Int =
+    private fun fillBase(color: OverlayPillColor, themeColor: Int): Int =
         when (color) {
+            OverlayPillColor.Theme -> themeColor
             OverlayPillColor.Black -> FILL_BLACK
             OverlayPillColor.Green -> FILL_GREEN
             OverlayPillColor.Red -> FILL_RED
