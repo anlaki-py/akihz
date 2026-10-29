@@ -34,7 +34,7 @@ data class FpsMonitorUiState(
     val overlayScale: Int = 100,
     val overlayAlpha: Int = OverlayStyle.ALPHA_DEFAULT,
     val showUnit: Boolean = true,
-    val pillColor: OverlayPillColor = OverlayPillColor.Black,
+    val pillColor: OverlayPillColor = OverlayPillColor.Theme,
     val rectShape: Boolean = false,
     val cornerRadius: Int = OverlayStyle.RECT_RADIUS_DP,
     val pillOutline: Boolean = true,

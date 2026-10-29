@@ -7,6 +7,11 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+### Changed
+
+- The FPS overlay and menu now follow the app theme, with rounded controls and clearer text.
+- Added an app-theme color option for the FPS counter and color choices in its menu.
+
 ## [0.0.52] - 2026-10-29
 
 ### Changed
