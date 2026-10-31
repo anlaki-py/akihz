@@ -9,6 +9,8 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -47,9 +49,13 @@ internal fun NavbarGlassSettingsScreen(
     val supported = Build.VERSION.SDK_INT >= 33
     val backdrop = if (supported && settings.enabled) rememberGlassBackdrop() else null
     var selection by rememberSaveable { mutableIntStateOf(0) }
-    val export = remember(settings) {
+    val outerTint = MaterialTheme.colorScheme.primary.toArgb()
+    val pillTint = MaterialTheme.colorScheme.surface.toArgb()
+    val export = remember(settings, outerTint, pillTint) {
         JSONObject(settings.toJson()).apply {
             put("appearance", JSONObject().apply {
+                put("outerTintArgb", String.format(Locale.US, "#%08X", outerTint))
+                put("pillTintArgb", String.format(Locale.US, "#%08X", pillTint))
                 put("themeId", PreferencesHelper.themeId)
                 put("themeMode", PreferencesHelper.themeMode.name)
                 put("dynamicColor", PreferencesHelper.dynamicColor)
