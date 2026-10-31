@@ -22,7 +22,7 @@ class NavbarGlassShaderTest {
         shader.setFloatUniform("dispersion", 0.5f)
         shader.setFloatUniform("blurRadius", 0f)
         shader.setFloatUniform("tintOpacity", 0.25f)
-        shader.setColorUniform("tint", android.graphics.Color.WHITE)
+        shader.setFloatUniform("tint", 1f, 1f, 1f, 1f)
         shader.setFloatUniform("saturation", 1f)
         shader.setFloatUniform("brightness", 1f)
         shader.setFloatUniform("highlight", 0.35f)

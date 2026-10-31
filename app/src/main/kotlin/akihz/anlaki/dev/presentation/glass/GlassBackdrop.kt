@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Offset
@@ -71,8 +71,10 @@ internal fun GlassSurface(
             null
         }
     }
-    val tint = if (settings.useThemeTint) themeTint
-        else Color.hsv(settings[GlassParameter.Hue], settings[GlassParameter.TintSaturation], settings[GlassParameter.TintBrightness])
+    // The app uses an sRGB window. Explicit components also work with the native test renderer.
+    val tint = (if (settings.useThemeTint) themeTint
+        else Color.hsv(settings[GlassParameter.Hue], settings[GlassParameter.TintSaturation],
+            settings[GlassParameter.TintBrightness])).convert(ColorSpaces.Srgb)
     // A failed shader still leaves a visible bar and working navigation.
     if (shader == null) {
         Box(modifier.drawWithContent { drawRect(themeTint); drawContent() })
@@ -90,7 +92,7 @@ internal fun GlassSurface(
                 shader.setFloatUniform("dispersion", settings[GlassParameter.Dispersion] * density)
                 shader.setFloatUniform("blurRadius", settings[GlassParameter.Blur] * density)
                 shader.setFloatUniform("tintOpacity", settings[GlassParameter.Tint])
-                shader.setColorUniform("tint", tint.toArgb())
+                shader.setFloatUniform("tint", tint.red, tint.green, tint.blue, 1f)
                 shader.setFloatUniform("saturation", settings[GlassParameter.Saturation])
                 shader.setFloatUniform("brightness", settings[GlassParameter.Brightness])
                 shader.setFloatUniform("highlight", settings[GlassParameter.Highlight])
