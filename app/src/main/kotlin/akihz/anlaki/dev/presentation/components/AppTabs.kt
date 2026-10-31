@@ -1,5 +1,6 @@
 package akihz.anlaki.dev.presentation.components
 
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 import android.os.Build
 import akihz.anlaki.dev.data.glass.NavbarGlassSettings
 import akihz.anlaki.dev.presentation.glass.rememberGlassBackdrop
@@ -30,7 +31,7 @@ internal enum class AppTab(val label: String, val icon: ImageVector) {
 /**
  * Displays the root [pagerState] and floating navigation as one previewable page.
  *
- * @param glassSettings opt-in navbar appearance
+ * @param glassSettings navbar appearance
  * @param content renders each tab beneath the navigation bar
  */
 @Composable
@@ -51,7 +52,7 @@ internal fun AppTabs(
     }
     Box(Modifier.fillMaxSize()) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize().then(
-            if (backdrop != null) Modifier.recordGlassBackdrop(backdrop) else Modifier
+            if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, AkihzColors.pageContainer) else Modifier
         )) { index ->
             content(AppTab.entries[index])
         }

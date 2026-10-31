@@ -46,14 +46,10 @@ object AkihzColors {
     /** Top app bar colors matching the page container. */
     val topBarColors: TopAppBarColors
         @Composable
-        get() = if (LocalDarkMode.current) {
-            TopAppBarDefaults.topAppBarColors()
-        } else {
-            TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-            )
-        }
+        get() = TopAppBarDefaults.topAppBarColors(
+            containerColor = pageContainer,
+            scrolledContainerColor = pageContainer
+        )
 
     /** Row card colors, raised above the page container in every mode. */
     val listItemColors: ListItemColors

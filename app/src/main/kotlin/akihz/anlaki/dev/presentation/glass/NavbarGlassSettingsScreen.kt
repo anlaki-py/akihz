@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -67,7 +68,7 @@ internal fun NavbarGlassSettingsScreen(
     Box(Modifier.fillMaxSize()) {
         PreferenceLayout(
             label = "Liquid glass navbar",
-            modifier = if (backdrop != null) Modifier.recordGlassBackdrop(backdrop) else Modifier,
+            modifier = if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, AkihzColors.pageContainer) else Modifier,
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             navigationContentDescription = "Back to debug options",
             onNavigationClick = onBack
@@ -75,7 +76,7 @@ internal fun NavbarGlassSettingsScreen(
             PreferenceGroup(heading = "Experiment") {
                 PreferenceTemplate(
                     title = "Enable liquid glass",
-                    description = if (supported) "Off by default. Tap the preview tabs and scroll to inspect the glass."
+                    description = if (supported) "On by default on supported devices. Tap the preview tabs and scroll to inspect the glass."
                         else "Requires Android 13 or later. This device keeps the normal navbar.",
                     checked = supported && settings.enabled,
                     onCheckedChange = { if (supported) onSettingsChanged(settings.copy(enabled = it)) }
@@ -96,7 +97,7 @@ internal fun NavbarGlassSettingsScreen(
                 )
                 PreferenceTemplate(
                     title = "Restore glass defaults",
-                    description = "Clear outer glass, slight pill blur, experiment turned off",
+                    description = "Restore the selected preset and turn glass on",
                     onClick = { onSettingsChanged(NavbarGlassSettings()) }
                 )
             }
