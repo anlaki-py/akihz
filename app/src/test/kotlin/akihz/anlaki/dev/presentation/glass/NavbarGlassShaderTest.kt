@@ -1,6 +1,5 @@
 package akihz.anlaki.dev.presentation.glass
 
-import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -21,13 +20,15 @@ class NavbarGlassShaderTest {
         shader.setFloatUniform("refraction", 7f)
         shader.setFloatUniform("edgeWidth", 14f)
         shader.setFloatUniform("dispersion", 0.5f)
-        shader.setFloatUniform("blurRadius", 0f)
         shader.setFloatUniform("tintOpacity", 0.25f)
         shader.setColorUniform("tint", android.graphics.Color.WHITE)
         shader.setFloatUniform("saturation", 1f)
         shader.setFloatUniform("brightness", 1f)
         shader.setFloatUniform("highlight", 0.35f)
         shader.setFloatUniform("lightDirection", -0.7f, -0.7f)
-        assertNotNull(RenderEffect.createRuntimeShaderEffect(shader, "backdrop"))
+        // Exercise the clear outer layer and both small and maximum-density blur inputs.
+        listOf(0f, 2f, 48f).forEach { blurRadiusPx ->
+            assertNotNull(createNavbarGlassEffect(shader, blurRadiusPx))
+        }
     }
 }

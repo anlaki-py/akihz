@@ -12,6 +12,10 @@ Versions before `0.0.31` are reconstructed from the Git history.
 - Added an optional liquid glass navbar in Debug options, with separate controls for the background and moving pill.
 - Added a live glass preview and preset copying and sharing.
 
+### Changed
+
+- Smoothed navbar glass blur to remove repeated outlines around text and sharp edges.
+
 ## [0.0.53] - 2026-10-29
 
 ### Added

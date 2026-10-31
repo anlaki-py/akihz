@@ -2,6 +2,7 @@ package akihz.anlaki.dev.presentation.glass
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
+import android.graphics.Shader
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
@@ -82,14 +84,14 @@ internal fun GlassSurface(
     Box(
         modifier
             .onGloballyPositioned { coordinates = it }
+            // Clip the finished glass, not the blur input. Blurring a capsule-shaped
+            // input would pull transparent pixels into the rounded edge.
+            .clip(CircleShape)
             .graphicsLayer {
-                shape = CircleShape
-                clip = true
                 shader.setFloatUniform("dimensions", size.width.coerceAtLeast(1f), size.height.coerceAtLeast(1f))
                 shader.setFloatUniform("refraction", settings[GlassParameter.Refraction] * density)
                 shader.setFloatUniform("edgeWidth", settings[GlassParameter.EdgeWidth] * density)
                 shader.setFloatUniform("dispersion", settings[GlassParameter.Dispersion] * density)
-                shader.setFloatUniform("blurRadius", settings[GlassParameter.Blur] * density)
                 shader.setFloatUniform("tintOpacity", settings[GlassParameter.Tint])
                 shader.setColorUniform("tint", tint.toArgb())
                 shader.setFloatUniform("saturation", settings[GlassParameter.Saturation])
@@ -97,7 +99,9 @@ internal fun GlassSurface(
                 shader.setFloatUniform("highlight", settings[GlassParameter.Highlight])
                 val angle = Math.toRadians(settings[GlassParameter.LightAngle].toDouble())
                 shader.setFloatUniform("lightDirection", cos(angle).toFloat(), sin(angle).toFloat())
-                renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "backdrop").asComposeRenderEffect()
+                renderEffect = createNavbarGlassEffect(
+                    shader, settings[GlassParameter.Blur] * density
+                ).asComposeRenderEffect()
             }
             .drawWithContent {
                 // Capture the animation value in this draw lambda so translated pills resample.
@@ -111,4 +115,16 @@ internal fun GlassSurface(
                 }
             }
     )
+}
+
+/**
+ * Blurs the backdrop by [blurRadiusPx] before [shader] applies refraction, tint, and lighting.
+ * Zero bypasses blur entirely. Clamp keeps the rectangular input opaque at its boundaries.
+ */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+internal fun createNavbarGlassEffect(shader: RuntimeShader, blurRadiusPx: Float): RenderEffect {
+    val glass = RenderEffect.createRuntimeShaderEffect(shader, "backdrop")
+    if (blurRadiusPx <= 0f) return glass
+    val blur = RenderEffect.createBlurEffect(blurRadiusPx, blurRadiusPx, Shader.TileMode.CLAMP)
+    return RenderEffect.createChainEffect(glass, blur)
 }
