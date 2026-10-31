@@ -85,6 +85,30 @@ class NavbarGlassSettingsTest {
         assertEquals(3f, restored.outer[GlassParameter.Blur], 0f)
     }
 
+    @Test
+    fun `old presets gain neutral glass and adaptive ink without losing optical controls`() {
+        val restored = NavbarGlassSettings.fromJson("""{
+            "format":"akihz-navbar-glass", "version":1,
+            "outer":{"Refraction":5, "Blur":3}
+        }""")
+        assertTrue(restored.monochrome)
+        assertTrue(restored.automaticContrast)
+        assertEquals(0.35f, restored.contentRefraction, 0f)
+        assertEquals(5f, restored.outer[GlassParameter.Refraction], 0f)
+        assertEquals(3f, restored.outer[GlassParameter.Blur], 0f)
+    }
+
+    @Test
+    fun `content controls survive export and unsafe refraction is bounded`() {
+        val settings = NavbarGlassSettings(monochrome = false, automaticContrast = false, contentRefraction = 0.6f)
+        val restored = NavbarGlassSettings.fromJson(settings.toJson())
+        assertFalse(restored.monochrome)
+        assertFalse(restored.automaticContrast)
+        assertEquals(0.6f, restored.contentRefraction, 0f)
+        val json = JSONObject(settings.toJson()).put("contentRefraction", 20)
+        assertEquals(1f, NavbarGlassSettings.fromJson(json.toString()).contentRefraction, 0f)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `future preset versions are rejected`() {
         NavbarGlassSettings.fromJson("""{"format":"akihz-navbar-glass","version":2}""")
