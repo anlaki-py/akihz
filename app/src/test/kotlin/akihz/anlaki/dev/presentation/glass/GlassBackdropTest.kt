@@ -83,7 +83,11 @@ class GlassBackdropTest {
         for (y in 0 until bright.height) for (x in 0 until bright.width) {
             if (bright[x, y].red < 0.2f) darkPixels++
         }
-        assertTrue("Bright glass needs dark ink", darkPixels > bright.width * bright.height / 10)
+        val samples = (0..7).map { y -> (0..7).map { x ->
+            bright[x * (bright.width - 1) / 7, y * (bright.height - 1) / 7].toArgb().toUInt().toString(16)
+        } }
+        assertTrue("Bright glass needs dark ink: $darkPixels/${bright.width * bright.height}, $samples",
+            darkPixels > bright.width * bright.height / 10)
         compose.runOnIdle { pageColor = Color.Black }
         val dark = compose.onNodeWithContentDescription("Home").captureToImage().toPixelMap()
         var lightPixels = 0
