@@ -15,11 +15,28 @@ import org.robolectric.annotation.Config
 @Config(sdk = [33], application = android.app.Application::class, manifest = Config.NONE)
 class NavbarGlassSettingsTest {
     @Test
-    fun `experiment defaults to off with clear outer glass and lightly blurred pill`() {
+    fun `defaults match the selected preset with glass enabled`() {
         val settings = NavbarGlassSettings()
-        assertFalse(settings.enabled)
-        assertEquals(0f, settings.outer[GlassParameter.Blur], 0f)
-        assertEquals(2f, settings.pill[GlassParameter.Blur], 0f)
+        val expected = NavbarGlassSettings.fromJson("""{
+            "format":"akihz-navbar-glass", "version":1, "enabled":true,
+            "outer": {"useThemeTint":true, "Refraction":9.595243453979492,
+                "EdgeWidth":4.5190205574035645, "Dispersion":0.5, "Blur":7.667381286621094,
+                "Tint":0.1033502146601677, "Hue":0, "TintSaturation":0.6499999761581421,
+                "TintBrightness":0.8500000238418579, "Saturation":2, "Brightness":1,
+                "Highlight":0.3499999940395355, "LightAngle":180.02334594726562},
+            "pill": {"useThemeTint":true, "Refraction":7.19543981552124,
+                "EdgeWidth":8.105807304382324, "Dispersion":0.5, "Blur":0,
+                "Tint":0.0961742028594017, "Hue":0, "TintSaturation":0.6499999761581421,
+                "TintBrightness":0.10000000149011612, "Saturation":1.0009421110153198,
+                "Brightness":0.9005719423294067, "Highlight":0.3499999940395355, "LightAngle":360}
+        }""")
+        assertTrue(settings.enabled)
+        assertTrue(settings.outer.useThemeTint)
+        assertTrue(settings.pill.useThemeTint)
+        GlassParameter.entries.forEach {
+            assertEquals(expected.outer[it], settings.outer[it], 0f)
+            assertEquals(expected.pill[it], settings.pill[it], 0f)
+        }
     }
 
     @Test
@@ -37,7 +54,7 @@ class NavbarGlassSettingsTest {
             assertEquals(original.outer[it], restored.outer[it], 0f)
             assertEquals(original.pill[it], restored.pill[it], 0f)
         }
-        assertEquals(0f, restored.outer[GlassParameter.Blur], 0f)
+        assertEquals(7.667381286621094f, restored.outer[GlassParameter.Blur], 0f)
     }
 
     @Test
@@ -45,7 +62,7 @@ class NavbarGlassSettingsTest {
         val defaults = NavbarGlassSettings()
         assertEquals(24f, defaults.outer.withValue(GlassParameter.Refraction, 1000f)[GlassParameter.Refraction], 0f)
         assertEquals(0f, defaults.outer.withValue(GlassParameter.Blur, -1f)[GlassParameter.Blur], 0f)
-        assertEquals(2f, defaults.pill.withValue(GlassParameter.Blur, Float.NaN)[GlassParameter.Blur], 0f)
+        assertEquals(0f, defaults.pill.withValue(GlassParameter.Blur, Float.NaN)[GlassParameter.Blur], 0f)
         val json = JSONObject(defaults.toJson())
         json.getJSONObject("pill").put("Blur", 99999)
         assertEquals(12f, NavbarGlassSettings.fromJson(json.toString()).pill[GlassParameter.Blur], 0f)
@@ -54,9 +71,18 @@ class NavbarGlassSettingsTest {
     @Test
     fun `partial preset fills missing fields from the correct layer defaults`() {
         val restored = NavbarGlassSettings.fromJson("""{"format":"akihz-navbar-glass","version":1}""")
+        assertTrue(restored.enabled)
+        assertEquals(7.667381286621094f, restored.outer[GlassParameter.Blur], 0f)
+        assertEquals(0f, restored.pill[GlassParameter.Blur], 0f)
+    }
+
+    @Test
+    fun `saved opt out and custom blur survive the new defaults`() {
+        val saved = NavbarGlassSettings(enabled = false)
+        val custom = saved.copy(outer = saved.outer.withValue(GlassParameter.Blur, 3f))
+        val restored = NavbarGlassSettings.fromJson(custom.toJson())
         assertFalse(restored.enabled)
-        assertEquals(0f, restored.outer[GlassParameter.Blur], 0f)
-        assertEquals(2f, restored.pill[GlassParameter.Blur], 0f)
+        assertEquals(3f, restored.outer[GlassParameter.Blur], 0f)
     }
 
     @Test(expected = IllegalArgumentException::class)

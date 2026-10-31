@@ -9,11 +9,14 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
-- Added an optional liquid glass navbar in Debug options, with separate controls for the background and moving pill.
+- Added liquid glass navigation with separate background and pill controls in Debug options.
 - Added a live glass preview and preset copying and sharing.
 
 ### Changed
 
+- Rounded the scrolling content below page headers and matched header backgrounds to each page.
+- Made the selected liquid glass preset the default on supported devices.
+- Corrected the glass background on Home so empty areas show the page color.
 - Smoothed navbar glass blur to remove repeated outlines around text and sharp edges.
 
 ## [0.0.53] - 2026-10-29

@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Offset
+import akihz.anlaki.dev.presentation.theme.AkihzColors
 import akihz.anlaki.dev.data.glass.GlassLayerSettings
 import akihz.anlaki.dev.data.glass.GlassParameter
 import timber.log.Timber
@@ -44,10 +45,18 @@ internal fun rememberGlassBackdrop(): GlassBackdrop {
     return remember(layer) { GlassBackdrop(layer) }
 }
 
-/** Records this page into [backdrop] and draws it normally, without bitmap readbacks. */
-internal fun Modifier.recordGlassBackdrop(backdrop: GlassBackdrop): Modifier =
+/** Records the page over [backgroundColor] so empty areas include the real page background. */
+internal fun Modifier.recordGlassBackdrop(
+    backdrop: GlassBackdrop,
+    backgroundColor: Color
+): Modifier =
     onGloballyPositioned { backdrop.coordinates = it }.drawWithContent {
-        backdrop.layer.record { this@drawWithContent.drawContent() }
+        backdrop.layer.record {
+            // Home draws its controls over the ancestor Scaffold. Include that missing
+            // background here so transparent spaces cannot reveal the navbar tint.
+            drawRect(backgroundColor)
+            this@drawWithContent.drawContent()
+        }
         drawLayer(backdrop.layer)
     }
 
@@ -64,6 +73,7 @@ internal fun GlassSurface(
     modifier: Modifier = Modifier,
     motionProgress: Float = 0f
 ) {
+    val pageColor = AkihzColors.pageContainer
     var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val shader = remember {
         try {
@@ -108,7 +118,7 @@ internal fun GlassSurface(
                 @Suppress("UNUSED_VARIABLE") val animationFrame = motionProgress
                 val source = backdrop.coordinates
                 val target = coordinates
-                drawRect(themeTint)
+                drawRect(pageColor)
                 if (source?.isAttached == true && target?.isAttached == true) {
                     val offset = target.localPositionOf(source, Offset.Zero)
                     translate(offset.x, offset.y) { drawLayer(backdrop.layer) }

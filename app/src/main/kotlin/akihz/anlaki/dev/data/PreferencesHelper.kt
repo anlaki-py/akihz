@@ -196,7 +196,7 @@ object PreferencesHelper {
         }
     }
 
-    /** Persistent opt-in glass preset shared by the debug preview and root navbar. */
+    /** Persistent glass preset shared by the debug preview and root navbar. */
     internal var navbarGlassSettings: NavbarGlassSettings
         get() {
             val json = prefs.getString("debug_navbar_glass", null)
