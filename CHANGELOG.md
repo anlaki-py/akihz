@@ -14,6 +14,9 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Navbar glass now bends the icons and labels beneath its moving edges.
+- Navbar icons and text choose black or white to contrast with the glass.
+- Glass defaults to shades of gray, with controls for color and text distortion.
 - Rounded the scrolling content below page headers and matched header backgrounds to each page.
 - Made the selected liquid glass preset the default on supported devices.
 - Corrected the glass background on Home so empty areas show the page color.

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -50,8 +51,8 @@ internal fun NavbarGlassSettingsScreen(
     val supported = Build.VERSION.SDK_INT >= 33
     val backdrop = if (supported && settings.enabled) rememberGlassBackdrop() else null
     var selection by rememberSaveable { mutableIntStateOf(0) }
-    val outerTint = MaterialTheme.colorScheme.primary.toArgb()
-    val pillTint = MaterialTheme.colorScheme.surface.toArgb()
+    val outerTint = if (settings.monochrome) Color.Transparent.toArgb() else MaterialTheme.colorScheme.primary.toArgb()
+    val pillTint = if (settings.monochrome) Color.Transparent.toArgb() else MaterialTheme.colorScheme.surface.toArgb()
     val export = remember(settings, outerTint, pillTint) {
         JSONObject(settings.toJson()).apply {
             put("appearance", JSONObject().apply {
@@ -82,6 +83,31 @@ internal fun NavbarGlassSettingsScreen(
                     onCheckedChange = { if (supported) onSettingsChanged(settings.copy(enabled = it)) }
                 )
                 PreferenceTemplate(
+                    title = "Monochrome glass",
+                    description = "Remove colored tints and show the background in shades of gray",
+                    checked = settings.monochrome,
+                    onCheckedChange = { onSettingsChanged(settings.copy(monochrome = it)) }
+                )
+                PreferenceTemplate(
+                    title = "Automatic text contrast",
+                    description = "Choose black or white from the glass beneath each tab",
+                    checked = settings.automaticContrast,
+                    onCheckedChange = { onSettingsChanged(settings.copy(automaticContrast = it)) }
+                )
+                formItem {
+                    PreferenceSlider(
+                        title = "Text and icon refraction",
+                        value = settings.contentRefraction,
+                        valueLabel = "${(settings.contentRefraction * 100).toInt()}%",
+                        description = "Bend labels and icons under the moving lens. Zero keeps them straight.",
+                        onValueChange = { onSettingsChanged(settings.copy(contentRefraction = it)) },
+                        onValueChangeFinished = {},
+                        valueRange = 0f..1f,
+                        steps = 0,
+                        increment = 0.05f
+                    )
+                }
+                PreferenceTemplate(
                     title = "Copy preset JSON",
                     description = "Copy both layers and appearance details to send back",
                     onClick = {
@@ -101,10 +127,10 @@ internal fun NavbarGlassSettingsScreen(
                     onClick = { onSettingsChanged(NavbarGlassSettings()) }
                 )
             }
-            GlassLayerControls("Outer background", settings.outer) {
+            GlassLayerControls("Outer background", settings.outer, settings.monochrome) {
                 onSettingsChanged(settings.copy(outer = it))
             }
-            GlassLayerControls("Moving pill", settings.pill) {
+            GlassLayerControls("Moving pill", settings.pill, settings.monochrome) {
                 onSettingsChanged(settings.copy(pill = it))
             }
         }
@@ -125,16 +151,20 @@ internal fun NavbarGlassSettingsScreen(
 private fun GlassLayerControls(
     title: String,
     settings: GlassLayerSettings,
+    monochrome: Boolean,
     onChange: (GlassLayerSettings) -> Unit
 ) {
     PreferenceGroup(heading = title) {
-        PreferenceTemplate(
+        if (!monochrome) PreferenceTemplate(
             title = "Use theme tint",
             description = "Turn off to use the custom hue below",
             checked = settings.useThemeTint,
             onCheckedChange = { onChange(settings.copy(useThemeTint = it)) }
         )
-        GlassParameter.entries.forEach { parameter ->
+        val colorControls = setOf(GlassParameter.Tint, GlassParameter.Hue,
+            GlassParameter.TintSaturation, GlassParameter.TintBrightness,
+            GlassParameter.Saturation, GlassParameter.Dispersion)
+        GlassParameter.entries.filterNot { monochrome && it in colorControls }.forEach { parameter ->
             formItem {
                 val increment = when (parameter) {
                     GlassParameter.Tint, GlassParameter.Highlight,

@@ -71,7 +71,8 @@ internal fun GlassSurface(
     settings: GlassLayerSettings,
     themeTint: Color,
     modifier: Modifier = Modifier,
-    motionProgress: Float = 0f
+    motionProgress: Float = 0f,
+    monochrome: Boolean = false
 ) {
     val pageColor = AkihzColors.pageContainer
     var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -83,12 +84,12 @@ internal fun GlassSurface(
             null
         }
     }
-    val tint = if (settings.useThemeTint) themeTint
+    val tint = if (monochrome) Color.White else if (settings.useThemeTint) themeTint
         else Color.hsv(settings[GlassParameter.Hue], settings[GlassParameter.TintSaturation],
             settings[GlassParameter.TintBrightness])
     // A failed shader still leaves a visible bar and working navigation.
     if (shader == null) {
-        Box(modifier.drawWithContent { drawRect(themeTint); drawContent() })
+        Box(modifier.drawWithContent { drawRect(if (monochrome) Color.DarkGray else themeTint); drawContent() })
         return
     }
     Box(
@@ -101,10 +102,10 @@ internal fun GlassSurface(
                 shader.setFloatUniform("dimensions", size.width.coerceAtLeast(1f), size.height.coerceAtLeast(1f))
                 shader.setFloatUniform("refraction", settings[GlassParameter.Refraction] * density)
                 shader.setFloatUniform("edgeWidth", settings[GlassParameter.EdgeWidth] * density)
-                shader.setFloatUniform("dispersion", settings[GlassParameter.Dispersion] * density)
-                shader.setFloatUniform("tintOpacity", settings[GlassParameter.Tint])
+                shader.setFloatUniform("dispersion", if (monochrome) 0f else settings[GlassParameter.Dispersion] * density)
+                shader.setFloatUniform("tintOpacity", if (monochrome) 0f else settings[GlassParameter.Tint])
                 shader.setColorUniform("tint", tint.toArgb())
-                shader.setFloatUniform("saturation", settings[GlassParameter.Saturation])
+                shader.setFloatUniform("saturation", if (monochrome) 0f else settings[GlassParameter.Saturation])
                 shader.setFloatUniform("brightness", settings[GlassParameter.Brightness])
                 shader.setFloatUniform("highlight", settings[GlassParameter.Highlight])
                 val angle = Math.toRadians(settings[GlassParameter.LightAngle].toDouble())

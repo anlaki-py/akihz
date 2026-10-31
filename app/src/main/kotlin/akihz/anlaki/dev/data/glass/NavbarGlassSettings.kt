@@ -54,6 +54,9 @@ internal data class GlassLayerSettings(
 /** Navbar appearance using the selected glass preset by default on supported devices. */
 internal data class NavbarGlassSettings(
     val enabled: Boolean = true,
+    val monochrome: Boolean = true,
+    val automaticContrast: Boolean = true,
+    val contentRefraction: Float = 0.35f,
     val outer: GlassLayerSettings = GlassLayerSettings(),
     val pill: GlassLayerSettings = GlassLayerSettings(pill = true)
 ) {
@@ -62,6 +65,9 @@ internal data class NavbarGlassSettings(
         put("format", "akihz-navbar-glass")
         put("version", 1)
         put("enabled", enabled)
+        put("monochrome", monochrome)
+        put("automaticContrast", automaticContrast)
+        put("contentRefraction", contentRefraction.toDouble())
         put("outer", outer.toJson())
         put("pill", pill.toJson())
     }.toString(2)
@@ -74,6 +80,11 @@ internal data class NavbarGlassSettings(
             require(root.getInt("version") == 1) { "Unsupported glass preset version" }
             return NavbarGlassSettings(
                 enabled = root.optBoolean("enabled", true),
+                monochrome = root.optBoolean("monochrome", true),
+                automaticContrast = root.optBoolean("automaticContrast", true),
+                contentRefraction = root.optDouble("contentRefraction", 0.35).toFloat().let {
+                    if (it.isFinite()) it.coerceIn(0f, 1f) else 0.35f
+                },
                 outer = decodeLayer(root.optJSONObject("outer"), false),
                 pill = decodeLayer(root.optJSONObject("pill"), true)
             )
