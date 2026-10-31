@@ -65,9 +65,11 @@ half4 main(float2 p) {
     if (p.y >= dimensions.y) return half4(0);
     half4 background = atlas.eval(p);
     half alpha = glyph(p);
-    half ink = half(inkAt(glyphPosition(p)));
     half outline = max(max(glyph(p + float2(outlineRadius, 0)), glyph(p - float2(outlineRadius, 0))),
         max(glyph(p + float2(0, outlineRadius)), glyph(p - float2(0, outlineRadius))));
+    // Empty pixels need no contrast sampling.
+    if (max(alpha, outline) < 0.001) return background;
+    half ink = half(inkAt(glyphPosition(p)));
     background.rgb = mix(background.rgb, half3(1.0 - ink), max(outline - alpha, 0.0) * 0.35);
     return half4(mix(background.rgb, half3(ink), alpha), 1.0);
 }
