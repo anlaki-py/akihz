@@ -10,7 +10,7 @@ uniform float edgeWidth;
 uniform float dispersion;
 uniform float blurRadius;
 uniform float tintOpacity;
-layout(color) uniform half4 tint;
+uniform half4 tint;
 uniform float saturation;
 uniform float brightness;
 uniform float highlight;
