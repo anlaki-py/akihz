@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], manifest = Config.NONE)
+@Config(sdk = [33], application = android.app.Application::class, manifest = Config.NONE)
 class NavbarGlassSettingsTest {
     @Test
     fun `experiment defaults to off with clear outer glass and lightly blurred pill`() {

@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], manifest = Config.NONE)
+@Config(sdk = [33], application = android.app.Application::class, manifest = Config.NONE)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class NavbarGlassShaderTest {
     @Test
