@@ -66,8 +66,7 @@ class NavigationContentShaderTest {
         val node = RenderNode("navigation shader test")
         node.setPosition(0, 0, 240, 64)
         val recording = node.beginRecording(240, 64)
-        recording.scale(1f, 0.5f)
-        recording.drawRect(0f, 0f, 240f, 128f, Paint().apply { this.shader = shader })
+        recording.drawRect(0f, 0f, 240f, 64f, Paint().apply { this.shader = shader })
         node.endRecording()
         val renderer = HardwareRenderer()
         try {

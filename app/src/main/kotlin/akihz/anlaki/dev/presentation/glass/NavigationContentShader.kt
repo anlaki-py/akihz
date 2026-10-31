@@ -61,10 +61,7 @@ float inkAt(float2 p) {
     // Pick the higher WCAG contrast ratio between black and white.
     return (average + 0.05) / 0.05 >= 1.05 / (average + 0.05) ? 0.0 : 1.0;
 }
-half4 main(float2 coordinate) {
-    // Render the full atlas height, then halve the output layer's height. This keeps
-    // the glyph input inside the filter's requested bounds instead of being culled.
-    float2 p = float2(coordinate.x, coordinate.y * 0.5);
+half4 main(float2 p) {
     if (p.y >= dimensions.y) return half4(0);
     half4 background = atlas.eval(p);
     half alpha = glyph(p);
