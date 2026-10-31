@@ -86,7 +86,7 @@ internal fun Modifier.refractedNavigationContent(
             regions[index * 2 + 1] = itemWidth
             start += itemWidth + NavigationItemSpacing.toPx()
         }
-        shader.setFloatUniform("regions", *regions)
+        shader.setFloatUniform("regions", regions)
         atlas.renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "atlas").asComposeRenderEffect()
         onDrawWithContent {
             mask.record { this@onDrawWithContent.drawContent() }
