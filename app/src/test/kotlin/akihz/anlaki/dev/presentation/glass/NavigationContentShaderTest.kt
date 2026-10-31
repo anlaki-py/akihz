@@ -6,6 +6,10 @@ import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RenderNode
+import android.graphics.HardwareRenderer
+import android.graphics.PixelFormat
+import android.media.ImageReader
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import org.junit.Assert.assertEquals
@@ -59,8 +63,31 @@ class NavigationContentShaderTest {
         shader.setFloatUniform("fixedInk", 1f)
         shader.setFloatUniform("outlineRadius", 0.65f)
         shader.setFloatUniform("regions", 66f, 132f, 176f, 52f)
-        return Bitmap.createBitmap(240, 64, Bitmap.Config.ARGB_8888).also {
-            Canvas(it).drawPaint(Paint().apply { this.shader = shader })
+        val node = RenderNode("navigation shader test")
+        node.setPosition(0, 0, 240, 64)
+        node.beginRecording(240, 64).drawPaint(Paint().apply { this.shader = shader })
+        node.endRecording()
+        val renderer = HardwareRenderer()
+        try {
+            return ImageReader.newInstance(240, 64, PixelFormat.RGBA_8888, 1).use { reader ->
+                renderer.setSurface(reader.surface)
+                renderer.setContentRoot(node)
+                renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
+                checkNotNull(reader.acquireNextImage()).use { image ->
+                    val plane = image.planes[0]
+                    val pixels = IntArray(240 * 64) { index ->
+                        val offset = (index / 240) * plane.rowStride + (index % 240) * plane.pixelStride
+                        val bytes = plane.buffer
+                        Color.argb(bytes.get(offset + 3).toInt() and 255,
+                            bytes.get(offset).toInt() and 255, bytes.get(offset + 1).toInt() and 255,
+                            bytes.get(offset + 2).toInt() and 255)
+                    }
+                    Bitmap.createBitmap(pixels, 240, 64, Bitmap.Config.ARGB_8888)
+                }
+            }
+        } finally {
+            renderer.destroy()
+            node.discardDisplayList()
         }
     }
 }
