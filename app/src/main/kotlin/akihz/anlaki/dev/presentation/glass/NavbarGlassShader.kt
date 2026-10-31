@@ -1,7 +1,7 @@
 package akihz.anlaki.dev.presentation.glass
 
-// The capsule normal bends samples inward near the rim. Keep this independent of
-// foreground drawing so labels and touch targets never distort or blur.
+// The capsule normal bends background samples inward near the rim. Glyphs use
+// a separate lens pass so backdrop blur cannot smear the labels or icons.
 // The input is already blurred by RenderEffect; sparse taps here cause ghost outlines.
 internal const val NavbarGlassShader = """
 uniform shader backdrop;
