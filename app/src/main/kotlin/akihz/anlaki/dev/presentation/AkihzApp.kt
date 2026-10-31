@@ -10,6 +10,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import akihz.anlaki.dev.data.PreferencesHelper
+import akihz.anlaki.dev.data.glass.NavbarGlassSettings
+import akihz.anlaki.dev.presentation.glass.NavbarGlassSettingsScreen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -93,6 +99,11 @@ fun AkihzApp(
     debugPage: String? = null,
     onErrorDismissed: () -> Unit = {}
 ) {
+    var glassSettings by remember { mutableStateOf(PreferencesHelper.navbarGlassSettings) }
+    val onGlassSettingsChanged: (NavbarGlassSettings) -> Unit = {
+        glassSettings = it
+        PreferencesHelper.navbarGlassSettings = it
+    }
     val navigator = rememberSaveable(saver = AppNavigator.StateSaver) { AppNavigator() }
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { AppTab.entries.size })
@@ -167,9 +178,15 @@ fun AkihzApp(
                     )
                     AppDestination.DebugOptions -> DebugSettingsScreen(
                         onBack = onBack,
+                        onOpenGlass = { navigator.open(AppDestination.DebugGlass) },
                         onOpenHomeScreen = { navigator.open(AppDestination.DebugHome) },
                         onOpenPerformance = { navigator.open(AppDestination.Performance) },
                         onOpenCrashLogs = { navigator.open(AppDestination.CrashLogs) }
+                    )
+                    AppDestination.DebugGlass -> NavbarGlassSettingsScreen(
+                        settings = glassSettings,
+                        onSettingsChanged = onGlassSettingsChanged,
+                        onBack = onBack
                     )
                     AppDestination.DebugHome -> HomeDebugSettingsScreen(
                         settings = homeDebugSettings,
@@ -197,7 +214,7 @@ fun AkihzApp(
                         onCustomThemesChanged = onCustomThemesChanged,
                         onBack = onBack
                     )
-                    AppDestination.Root -> AppTabs(pagerState) { tab ->
+                    AppDestination.Root -> AppTabs(pagerState, glassSettings) { tab ->
                         when (tab) {
                             AppTab.Home -> RefreshRateScreen(
                                 supportedRates = uiState.supportedRates,

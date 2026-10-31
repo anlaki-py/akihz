@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import akihz.anlaki.dev.data.HomeDebugSettings
+import akihz.anlaki.dev.data.glass.NavbarGlassSettings
+import org.json.JSONException
+import timber.log.Timber
 import akihz.anlaki.dev.data.fps.OverlayPillColor
 import akihz.anlaki.dev.data.fps.OverlayStyle
 import akihz.anlaki.dev.domain.update.UpdateChannel
@@ -192,6 +195,23 @@ object PreferencesHelper {
             remove(KEY_LATEST_UPDATE_NAME)
         }
     }
+
+    /** Persistent opt-in glass preset shared by the debug preview and root navbar. */
+    internal var navbarGlassSettings: NavbarGlassSettings
+        get() {
+            val json = prefs.getString("debug_navbar_glass", null)
+                ?: return NavbarGlassSettings()
+            return try {
+                NavbarGlassSettings.fromJson(json)
+            } catch (error: JSONException) {
+                Timber.w(error, "Could not read navbar glass preset")
+                NavbarGlassSettings()
+            } catch (error: IllegalArgumentException) {
+                Timber.w(error, "Unsupported navbar glass preset")
+                NavbarGlassSettings()
+            }
+        }
+        set(value) = prefs.edit { putString("debug_navbar_glass", value.toJson()) }
 
     var homeDebugSettings: HomeDebugSettings
         get() {

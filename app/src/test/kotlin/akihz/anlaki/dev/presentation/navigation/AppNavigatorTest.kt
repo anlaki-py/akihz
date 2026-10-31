@@ -20,7 +20,7 @@ class AppNavigatorTest {
 
     @Test
     fun `every debug deep link includes the categories as its back destination`() {
-        listOf(AppDestination.DebugHome, AppDestination.Performance, AppDestination.CrashLogs).forEach { page ->
+        listOf(AppDestination.DebugHome, AppDestination.DebugGlass, AppDestination.Performance, AppDestination.CrashLogs).forEach { page ->
             val navigator = AppNavigator()
             navigator.open(page)
 
@@ -122,6 +122,7 @@ class AppNavigatorTest {
         mapOf(
             AppDestination.Performance to listOf("performance", "perf", "PERF"),
             AppDestination.CrashLogs to listOf("crash", "crashes", "crash_logs", "crashlogs"),
+            AppDestination.DebugGlass to listOf("glass", "navbar"),
             AppDestination.DebugHome to listOf("home", "home_screen", "homescreen")
         ).forEach { (page, aliases) ->
             aliases.forEach { assertEquals(page, AppDestination.fromDebugPage(it)) }
