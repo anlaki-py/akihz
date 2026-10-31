@@ -77,7 +77,7 @@ internal fun FloatingBottomBar(
         shadowElevation = if (glassEnabled) 0.dp else 8.dp
     ) {
         Box {
-            if (glassEnabled && backdrop != null && Build.VERSION.SDK_INT >= 33) {
+            if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
                 GlassSurface(backdrop, glassSettings.outer, MaterialTheme.colorScheme.primary,
                     Modifier.matchParentSize())
             }
@@ -92,7 +92,7 @@ internal fun FloatingBottomBar(
                         .testTag("navigation_indicator")
                         .then(if (glassEnabled) Modifier else Modifier.background(MaterialTheme.colorScheme.surface, CircleShape))
                 ) {
-                    if (glassEnabled && backdrop != null && Build.VERSION.SDK_INT >= 33) {
+                    if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
                         GlassSurface(backdrop, glassSettings.pill, MaterialTheme.colorScheme.surface,
                             Modifier.fillMaxSize(), selectionPosition)
                     }
