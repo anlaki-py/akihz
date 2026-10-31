@@ -87,6 +87,10 @@ internal fun Modifier.refractedNavigationContent(
             start += itemWidth + NavigationItemSpacing.toPx()
         }
         shader.setFloatUniform("regions", regions)
+        // Both atlas rows must remain inside the filter's visible input bounds.
+        // The shader doubles the output vertically; this restores the navbar size.
+        atlas.pivotOffset = Offset.Zero
+        atlas.scaleY = 0.5f
         atlas.renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "atlas").asComposeRenderEffect()
         onDrawWithContent {
             mask.record { this@onDrawWithContent.drawContent() }
