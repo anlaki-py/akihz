@@ -15,6 +15,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  * Displays debug categories. The app back stack owns navigation to each detail page.
  *
  * @param onBack returns to Settings
+ * @param onOpenGlass opens navbar glass tuning
  * @param onOpenHomeScreen opens home-screen tuning
  * @param onOpenPerformance opens performance monitoring
  * @param onOpenCrashLogs opens crash reports
@@ -24,6 +25,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 internal fun DebugSettingsScreen(
     onBack: () -> Unit,
     onOpenHomeScreen: () -> Unit,
+    onOpenGlass: () -> Unit,
     onOpenPerformance: () -> Unit,
     onOpenCrashLogs: () -> Unit,
     modifier: Modifier = Modifier
@@ -36,6 +38,11 @@ internal fun DebugSettingsScreen(
         onNavigationClick = onBack
     ) {
         PreferenceGroup(heading = "Interface") {
+            PreferenceTemplate(
+                title = "Liquid glass navbar",
+                description = "Try glass effects, tune each layer, and export a preset",
+                onClick = onOpenGlass
+            )
             PreferenceTemplate(
                 title = "Home screen",
                 description = "Adjust text, buttons, and spacing",

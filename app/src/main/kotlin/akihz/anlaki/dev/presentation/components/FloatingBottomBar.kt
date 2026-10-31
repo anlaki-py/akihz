@@ -1,5 +1,10 @@
 package akihz.anlaki.dev.presentation.components
 
+import android.os.Build
+import akihz.anlaki.dev.data.glass.NavbarGlassSettings
+import akihz.anlaki.dev.presentation.glass.GlassBackdrop
+import akihz.anlaki.dev.presentation.glass.GlassSurface
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -51,8 +56,11 @@ internal data class FloatingNavigationItem(
 internal fun FloatingBottomBar(
     items: List<FloatingNavigationItem>,
     selectedIndex: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    glassSettings: NavbarGlassSettings = NavbarGlassSettings(),
+    backdrop: GlassBackdrop? = null
 ) {
+    val glassEnabled = glassSettings.enabled && backdrop != null && Build.VERSION.SDK_INT >= 33
     val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     val selectionPosition by animateFloatAsState(
         targetValue = selectedIndex.toFloat(),
@@ -64,68 +72,79 @@ internal fun FloatingBottomBar(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
         shape = RoundedCornerShape(36.dp),
-        color = MaterialTheme.colorScheme.primary,
+        color = if (glassEnabled) Color.Transparent else MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        shadowElevation = 8.dp
+        shadowElevation = if (glassEnabled) 0.dp else 8.dp
     ) {
-        Box(Modifier.padding(6.dp)) {
-            // Animate one pill across the bar. Its overshoot never changes touch bounds.
-            Box(
-                Modifier
-                    .size(width = ItemWidth + LabelWidth, height = 52.dp)
-                    .graphicsLayer {
-                        translationX = (ItemWidth + ItemSpacing).toPx() * selectionPosition * direction
-                    }
-                    .testTag("navigation_indicator")
-                    .background(MaterialTheme.colorScheme.surface, CircleShape)
-            )
-            Row {
-                items.forEachIndexed { index, item ->
-                    val selected = index == selectedIndex
-                    val boundedPosition = selectionPosition.coerceIn(0f, items.lastIndex.toFloat())
-                    val labelProgress = (1f - abs(boundedPosition - index)).coerceIn(0f, 1f)
-                    val contentColor by animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onPrimary,
-                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
-                        label = "navigation_color_$index"
-                    )
-                    Surface(
-                        selected = selected,
-                        onClick = item.onClick,
-                        modifier = Modifier.height(52.dp),
-                        shape = CircleShape,
-                        color = Color.Transparent,
-                        contentColor = contentColor
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 13.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                modifier = Modifier.size(26.dp)
-                            )
-                            Text(
-                                text = item.label,
-                                style = MaterialTheme.typography.labelLargeEmphasized,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .width(LabelWidth * labelProgress)
-                                    .clipToBounds()
-                                    .wrapContentWidth(Alignment.Start, unbounded = true)
-                                    .width(LabelWidth)
-                                    .padding(start = 8.dp)
-                                    .graphicsLayer {
-                                        alpha = labelProgress
-                                    }
-                                    .clearAndSetSemantics {}
-                            )
+        Box {
+            if (glassEnabled && backdrop != null && Build.VERSION.SDK_INT >= 33) {
+                GlassSurface(backdrop, glassSettings.outer, MaterialTheme.colorScheme.primary,
+                    Modifier.matchParentSize())
+            }
+            Box(Modifier.padding(6.dp)) {
+                // Animate one pill across the bar. Its overshoot never changes touch bounds.
+                Box(
+                    Modifier
+                        .size(width = ItemWidth + LabelWidth, height = 52.dp)
+                        .graphicsLayer {
+                            translationX = (ItemWidth + ItemSpacing).toPx() * selectionPosition * direction
                         }
+                        .testTag("navigation_indicator")
+                        .then(if (glassEnabled) Modifier else Modifier.background(MaterialTheme.colorScheme.surface, CircleShape))
+                ) {
+                    if (glassEnabled && backdrop != null && Build.VERSION.SDK_INT >= 33) {
+                        GlassSurface(backdrop, glassSettings.pill, MaterialTheme.colorScheme.surface,
+                            Modifier.fillMaxSize(), selectionPosition)
                     }
-                    if (index < items.lastIndex) {
-                        Spacer(modifier = Modifier.width(ItemSpacing))
+                }
+                Row {
+                    items.forEachIndexed { index, item ->
+                        val selected = index == selectedIndex
+                        val boundedPosition = selectionPosition.coerceIn(0f, items.lastIndex.toFloat())
+                        val labelProgress = (1f - abs(boundedPosition - index)).coerceIn(0f, 1f)
+                        val contentColor by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onPrimary,
+                            animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                            label = "navigation_color_$index"
+                        )
+                        Surface(
+                            selected = selected,
+                            onClick = item.onClick,
+                            modifier = Modifier.height(52.dp),
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                            contentColor = contentColor
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 13.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                Text(
+                                    text = item.label,
+                                    style = MaterialTheme.typography.labelLargeEmphasized,
+                                    maxLines = 1,
+                                    modifier = Modifier
+                                        .width(LabelWidth * labelProgress)
+                                        .clipToBounds()
+                                        .wrapContentWidth(Alignment.Start, unbounded = true)
+                                        .width(LabelWidth)
+                                        .padding(start = 8.dp)
+                                        .graphicsLayer {
+                                            alpha = labelProgress
+                                        }
+                                        .clearAndSetSemantics {}
+                                )
+                            }
+                        }
+                        if (index < items.lastIndex) {
+                            Spacer(modifier = Modifier.width(ItemSpacing))
+                        }
                     }
                 }
             }
