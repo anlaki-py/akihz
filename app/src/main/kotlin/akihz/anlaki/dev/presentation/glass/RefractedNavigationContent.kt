@@ -77,6 +77,13 @@ internal fun Modifier.refractedNavigationContent(
                 val bitmap = sample.toImageBitmap().asAndroidBitmap()
                     .copy(Bitmap.Config.ARGB_8888, false)
                 val pixels = bitmap.asImageBitmap().toPixelMap()
+                println("NAV_SAMPLE_PIXELS corner=${pixels[1, 1]} center=${pixels[pixels.width / 2, pixels.height / 2]} atlas=${atlas.size} sample=${sample.size}")
+                if (atlas.size.width > 0) {
+                    val atlasBitmap = atlas.toImageBitmap().asAndroidBitmap()
+                        .copy(Bitmap.Config.ARGB_8888, false)
+                    println("NAV_ATLAS_PIXELS size=${atlasBitmap.width}x${atlasBitmap.height} glass=${atlasBitmap.getPixel(atlasBitmap.width / 2, atlasBitmap.height / 4)}")
+                    atlasBitmap.recycle()
+                }
                 targets = List(labelProgress.size) { index ->
                     var luminance = 0f
                     for (y in -1..1) {

@@ -94,7 +94,7 @@ class GlassBackdropTest {
         for (y in 0 until dark.height) for (x in 0 until dark.width) {
             if (dark[x, y].red > 0.8f) lightPixels++
         }
-        println("NAV_TEST dark light=$lightPixels total=${dark.width * dark.height} center=${dark[dark.width / 2, dark.height / 2]}")
+        println("NAV_TEST dark light=$lightPixels total=${dark.width * dark.height} corner=${dark[0, 0]} center=${dark[dark.width / 2, dark.height / 2]}")
         assertTrue("Dark glass needs light ink", lightPixels > dark.width * dark.height / 10)
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.runOnIdle { assertEquals(1, selected) }
