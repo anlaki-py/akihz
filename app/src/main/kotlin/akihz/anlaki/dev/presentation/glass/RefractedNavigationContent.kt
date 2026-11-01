@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import akihz.anlaki.dev.data.glass.GlassParameter
@@ -55,9 +54,7 @@ internal fun Modifier.refractedNavigationContent(
     background: GlassBackdrop,
     settings: NavbarGlassSettings,
     selectionPosition: Float,
-    labelProgress: List<Float>,
-    wideItemWidth: Dp? = null,
-    itemHeight: Dp = NavigationHeight
+    labelProgress: List<Float>
 ): Modifier {
     val mask = rememberGraphicsLayer()
     val atlas = rememberGraphicsLayer()
@@ -112,11 +109,11 @@ internal fun Modifier.refractedNavigationContent(
         val width = size.width
         val height = size.height
         shader.setFloatUniform("dimensions", width, height)
-        val pillWidth = (wideItemWidth ?: (NavigationItemWidth + NavigationLabelWidth)).toPx()
+        val pillWidth = (NavigationItemWidth + NavigationLabelWidth).toPx()
         val padding = NavigationPadding.toPx()
-        val offset = (wideItemWidth ?: (NavigationItemWidth + NavigationItemSpacing)).toPx() * selectionPosition
+        val offset = (NavigationItemWidth + NavigationItemSpacing).toPx() * selectionPosition
         shader.setFloatUniform("pillBounds", if (rtl) width - padding - pillWidth - offset else padding + offset,
-            padding, pillWidth, itemHeight.toPx())
+            padding, pillWidth, NavigationHeight.toPx())
         shader.setFloatUniform("outerLens", settings.outer[GlassParameter.Refraction] * density,
             settings.outer[GlassParameter.EdgeWidth] * density)
         shader.setFloatUniform("pillLens", settings.pill[GlassParameter.Refraction] * density,
@@ -127,13 +124,13 @@ internal fun Modifier.refractedNavigationContent(
         var start = padding
         val regions = FloatArray(labelProgress.size * 2)
         labelProgress.forEachIndexed { index, progress ->
-            val itemWidth = (wideItemWidth ?: (NavigationItemWidth + NavigationLabelWidth * progress)).toPx()
+            val itemWidth = (NavigationItemWidth + NavigationLabelWidth * progress).toPx()
             val center = start + itemWidth * 0.5f
             regions[index * 2] = if (rtl) width - center else center
             regions[index * 2 + 1] = itemWidth
             sampleRegions[index * 2] = regions[index * 2] / width
             sampleRegions[index * 2 + 1] = itemWidth / width
-            start += itemWidth + if (wideItemWidth == null) NavigationItemSpacing.toPx() else 0f
+            start += itemWidth + NavigationItemSpacing.toPx()
         }
         shader.setFloatUniform("regions", regions)
         onDrawWithContent {

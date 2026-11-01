@@ -15,30 +15,25 @@ import org.robolectric.annotation.Config
 @Config(sdk = [33], application = android.app.Application::class, manifest = Config.NONE)
 class NavbarGlassSettingsTest {
     @Test
-    fun `wide navbar choice survives export and old presets stay compact`() {
-        val wide = NavbarGlassSettings(wide = true)
-        assertTrue(NavbarGlassSettings.fromJson(wide.toJson()).wide)
-        val oldPreset = JSONObject(wide.toJson()).apply { remove("wide") }
-        assertFalse(NavbarGlassSettings.fromJson(oldPreset.toString()).wide)
-    }
-
-    @Test
     fun `defaults match the selected preset with glass enabled`() {
         val settings = NavbarGlassSettings()
         val expected = NavbarGlassSettings.fromJson("""{
             "format":"akihz-navbar-glass", "version":1, "enabled":true,
-            "outer": {"useThemeTint":true, "Refraction":9.595243453979492,
-                "EdgeWidth":4.5190205574035645, "Dispersion":0.5, "Blur":7.667381286621094,
+            "outer": {"useThemeTint":true, "Refraction":11.952775955200195,
+                "EdgeWidth":9.06364631652832, "Dispersion":0.5, "Blur":7.667381286621094,
                 "Tint":0.1033502146601677, "Hue":0, "TintSaturation":0.6499999761581421,
-                "TintBrightness":0.8500000238418579, "Saturation":2, "Brightness":1,
+                "TintBrightness":0.8500000238418579, "Saturation":1.0033928155899048, "Brightness":1,
                 "Highlight":0.3499999940395355, "LightAngle":180.02334594726562},
-            "pill": {"useThemeTint":true, "Refraction":7.19543981552124,
-                "EdgeWidth":8.105807304382324, "Dispersion":0.5, "Blur":0,
+            "pill": {"useThemeTint":true, "Refraction":11.059355735778809,
+                "EdgeWidth":22.319473266601562, "Dispersion":0.5, "Blur":0,
                 "Tint":0.0961742028594017, "Hue":0, "TintSaturation":0.6499999761581421,
                 "TintBrightness":0.10000000149011612, "Saturation":1.0009421110153198,
                 "Brightness":0.9005719423294067, "Highlight":0.3499999940395355, "LightAngle":360}
         }""")
         assertTrue(settings.enabled)
+        assertFalse(settings.monochrome)
+        assertTrue(settings.automaticContrast)
+        assertEquals(1f, settings.contentRefraction, 0f)
         assertTrue(settings.outer.useThemeTint)
         assertTrue(settings.pill.useThemeTint)
         GlassParameter.entries.forEach {
@@ -94,14 +89,14 @@ class NavbarGlassSettingsTest {
     }
 
     @Test
-    fun `old presets gain neutral glass and adaptive ink without losing optical controls`() {
+    fun `old presets gain colored glass and adaptive ink without losing optical controls`() {
         val restored = NavbarGlassSettings.fromJson("""{
             "format":"akihz-navbar-glass", "version":1,
             "outer":{"Refraction":5, "Blur":3}
         }""")
-        assertTrue(restored.monochrome)
+        assertFalse(restored.monochrome)
         assertTrue(restored.automaticContrast)
-        assertEquals(0.35f, restored.contentRefraction, 0f)
+        assertEquals(1f, restored.contentRefraction, 0f)
         assertEquals(5f, restored.outer[GlassParameter.Refraction], 0f)
         assertEquals(3f, restored.outer[GlassParameter.Blur], 0f)
     }
@@ -115,6 +110,26 @@ class NavbarGlassSettingsTest {
         assertEquals(0.6f, restored.contentRefraction, 0f)
         val json = JSONObject(settings.toJson()).put("contentRefraction", 20)
         assertEquals(1f, NavbarGlassSettings.fromJson(json.toString()).contentRefraction, 0f)
+    }
+
+    @Test
+    fun `import accepts exported appearance and ignores removed wide setting`() {
+        val json = JSONObject(NavbarGlassSettings().toJson())
+            .put("wide", true)
+            .put("appearance", JSONObject().put("themeId", "spring"))
+        val imported = NavbarGlassSettings.fromJson(json.toString())
+        assertFalse(imported.monochrome)
+        assertFalse(JSONObject(imported.toJson()).has("wide"))
+    }
+
+    @Test(expected = org.json.JSONException::class)
+    fun `malformed imports are rejected`() {
+        NavbarGlassSettings.fromJson("{")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `oversized imports are rejected`() {
+        NavbarGlassSettings.fromJson(" ".repeat(65_537))
     }
 
     @Test(expected = IllegalArgumentException::class)

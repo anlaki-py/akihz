@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,6 +48,8 @@ internal fun NavbarGlassSettingsScreen(
     onSettingsChanged: (NavbarGlassSettings) -> Unit,
     onBack: () -> Unit
 ) {
+    var showImport by rememberSaveable { mutableStateOf(false) }
+    if (showImport) GlassPresetImportDialog(onDismiss = { showImport = false }, onImport = onSettingsChanged)
     val context = LocalContext.current
     val supported = Build.VERSION.SDK_INT >= 33
     val backdrop = if (supported && settings.enabled) rememberGlassBackdrop() else null
@@ -71,16 +74,10 @@ internal fun NavbarGlassSettingsScreen(
             label = "Liquid glass navbar",
             modifier = if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, AkihzColors.pageContainer) else Modifier,
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-            navigationContentDescription = "Back to debug options",
+            navigationContentDescription = "Back to theme settings",
             onNavigationClick = onBack
         ) {
-            PreferenceGroup(heading = "Experiment") {
-                PreferenceTemplate(
-                    title = "Wide bottom navbar",
-                    description = "Spread tabs across a rounded glass bar with labels below the icons",
-                    checked = settings.wide,
-                    onCheckedChange = { onSettingsChanged(settings.copy(wide = it)) }
-                )
+            PreferenceGroup(heading = "Liquid glass") {
                 PreferenceTemplate(
                     title = "Enable liquid glass",
                     description = if (supported) "On by default on supported devices. Tap the preview tabs and scroll to inspect the glass."
@@ -113,6 +110,11 @@ internal fun NavbarGlassSettingsScreen(
                         increment = 0.05f
                     )
                 }
+                PreferenceTemplate(
+                    title = "Import preset JSON",
+                    description = "Paste a glass configuration",
+                    onClick = { showImport = true }
+                )
                 PreferenceTemplate(
                     title = "Copy preset JSON",
                     description = "Copy both layers and appearance details to send back",
