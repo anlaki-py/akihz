@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
@@ -130,9 +134,15 @@ internal fun FloatingBottomBar(
                         val contentColor = if (glassEnabled) Color.White
                             else if (baseColor.luminance() > 0.179f) Color.Black else Color.White
                         Surface(
-                            selected = selected,
-                            onClick = item.onClick,
-                            modifier = Modifier.height(NavigationHeight),
+                            modifier = Modifier
+                                .height(NavigationHeight)
+                                .selectable(
+                                    selected = selected,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    role = Role.Tab,
+                                    onClick = item.onClick
+                                ),
                             shape = CircleShape,
                             color = Color.Transparent,
                             contentColor = contentColor

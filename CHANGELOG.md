@@ -16,6 +16,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- Removed the press highlight from the glass navbar.
+- Added an icon to the font option in Theme.
 - Moved all liquid glass controls into Theme settings.
 - Updated the default glass preset with color, stronger refraction, and automatic text contrast.
 - Removed the wide navbar option.
