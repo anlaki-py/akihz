@@ -54,6 +54,7 @@ internal data class GlassLayerSettings(
 /** Navbar appearance using the selected glass preset by default on supported devices. */
 internal data class NavbarGlassSettings(
     val enabled: Boolean = true,
+    val wide: Boolean = false,
     val monochrome: Boolean = true,
     val automaticContrast: Boolean = true,
     val contentRefraction: Float = 0.35f,
@@ -65,6 +66,7 @@ internal data class NavbarGlassSettings(
         put("format", "akihz-navbar-glass")
         put("version", 1)
         put("enabled", enabled)
+        put("wide", wide)
         put("monochrome", monochrome)
         put("automaticContrast", automaticContrast)
         put("contentRefraction", contentRefraction.toDouble())
@@ -80,6 +82,7 @@ internal data class NavbarGlassSettings(
             require(root.getInt("version") == 1) { "Unsupported glass preset version" }
             return NavbarGlassSettings(
                 enabled = root.optBoolean("enabled", true),
+                wide = root.optBoolean("wide", false),
                 monochrome = root.optBoolean("monochrome", true),
                 automaticContrast = root.optBoolean("automaticContrast", true),
                 contentRefraction = root.optDouble("contentRefraction", 0.35).toFloat().let {

@@ -15,6 +15,14 @@ import org.robolectric.annotation.Config
 @Config(sdk = [33], application = android.app.Application::class, manifest = Config.NONE)
 class NavbarGlassSettingsTest {
     @Test
+    fun `wide navbar choice survives export and old presets stay compact`() {
+        val wide = NavbarGlassSettings(wide = true)
+        assertTrue(NavbarGlassSettings.fromJson(wide.toJson()).wide)
+        val oldPreset = JSONObject(wide.toJson()).apply { remove("wide") }
+        assertFalse(NavbarGlassSettings.fromJson(oldPreset.toString()).wide)
+    }
+
+    @Test
     fun `defaults match the selected preset with glass enabled`() {
         val settings = NavbarGlassSettings()
         val expected = NavbarGlassSettings.fromJson("""{
