@@ -2,6 +2,7 @@ package akihz.anlaki.dev.presentation.theme
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
@@ -60,6 +61,7 @@ fun ThemePreferencesScreen(
             PreferenceTemplate(
                 title = "Liquid glass navbar",
                 description = "Adjust glass, text contrast, and presets",
+                icon = Icons.Default.BlurOn,
                 onClick = onOpenGlass
             )
             PreferenceTemplate(
