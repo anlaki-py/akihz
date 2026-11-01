@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.drawscope.scale
 import kotlinx.coroutines.delay
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -60,23 +61,22 @@ internal fun Modifier.refractedNavigationContent(
 ): Modifier {
     val mask = rememberGraphicsLayer()
     val atlas = rememberGraphicsLayer()
+    val sample = rememberGraphicsLayer()
     val sampleRegions = remember(labelProgress.size) { FloatArray(labelProgress.size * 2) }
     val initialInk = if (AkihzColors.pageContainer.luminance() > 0.179f) 0f else 1f
     var targets by remember(labelProgress.size) { mutableStateOf(List(labelProgress.size) { initialInk }) }
     val inks = targets.map { target ->
         animateFloatAsState(target, tween(250), label = "Navbar ink")
     }
-    LaunchedEffect(atlas, settings.automaticContrast, labelProgress.size) {
+    LaunchedEffect(sample, settings.automaticContrast, labelProgress.size) {
         if (!settings.automaticContrast) return@LaunchedEffect
         while (true) {
             withFrameNanos { }
-            if (atlas.size.width > 0 && atlas.size.height > 1) {
+            if (sample.size.width > 0) {
                 // Graphics layers return hardware bitmaps; pixel reads need a software copy.
-                val bitmap = atlas.toImageBitmap().asAndroidBitmap()
+                val bitmap = sample.toImageBitmap().asAndroidBitmap()
                     .copy(Bitmap.Config.ARGB_8888, false)
                 val pixels = bitmap.asImageBitmap().toPixelMap()
-                // The top half holds the rendered glass; the bottom half is the glyph mask.
-                val glassHeight = pixels.height / 2
                 targets = List(labelProgress.size) { index ->
                     var luminance = 0f
                     for (y in -1..1) {
@@ -84,8 +84,8 @@ internal fun Modifier.refractedNavigationContent(
                             val sx = ((sampleRegions[index * 2] +
                                 x * sampleRegions[index * 2 + 1] * 0.3f) * pixels.width)
                                 .toInt().coerceIn(0, pixels.width - 1)
-                            val sy = ((0.5f + y * 0.2f) * glassHeight)
-                                .toInt().coerceIn(0, glassHeight - 1)
+                            val sy = ((0.5f + y * 0.2f) * pixels.height)
+                                .toInt().coerceIn(0, pixels.height - 1)
                             luminance += pixels[sx, sy].luminance()
                         }
                     }
@@ -136,12 +136,26 @@ internal fun Modifier.refractedNavigationContent(
             start += itemWidth + if (wideItemWidth == null) NavigationItemSpacing.toPx() else 0f
         }
         shader.setFloatUniform("regions", regions)
-        atlas.renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "atlas").asComposeRenderEffect()
         onDrawWithContent {
             shader.setFloatUniform("inks", inks.map { it.value }.toFloatArray())
+            // RenderEffect snapshots uniforms. Recreate it after each animated ink update.
+            atlas.renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "atlas").asComposeRenderEffect()
             mask.record { this@onDrawWithContent.drawContent() }
             val source = background.coordinates
             val target = coordinates
+            // Read back only a small glass image. Animated ink stays independent of
+            // backdrop changes, including abrupt page and theme switches.
+            if (settings.automaticContrast) {
+                sample.record(size = IntSize(96, 16)) {
+                    scale(96f / width, 16f / height, pivot = Offset.Zero) {
+                        drawRect(pageColor, size = androidx.compose.ui.geometry.Size(width, height))
+                        if (source?.isAttached == true && target?.isAttached == true) {
+                            val offset = target.localPositionOf(source, Offset.Zero)
+                            translate(offset.x, offset.y) { drawLayer(background.layer) }
+                        }
+                    }
+                }
+            }
             // Top half: rendered glass. Bottom half: the unblurred glyph mask.
             // Neither layer captures this final composite.
             atlas.record(size = IntSize(width.toInt(), height.toInt() * 2)) {

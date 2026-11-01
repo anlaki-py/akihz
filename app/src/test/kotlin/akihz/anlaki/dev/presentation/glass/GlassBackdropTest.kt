@@ -26,7 +26,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -78,24 +77,28 @@ class GlassBackdropTest {
                 }
             }
         }
-        // Contrast reads the rendered glass on frames, so let the sampler settle first.
-        compose.mainClock.advanceTimeBy(1_000)
-        val bright = compose.onNodeWithContentDescription("Home", useUnmergedTree = true).captureToImage().toPixelMap()
-        var darkPixels = 0
-        for (y in 0 until bright.height) for (x in 0 until bright.width) {
-            if (bright[x, y].red < 0.2f) darkPixels++
-        }
-        assertTrue("Bright glass needs dark ink", darkPixels > bright.width * bright.height / 10)
+        // Contrast sampling is asynchronous and the ink then fades over 250 ms.
+        // Wait for the visible result rather than assuming a single draw settles it.
+        awaitHomeInk(light = false)
         compose.runOnIdle { pageColor = Color.Black }
-        compose.mainClock.advanceTimeBy(1_000)
-        val dark = compose.onNodeWithContentDescription("Home", useUnmergedTree = true).captureToImage().toPixelMap()
-        var lightPixels = 0
-        for (y in 0 until dark.height) for (x in 0 until dark.width) {
-            if (dark[x, y].red > 0.8f) lightPixels++
-        }
-        assertTrue("Dark glass needs light ink", lightPixels > dark.width * dark.height / 10)
+        awaitHomeInk(light = true)
+        compose.runOnIdle { pageColor = Color.White }
+        awaitHomeInk(light = false)
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.runOnIdle { assertEquals(1, selected) }
+    }
+
+    private fun awaitHomeInk(light: Boolean) {
+        compose.waitUntil(timeoutMillis = 5_000) {
+            val pixels = compose.onNodeWithContentDescription("Home", useUnmergedTree = true)
+                .captureToImage().toPixelMap()
+            var matchingPixels = 0
+            for (y in 0 until pixels.height) for (x in 0 until pixels.width) {
+                val red = pixels[x, y].red
+                if (if (light) red > 0.8f else red < 0.2f) matchingPixels++
+            }
+            matchingPixels > pixels.width * pixels.height / 10
+        }
     }
 
 }
