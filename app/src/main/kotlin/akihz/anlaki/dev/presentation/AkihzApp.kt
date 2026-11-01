@@ -178,12 +178,11 @@ fun AkihzApp(
                     )
                     AppDestination.DebugOptions -> DebugSettingsScreen(
                         onBack = onBack,
-                        onOpenGlass = { navigator.open(AppDestination.DebugGlass) },
                         onOpenHomeScreen = { navigator.open(AppDestination.DebugHome) },
                         onOpenPerformance = { navigator.open(AppDestination.Performance) },
                         onOpenCrashLogs = { navigator.open(AppDestination.CrashLogs) }
                     )
-                    AppDestination.DebugGlass -> NavbarGlassSettingsScreen(
+                    AppDestination.NavbarGlass -> NavbarGlassSettingsScreen(
                         settings = glassSettings,
                         onSettingsChanged = onGlassSettingsChanged,
                         onBack = onBack
@@ -204,6 +203,7 @@ fun AkihzApp(
                         onDynamicColorChanged = onDynamicColorChanged,
                         onAmoledModeChanged = onAmoledModeChanged,
                         onOpenColorSchemes = { navigator.open(AppDestination.ThemePalette) },
+                        onOpenGlass = { navigator.open(AppDestination.NavbarGlass) },
                         onBack = onBack
                     )
                     AppDestination.ThemePalette -> ThemePaletteScreen(

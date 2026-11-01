@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -83,113 +79,92 @@ internal fun FloatingBottomBar(
     )
     val boundedPosition = selectionPosition.coerceIn(0f, items.lastIndex.toFloat())
     val labelProgresses = items.indices.map { (1f - abs(boundedPosition - it)).coerceIn(0f, 1f) }
-    BoxWithConstraints(modifier = modifier) {
-        val wide = glassSettings.wide
-        val itemWidth = if (wide) (maxWidth - 32.dp - NavigationPadding * 2) / items.size.coerceAtLeast(1) else NavigationItemWidth + NavigationLabelWidth
-        val itemHeight = if (wide) 64.dp else NavigationHeight
-        val itemStep = if (wide) itemWidth else NavigationItemWidth + NavigationItemSpacing
-        Surface(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                .then(if (wide) Modifier.fillMaxWidth() else Modifier),
-            shape = RoundedCornerShape(36.dp),
-            color = if (glassEnabled) Color.Transparent else outerColor,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            shadowElevation = if (glassEnabled) 0.dp else 8.dp
-        ) {
-            Box {
-                Box(Modifier.matchParentSize().then(
-                    if (navigationBackground != null) Modifier.recordGlassBackdrop(navigationBackground, pageColor)
-                    else Modifier
-                )) {
-                    if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
-                        GlassSurface(backdrop, glassSettings.outer, MaterialTheme.colorScheme.primary,
-                            Modifier.matchParentSize(), monochrome = glassSettings.monochrome)
-                    }
-                    Box(Modifier.fillMaxSize().padding(NavigationPadding)) {
-                        // The moving lens changes only drawing. Hit targets keep their layout bounds.
-                        Box(
-                            Modifier
-                                .size(width = itemWidth, height = itemHeight)
-                                .graphicsLayer {
-                                    translationX = itemStep.toPx() * selectionPosition * direction
-                                }
-                                .testTag("navigation_indicator")
-                                .then(if (glassEnabled) Modifier else Modifier.background(pillColor, CircleShape))
-                        ) {
-                            if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
-                                GlassSurface(backdrop, glassSettings.pill, MaterialTheme.colorScheme.surface,
-                                    Modifier.fillMaxSize(), selectionPosition, glassSettings.monochrome)
+    Surface(
+        modifier = modifier
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+        shape = RoundedCornerShape(36.dp),
+        color = if (glassEnabled) Color.Transparent else outerColor,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shadowElevation = if (glassEnabled) 0.dp else 8.dp
+    ) {
+        Box {
+            Box(Modifier.matchParentSize().then(
+                if (navigationBackground != null) Modifier.recordGlassBackdrop(navigationBackground, pageColor)
+                else Modifier
+            )) {
+                if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
+                    GlassSurface(backdrop, glassSettings.outer, MaterialTheme.colorScheme.primary,
+                        Modifier.matchParentSize(), monochrome = glassSettings.monochrome)
+                }
+                Box(Modifier.fillMaxSize().padding(NavigationPadding)) {
+                    // The moving lens changes only drawing. Hit targets keep their layout bounds.
+                    Box(
+                        Modifier
+                            .size(width = NavigationItemWidth + NavigationLabelWidth, height = NavigationHeight)
+                            .graphicsLayer {
+                                translationX = (NavigationItemWidth + NavigationItemSpacing).toPx() * selectionPosition * direction
                             }
+                            .testTag("navigation_indicator")
+                            .then(if (glassEnabled) Modifier else Modifier.background(pillColor, CircleShape))
+                    ) {
+                        if (glassEnabled && Build.VERSION.SDK_INT >= 33) {
+                            GlassSurface(backdrop, glassSettings.pill, MaterialTheme.colorScheme.surface,
+                                Modifier.fillMaxSize(), selectionPosition, glassSettings.monochrome)
                         }
                     }
                 }
-                val contentLens = if (navigationBackground != null && Build.VERSION.SDK_INT >= 33) {
-                    Modifier.refractedNavigationContent(navigationBackground, glassSettings,
-                        selectionPosition, labelProgresses,
-                        wideItemWidth = if (wide) itemWidth else null, itemHeight = itemHeight)
-                } else Modifier
-                Box(contentLens.padding(NavigationPadding)) {
-                    Row {
-                        items.forEachIndexed { index, item ->
-                            val selected = index == selectedIndex
-                            val labelProgress = labelProgresses[index]
-                            // White becomes an alpha mask for the lens. The fallback also uses
-                            // neutral ink, chosen against its actual solid surface color.
-                            val baseColor = if (selected) pillColor else outerColor
-                            val contentColor = if (glassEnabled) Color.White
-                                else if (baseColor.luminance() > 0.179f) Color.Black else Color.White
-                            Surface(
-                                selected = selected,
-                                onClick = item.onClick,
-                                modifier = Modifier.height(itemHeight).then(if (wide) Modifier.width(itemWidth) else Modifier),
-                                shape = CircleShape,
-                                color = Color.Transparent,
-                                contentColor = contentColor
+            }
+            val contentLens = if (navigationBackground != null && Build.VERSION.SDK_INT >= 33) {
+                Modifier.refractedNavigationContent(navigationBackground, glassSettings,
+                    selectionPosition, labelProgresses)
+            } else Modifier
+            Box(contentLens.padding(NavigationPadding)) {
+                Row {
+                    items.forEachIndexed { index, item ->
+                        val selected = index == selectedIndex
+                        val labelProgress = labelProgresses[index]
+                        // White becomes an alpha mask for the lens. The fallback also uses
+                        // neutral ink, chosen against its actual solid surface color.
+                        val baseColor = if (selected) pillColor else outerColor
+                        val contentColor = if (glassEnabled) Color.White
+                            else if (baseColor.luminance() > 0.179f) Color.Black else Color.White
+                        Surface(
+                            selected = selected,
+                            onClick = item.onClick,
+                            modifier = Modifier.height(NavigationHeight),
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                            contentColor = contentColor
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 13.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (wide) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(item.icon, item.label, Modifier.size(26.dp))
-                                        Text(
-                                            item.label,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            maxLines = 1,
-                                            modifier = Modifier.padding(top = 4.dp).clearAndSetSemantics {}
-                                        )
-                                    }
-                                } else Row(
-                                    modifier = Modifier.padding(horizontal = 13.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = item.label,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                    Text(
-                                        text = item.label,
-                                        style = MaterialTheme.typography.labelLargeEmphasized,
-                                        maxLines = 1,
-                                        modifier = Modifier
-                                            .width(NavigationLabelWidth * labelProgress)
-                                            .clipToBounds()
-                                            .wrapContentWidth(Alignment.Start, unbounded = true)
-                                            .width(NavigationLabelWidth)
-                                            .padding(start = 8.dp)
-                                            .graphicsLayer {
-                                                alpha = labelProgress
-                                            }
-                                            .clearAndSetSemantics {}
-                                    )
-                                }
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                Text(
+                                    text = item.label,
+                                    style = MaterialTheme.typography.labelLargeEmphasized,
+                                    maxLines = 1,
+                                    modifier = Modifier
+                                        .width(NavigationLabelWidth * labelProgress)
+                                        .clipToBounds()
+                                        .wrapContentWidth(Alignment.Start, unbounded = true)
+                                        .width(NavigationLabelWidth)
+                                        .padding(start = 8.dp)
+                                        .graphicsLayer {
+                                            alpha = labelProgress
+                                        }
+                                        .clearAndSetSemantics {}
+                                )
                             }
-                            if (!wide && index < items.lastIndex) {
-                                Spacer(modifier = Modifier.width(NavigationItemSpacing))
-                            }
+                        }
+                        if (index < items.lastIndex) {
+                            Spacer(modifier = Modifier.width(NavigationItemSpacing))
                         }
                     }
                 }

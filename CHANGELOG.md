@@ -9,12 +9,16 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
-- Added a wide glass navbar with labels below the icons.
+- Added JSON import for liquid glass presets.
 
 - Added liquid glass navigation with separate background and pill controls in Debug options.
 - Added a live glass preview and preset copying and sharing.
 
 ### Changed
+
+- Moved all liquid glass controls into Theme settings.
+- Updated the default glass preset with color, stronger refraction, and automatic text contrast.
+- Removed the wide navbar option.
 
 - Removed navbar icon and text outlines and added a smooth color fade.
 

@@ -75,6 +75,7 @@ class CuteDinoFontTest {
                     onDynamicColorChanged = {},
                     onAmoledModeChanged = {},
                     onOpenColorSchemes = {},
+            onOpenGlass = {},
                     onBack = {}
                 )
             }

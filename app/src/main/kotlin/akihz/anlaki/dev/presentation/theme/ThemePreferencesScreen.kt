@@ -23,6 +23,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  * @param onDynamicColorChanged persists dynamic color changes
  * @param onAmoledModeChanged persists AMOLED changes
  * @param onOpenColorSchemes opens the second-level color scheme page
+ * @param onOpenGlass opens all liquid glass navbar controls
  * @param onBack returns to Settings
  * @param modifier page modifier
  */
@@ -36,6 +37,7 @@ fun ThemePreferencesScreen(
     onAmoledModeChanged: (Boolean) -> Unit,
     onOpenColorSchemes: () -> Unit,
     onBack: () -> Unit,
+    onOpenGlass: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     PreferenceLayout(
@@ -55,6 +57,11 @@ fun ThemePreferencesScreen(
             )
         }
         PreferenceGroup(heading = "Theme") {
+            PreferenceTemplate(
+                title = "Liquid glass navbar",
+                description = "Adjust glass, text contrast, and presets",
+                onClick = onOpenGlass
+            )
             PreferenceTemplate(
                 title = "Dynamic color",
                 description = "Match your wallpaper",

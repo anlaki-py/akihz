@@ -10,15 +10,15 @@ internal enum class GlassParameter(
     val outerDefault: Float,
     val pillDefault: Float = outerDefault
 ) {
-    Refraction("Refraction", "dp", 0f..24f, 9.595243453979492f, 7.19543981552124f),
-    EdgeWidth("Lens edge width", "dp", 1f..32f, 4.5190205574035645f, 8.105807304382324f),
+    Refraction("Refraction", "dp", 0f..24f, 11.952775955200195f, 11.059355735778809f),
+    EdgeWidth("Lens edge width", "dp", 1f..32f, 9.06364631652832f, 22.319473266601562f),
     Dispersion("Color separation", "dp", 0f..6f, 0.5f),
     Blur("Blur radius", "dp", 0f..12f, 7.667381286621094f, 0f),
     Tint("Tint opacity", "", 0f..1f, 0.1033502146601677f, 0.0961742028594017f),
     Hue("Custom tint hue", "°", 0f..360f, 0f),
     TintSaturation("Custom tint saturation", "", 0f..1f, 0.65f),
     TintBrightness("Custom tint brightness", "", 0f..1f, 0.85f, 0.1f),
-    Saturation("Background saturation", "", 0f..2f, 2f, 1.0009421110153198f),
+    Saturation("Background saturation", "", 0f..2f, 1.0033928155899048f, 1.0009421110153198f),
     Brightness("Background brightness", "", 0.25f..2f, 1f, 0.9005719423294067f),
     Highlight("Edge reflection", "", 0f..1f, 0.35f),
     LightAngle("Light angle", "°", 0f..360f, 180.02334594726562f, 360f);
@@ -54,10 +54,9 @@ internal data class GlassLayerSettings(
 /** Navbar appearance using the selected glass preset by default on supported devices. */
 internal data class NavbarGlassSettings(
     val enabled: Boolean = true,
-    val wide: Boolean = false,
-    val monochrome: Boolean = true,
+    val monochrome: Boolean = false,
     val automaticContrast: Boolean = true,
-    val contentRefraction: Float = 0.35f,
+    val contentRefraction: Float = 1f,
     val outer: GlassLayerSettings = GlassLayerSettings(),
     val pill: GlassLayerSettings = GlassLayerSettings(pill = true)
 ) {
@@ -66,7 +65,6 @@ internal data class NavbarGlassSettings(
         put("format", "akihz-navbar-glass")
         put("version", 1)
         put("enabled", enabled)
-        put("wide", wide)
         put("monochrome", monochrome)
         put("automaticContrast", automaticContrast)
         put("contentRefraction", contentRefraction.toDouble())
@@ -77,16 +75,16 @@ internal data class NavbarGlassSettings(
     companion object {
         /** Decodes [json], rejecting unsupported formats and bounding every shader control. */
         fun fromJson(json: String): NavbarGlassSettings {
+            require(json.length <= 65_536) { "Glass preset is too large" }
             val root = JSONObject(json)
             require(root.getString("format") == "akihz-navbar-glass") { "Unknown glass preset format" }
             require(root.getInt("version") == 1) { "Unsupported glass preset version" }
             return NavbarGlassSettings(
                 enabled = root.optBoolean("enabled", true),
-                wide = root.optBoolean("wide", false),
-                monochrome = root.optBoolean("monochrome", true),
+                monochrome = root.optBoolean("monochrome", false),
                 automaticContrast = root.optBoolean("automaticContrast", true),
-                contentRefraction = root.optDouble("contentRefraction", 0.35).toFloat().let {
-                    if (it.isFinite()) it.coerceIn(0f, 1f) else 0.35f
+                contentRefraction = root.optDouble("contentRefraction", 1.0).toFloat().let {
+                    if (it.isFinite()) it.coerceIn(0f, 1f) else 1f
                 },
                 outer = decodeLayer(root.optJSONObject("outer"), false),
                 pill = decodeLayer(root.optJSONObject("pill"), true)
