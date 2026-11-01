@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Wallpaper
 import akihz.anlaki.dev.data.PreferencesHelper
 import androidx.compose.runtime.Composable
@@ -89,6 +90,7 @@ fun ThemePreferencesScreen(
             PreferenceTemplate(
                 title = "Cute Dino everywhere",
                 description = "Cute Dino titles and Soft Core descriptions",
+                icon = Icons.Default.TextFields,
                 checked = LocalCuteDinoEnabled.current,
                 onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
             )
