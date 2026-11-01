@@ -78,6 +78,8 @@ class GlassBackdropTest {
                 }
             }
         }
+        // Contrast reads the rendered glass on frames, so let the sampler settle first.
+        compose.mainClock.advanceTimeBy(1_000)
         val bright = compose.onNodeWithContentDescription("Home", useUnmergedTree = true).captureToImage().toPixelMap()
         var darkPixels = 0
         for (y in 0 until bright.height) for (x in 0 until bright.width) {
@@ -85,6 +87,7 @@ class GlassBackdropTest {
         }
         assertTrue("Bright glass needs dark ink", darkPixels > bright.width * bright.height / 10)
         compose.runOnIdle { pageColor = Color.Black }
+        compose.mainClock.advanceTimeBy(1_000)
         val dark = compose.onNodeWithContentDescription("Home", useUnmergedTree = true).captureToImage().toPixelMap()
         var lightPixels = 0
         for (y in 0 until dark.height) for (x in 0 until dark.width) {
