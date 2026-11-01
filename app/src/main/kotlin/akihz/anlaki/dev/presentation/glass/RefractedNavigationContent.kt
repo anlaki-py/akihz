@@ -89,9 +89,12 @@ internal fun Modifier.refractedNavigationContent(
                             luminance += pixels[sx, sy].luminance()
                         }
                     }
+                    println("NAV_SAMPLE index=$index size=${sample.size} luminance=${luminance / 9f} target=${if (luminance / 9f > 0.179f) 0f else 1f}")
                     if (luminance / 9f > 0.179f) 0f else 1f
                 }
                 bitmap.recycle()
+            } else {
+                println("NAV_SAMPLE empty size=${sample.size}")
             }
             delay(50)
         }

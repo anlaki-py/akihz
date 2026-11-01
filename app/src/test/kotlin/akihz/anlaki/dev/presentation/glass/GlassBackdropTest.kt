@@ -86,6 +86,7 @@ class GlassBackdropTest {
             if (bright[x, y].red < 0.2f) darkPixels++
         }
         assertTrue("Bright glass needs dark ink", darkPixels > bright.width * bright.height / 10)
+        println("NAV_TEST bright dark=$darkPixels total=${bright.width * bright.height}")
         compose.runOnIdle { pageColor = Color.Black }
         compose.mainClock.advanceTimeBy(1_000)
         val dark = compose.onNodeWithContentDescription("Home", useUnmergedTree = true).captureToImage().toPixelMap()
@@ -93,6 +94,7 @@ class GlassBackdropTest {
         for (y in 0 until dark.height) for (x in 0 until dark.width) {
             if (dark[x, y].red > 0.8f) lightPixels++
         }
+        println("NAV_TEST dark light=$lightPixels total=${dark.width * dark.height} center=${dark[dark.width / 2, dark.height / 2]}")
         assertTrue("Dark glass needs light ink", lightPixels > dark.width * dark.height / 10)
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.runOnIdle { assertEquals(1, selected) }
