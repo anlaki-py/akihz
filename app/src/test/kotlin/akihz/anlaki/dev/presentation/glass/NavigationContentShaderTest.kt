@@ -35,6 +35,17 @@ class NavigationContentShaderTest {
     }
 
     @Test
+    fun `animated ink renders intermediate colors without an outline`() {
+        val darker = render(Color.rgb(110, 110, 110), 0f, 0.75f)
+        val lighter = render(Color.rgb(125, 125, 125), 0f, 0.25f)
+        val darkInk = Color.red(darker.getPixel(32, 32))
+        val lightInk = Color.red(lighter.getPixel(32, 32))
+        assertTrue(darkInk in 1..254)
+        assertTrue(lightInk in 1 until darkInk)
+        assertEquals(Color.rgb(110, 110, 110), darker.getPixel(27, 32))
+    }
+
+    @Test
     fun `moving lens bends an opaque glyph without turning the glyph into glass`() {
         val straight = render(Color.WHITE, 0f)
         val bent = render(Color.WHITE, 1f)
@@ -45,7 +56,11 @@ class NavigationContentShaderTest {
         assertEquals(Color.WHITE, bent.getPixel(180, 32))
     }
 
-    private fun render(backgroundColor: Int, strength: Float): Bitmap {
+    private fun render(
+        backgroundColor: Int,
+        strength: Float,
+        ink: Float = if (backgroundColor == Color.WHITE) 0f else 1f
+    ): Bitmap {
         val input = Bitmap.createBitmap(240, 128, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(input)
         val paint = Paint().apply { color = backgroundColor }
@@ -61,7 +76,7 @@ class NavigationContentShaderTest {
         shader.setFloatUniform("strength", strength)
         shader.setFloatUniform("automaticContrast", 1f)
         shader.setFloatUniform("fixedInk", 1f)
-        shader.setFloatUniform("outlineRadius", 0.65f)
+        shader.setFloatUniform("inks", floatArrayOf(ink, ink))
         shader.setFloatUniform("regions", 66f, 132f, 176f, 52f)
         val node = RenderNode("navigation shader test")
         node.setPosition(0, 0, 240, 64)

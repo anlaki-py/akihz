@@ -9,10 +9,14 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Added
 
+- Added a wide glass navbar with labels below the icons.
+
 - Added liquid glass navigation with separate background and pill controls in Debug options.
 - Added a live glass preview and preset copying and sharing.
 
 ### Changed
+
+- Removed navbar icon and text outlines and added a smooth color fade.
 
 - Navbar glass now bends the icons and labels beneath its moving edges.
 - Navbar icons and text choose black or white to contrast with the glass.

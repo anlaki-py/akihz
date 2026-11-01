@@ -76,6 +76,12 @@ internal fun NavbarGlassSettingsScreen(
         ) {
             PreferenceGroup(heading = "Experiment") {
                 PreferenceTemplate(
+                    title = "Wide bottom navbar",
+                    description = "Spread tabs across a rounded glass bar with labels below the icons",
+                    checked = settings.wide,
+                    onCheckedChange = { onSettingsChanged(settings.copy(wide = it)) }
+                )
+                PreferenceTemplate(
                     title = "Enable liquid glass",
                     description = if (supported) "On by default on supported devices. Tap the preview tabs and scroll to inspect the glass."
                         else "Requires Android 13 or later. This device keeps the normal navbar.",
