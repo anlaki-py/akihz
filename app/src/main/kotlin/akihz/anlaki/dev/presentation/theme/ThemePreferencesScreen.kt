@@ -2,9 +2,11 @@ package akihz.anlaki.dev.presentation.theme
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Wallpaper
 import akihz.anlaki.dev.data.PreferencesHelper
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ import akihz.anlaki.dev.presentation.components.PreferenceTemplate
  * @param onDynamicColorChanged persists dynamic color changes
  * @param onAmoledModeChanged persists AMOLED changes
  * @param onOpenColorSchemes opens the second-level color scheme page
+ * @param onOpenGlass opens all liquid glass navbar controls
  * @param onBack returns to Settings
  * @param modifier page modifier
  */
@@ -36,6 +39,7 @@ fun ThemePreferencesScreen(
     onAmoledModeChanged: (Boolean) -> Unit,
     onOpenColorSchemes: () -> Unit,
     onBack: () -> Unit,
+    onOpenGlass: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     PreferenceLayout(
@@ -55,6 +59,12 @@ fun ThemePreferencesScreen(
             )
         }
         PreferenceGroup(heading = "Theme") {
+            PreferenceTemplate(
+                title = "Liquid glass navbar",
+                description = "Adjust glass, text contrast, and presets",
+                icon = Icons.Default.BlurOn,
+                onClick = onOpenGlass
+            )
             PreferenceTemplate(
                 title = "Dynamic color",
                 description = "Match your wallpaper",
@@ -80,6 +90,7 @@ fun ThemePreferencesScreen(
             PreferenceTemplate(
                 title = "Cute Dino everywhere",
                 description = "Cute Dino titles and Soft Core descriptions",
+                icon = Icons.Default.TextFields,
                 checked = LocalCuteDinoEnabled.current,
                 onCheckedChange = { PreferencesHelper.cuteDinoEverywhere = it }
             )

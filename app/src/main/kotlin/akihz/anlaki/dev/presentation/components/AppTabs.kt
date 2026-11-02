@@ -1,5 +1,10 @@
 package akihz.anlaki.dev.presentation.components
 
+import akihz.anlaki.dev.presentation.theme.AkihzColors
+import android.os.Build
+import akihz.anlaki.dev.data.glass.NavbarGlassSettings
+import akihz.anlaki.dev.presentation.glass.rememberGlassBackdrop
+import akihz.anlaki.dev.presentation.glass.recordGlassBackdrop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -26,10 +31,16 @@ internal enum class AppTab(val label: String, val icon: ImageVector) {
 /**
  * Displays the root [pagerState] and floating navigation as one previewable page.
  *
+ * @param glassSettings navbar appearance
  * @param content renders each tab beneath the navigation bar
  */
 @Composable
-internal fun AppTabs(pagerState: PagerState, content: @Composable (AppTab) -> Unit) {
+internal fun AppTabs(
+    pagerState: PagerState,
+    glassSettings: NavbarGlassSettings = NavbarGlassSettings(),
+    content: @Composable (AppTab) -> Unit
+) {
+    val backdrop = if (glassSettings.enabled && Build.VERSION.SDK_INT >= 33) rememberGlassBackdrop() else null
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(pagerState) {
@@ -40,7 +51,9 @@ internal fun AppTabs(pagerState: PagerState, content: @Composable (AppTab) -> Un
         }
     }
     Box(Modifier.fillMaxSize()) {
-        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { index ->
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize().then(
+            if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, AkihzColors.pageContainer) else Modifier
+        )) { index ->
             content(AppTab.entries[index])
         }
         FloatingBottomBar(
@@ -52,6 +65,8 @@ internal fun AppTabs(pagerState: PagerState, content: @Composable (AppTab) -> Un
                 )
             },
             selectedIndex = pagerState.currentPage,
+            glassSettings = glassSettings,
+            backdrop = backdrop,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

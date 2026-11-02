@@ -5,13 +5,13 @@ import androidx.compose.runtime.saveable.Saver
 
 /** Pages sharing the app's predictive back stack. Home and Settings remain root tabs. */
 internal enum class AppDestination {
-    Root, CustomKeys, FpsMonitor, ThemePreferences, ThemePalette,
+    Root, CustomKeys, FpsMonitor, ThemePreferences, ThemePalette, NavbarGlass,
     DebugOptions, DebugHome, Performance, CrashLogs;
 
     val parent: AppDestination?
         get() = when (this) {
             Root -> null
-            ThemePalette -> ThemePreferences
+            ThemePalette, NavbarGlass -> ThemePreferences
             DebugHome, Performance, CrashLogs -> DebugOptions
             else -> Root
         }
@@ -21,6 +21,7 @@ internal enum class AppDestination {
         fun fromDebugPage(value: String?): AppDestination = when (value?.lowercase()) {
             "performance", "perf" -> Performance
             "crash", "crashes", "crash_logs", "crashlogs" -> CrashLogs
+            "glass", "navbar" -> NavbarGlass
             "home", "home_screen", "homescreen" -> DebugHome
             else -> DebugOptions
         }
