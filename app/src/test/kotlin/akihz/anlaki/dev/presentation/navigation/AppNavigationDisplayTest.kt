@@ -192,6 +192,7 @@ private fun ThemePage(
             onDynamicColorChanged = onDynamicColorChanged,
             onAmoledModeChanged = onAmoledModeChanged,
             onOpenColorSchemes = {},
+            onOpenGlass = {},
             onBack = { navigator.pop() }
         )
     }

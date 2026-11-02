@@ -30,24 +30,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.HomeDebugSettings
 import akihz.anlaki.dev.domain.TileRateSelection
 import akihz.anlaki.dev.presentation.components.HomeGroupOuterCornerRadius
+import akihz.anlaki.dev.presentation.components.PageContentShape
 import akihz.anlaki.dev.presentation.components.RefreshRateButton
 import akihz.anlaki.dev.presentation.components.TileInclusionButton
 import akihz.anlaki.dev.presentation.theme.LocalCuteDinoEnabled
-import akihz.anlaki.dev.presentation.theme.AkihzColors
 import kotlin.math.abs
-
-/** Height of the fade band above the rate groups. The list starts below it. */
-private val ListFadeHeight = 24.dp
 
 /**
  * Shows detected refresh rates and lets the user select one.
@@ -73,8 +66,6 @@ fun RefreshRateScreen(
     modifier: Modifier = Modifier
 ) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val listFadeHeightPx = with(LocalDensity.current) { ListFadeHeight.toPx() }
-    val listFadeColor = AkihzColors.pageContainer.copy(alpha = 0.65f)
     val displayedRates = if (debugSettings.showFakeRefreshRates) {
         HomeDebugSettings.previewRates(supportedRates)
     } else {
@@ -113,15 +104,7 @@ fun RefreshRateScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            Brush.verticalGradient(
-                                colors = listOf(listFadeColor, Color.Transparent),
-                                endY = listFadeHeightPx
-                            )
-                        )
-                    }
+                    .clip(PageContentShape)
             ) {
                 Column(
                     modifier = Modifier
@@ -129,7 +112,6 @@ fun RefreshRateScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(ListFadeHeight))
                     Row(
                         modifier = Modifier.fillMaxWidth(debugSettings.buttonWidthPercent / 100f),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)

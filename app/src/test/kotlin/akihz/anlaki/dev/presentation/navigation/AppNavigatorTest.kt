@@ -7,6 +7,17 @@ import org.junit.Test
 
 class AppNavigatorTest {
     @Test
+    fun `glass controls return to theme settings`() {
+        val navigator = AppNavigator(AppDestination.NavbarGlass)
+        assertEquals(
+            listOf(AppDestination.Root, AppDestination.ThemePreferences, AppDestination.NavbarGlass),
+            navigator.backStack
+        )
+        navigator.pop()
+        assertEquals(AppDestination.ThemePreferences, navigator.current)
+    }
+
+    @Test
     fun `back from color schemes reveals theme preferences then the root tabs`() {
         val navigator = AppNavigator()
         navigator.open(AppDestination.ThemePreferences)
@@ -122,6 +133,7 @@ class AppNavigatorTest {
         mapOf(
             AppDestination.Performance to listOf("performance", "perf", "PERF"),
             AppDestination.CrashLogs to listOf("crash", "crashes", "crash_logs", "crashlogs"),
+            AppDestination.NavbarGlass to listOf("glass", "navbar"),
             AppDestination.DebugHome to listOf("home", "home_screen", "homescreen")
         ).forEach { (page, aliases) ->
             aliases.forEach { assertEquals(page, AppDestination.fromDebugPage(it)) }
