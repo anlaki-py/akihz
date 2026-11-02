@@ -7,30 +7,25 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.54] - 2026-11-02
+
 ### Added
 
-- Added JSON import for liquid glass presets.
-
-- Added liquid glass navigation with separate background and pill controls in Debug options.
-- Added a live glass preview and preset copying and sharing.
+- Added liquid glass navigation, with background and pill controls in Theme.
+- Added a live glass preview, JSON preset import, and preset sharing.
 
 ### Changed
 
-- Removed the press highlight from the glass navbar.
-- Added an icon to the font option in Theme.
-- Moved all liquid glass controls into Theme settings.
-- Updated the default glass preset with color, stronger refraction, and automatic text contrast.
-- Removed the wide navbar option.
-
-- Removed navbar icon and text outlines and added a smooth color fade.
-
-- Navbar glass now bends the icons and labels beneath its moving edges.
-- Navbar icons and text choose black or white to contrast with the glass.
+- Navbar glass bends the icons and labels beneath its moving edges.
+- Navbar icons and text pick black or white to contrast with the glass.
+- Navbar glass uses a smooth blur and color fade, without a press highlight.
 - Glass defaults to shades of gray, with controls for color and text distortion.
-- Rounded the scrolling content below page headers and matched header backgrounds to each page.
-- Made the selected liquid glass preset the default on supported devices.
-- Corrected the glass background on Home so empty areas show the page color.
-- Smoothed navbar glass blur to remove repeated outlines around text and sharp edges.
+- The selected glass preset is the default on supported devices.
+- Updated the default glass preset with color, stronger refraction, and automatic text contrast.
+- Moved all liquid glass controls into Theme settings.
+- Added icons to the liquid glass and font options in Theme.
+- Rounded scrolling content below page headers and matched header backgrounds to each page.
+- Corrected the Home background so empty areas show the page color.
 
 ## [0.0.53] - 2026-10-29
 
