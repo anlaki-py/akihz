@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import akihz.anlaki.dev.data.changelog.BundledChangelog
 import akihz.anlaki.dev.presentation.components.TileInclusionButton
 import akihz.anlaki.dev.presentation.theme.AnlakiTheme
+import io.mockk.coEvery
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
@@ -40,20 +43,28 @@ class HoldHelpTest {
 
     @Test
     fun versionHoldOpensOfflineNotesWithoutCountingAsADebugTap() {
-        var taps = 0
-        compose.setContent { AnlakiTheme(dynamicColor = false) { AboutSection { taps++ } } }
-        compose.onNodeWithText("akiHz").performTouchInput { longClick() }
-        compose.onNodeWithText("What's new").assertIsDisplayed()
-        compose.waitUntil(5_000) {
-            compose.onAllNodes(androidx.compose.ui.test.hasText("Full changelog")).fetchSemanticsNodes().isNotEmpty()
+        val notes = runBlocking { BundledChangelog.load(RuntimeEnvironment.getApplication()) }
+        // Asset loading has its own test. Keep IO scheduling out of the gesture assertion.
+        mockkObject(BundledChangelog)
+        try {
+            coEvery { BundledChangelog.load(any()) } returns notes
+            var taps = 0
+            compose.setContent { AnlakiTheme(dynamicColor = false) { AboutSection { taps++ } } }
+            compose.onNodeWithText("akiHz").performTouchInput { longClick() }
+            compose.onNodeWithText("What's new").assertIsDisplayed()
+            compose.waitUntil(5_000) {
+                compose.onAllNodes(androidx.compose.ui.test.hasText("Full changelog")).fetchSemanticsNodes().isNotEmpty()
+            }
+            assertEquals(0, taps)
+            compose.onNodeWithText("Full changelog").performClick()
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("0.0.50 - 2026-10-26"))
+            compose.onNodeWithText("0.0.50 - 2026-10-26").assertIsDisplayed()
+            compose.onNodeWithText("Close").performClick()
+            compose.onNodeWithText("akiHz").performClick()
+            assertEquals(1, taps)
+        } finally {
+            unmockkObject(BundledChangelog)
         }
-        assertEquals(0, taps)
-        compose.onNodeWithText("Full changelog").performClick()
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("0.0.50 - 2026-10-26"))
-        compose.onNodeWithText("0.0.50 - 2026-10-26").assertIsDisplayed()
-        compose.onNodeWithText("Close").performClick()
-        compose.onNodeWithText("akiHz").performClick()
-        assertEquals(1, taps)
     }
 
     @Test
