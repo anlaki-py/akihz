@@ -3,8 +3,6 @@ package akihz.anlaki.dev.data
 import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -19,7 +17,6 @@ class ProcessExitLogCollector @Inject constructor(
     /** Saves previously unseen exits on a worker thread; deleting logs does not reimport them. */
     @Synchronized
     fun collect() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
         try {
             val preferences = context.getSharedPreferences("diagnostic_exits", Context.MODE_PRIVATE)
             val seen = preferences.getStringSet("seen", emptySet()).orEmpty().toMutableSet()
@@ -39,7 +36,6 @@ class ProcessExitLogCollector @Inject constructor(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
     private fun describe(exit: ApplicationExitInfo): String = buildString {
         appendLine("Source: Android process history. App version above is the collecting version.")
         appendLine("Process: ${exit.processName} pid=${exit.pid}")
