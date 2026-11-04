@@ -40,6 +40,7 @@ class AkihzApplication : Application() {
         installCrashLogger()
         Timber.tag("AppLifecycle").i("Process started, pid=%d", android.os.Process.myPid())
         applicationScope.launch { processExitLogCollector.collect() }
+        akihz.anlaki.dev.data.RootCommandService.init(this)
         PreferencesHelper.init(this)
         CustomProfileManager.init(this)
         if (PreferencesHelper.latestAvailableVersionCode <= BuildConfig.VERSION_CODE) {

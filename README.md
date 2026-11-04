@@ -211,3 +211,10 @@ To the fullest extent permitted by law, I accept no responsibility or liability
 for any damage, data loss, device problems, security issues, or other
 consequences resulting from installing, using, modifying, or relying on this
 app.
+
+### Root access
+
+Rooted devices can use akiHz without Shizuku. Open the app with Shizuku stopped,
+choose **Use root**, and approve the root manager prompt. The app remembers this
+choice for settings, refresh rates, tiles, and FPS commands. Root access must stay
+granted in your root manager. Commands report an error if access is revoked.

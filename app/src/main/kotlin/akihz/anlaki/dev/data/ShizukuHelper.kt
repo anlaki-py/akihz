@@ -22,10 +22,10 @@ object ShizukuHelper {
     private val cleanupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Returns true when the Shizuku binder answers. */
-    fun isBinderReady(): Boolean = ShizukuConnection.isBinderReady()
+    fun isBinderReady(): Boolean = RootCommandService.enabled || ShizukuConnection.isBinderReady()
 
     /** Returns true when this app holds Shizuku permission. */
-    fun hasPermission(): Boolean = ShizukuConnection.hasPermission()
+    fun hasPermission(): Boolean = RootCommandService.enabled || ShizukuConnection.hasPermission()
 
     /**
      * Asks Shizuku for permission.
@@ -34,10 +34,10 @@ object ShizukuHelper {
     fun requestPermission(requestCode: Int) = ShizukuConnection.requestPermission(requestCode)
 
     /** Returns the Shizuku UID, or -1 when unavailable. */
-    fun getUid(): Int = ShizukuConnection.getUid()
+    fun getUid(): Int = if (RootCommandService.enabled) 0 else ShizukuConnection.getUid()
 
     /** Returns true when the user service is bound. */
-    fun isUserServiceBound(): Boolean = ShizukuConnection.isBound()
+    fun isUserServiceBound(): Boolean = RootCommandService.enabled || ShizukuConnection.isBound()
 
     /**
      * Acquires the shared Shizuku user service for [owner].
@@ -49,6 +49,10 @@ object ShizukuHelper {
         onConnected: () -> Unit,
         onFailed: (ErrorType, String) -> Unit = { _, _ -> }
     ) {
+        if (RootCommandService.enabled) {
+            onConnected()
+            return
+        }
         ShizukuConnection.acquire(
             owner = owner,
             onConnected = onConnected,
@@ -67,24 +71,30 @@ object ShizukuHelper {
     /** Releases [owner] and disconnects only when no component still needs the service. */
     fun releaseUserService(owner: String) = ShizukuConnection.release(owner)
 
+    private fun activeService(): ICommandService? =
+        if (RootCommandService.enabled) RootCommandService else ShizukuConnection.service()
+
+    /** Requests root access. Call from a worker thread. */
+    fun requestRoot(): Boolean = RootCommandService.request()
+
     private fun exec(command: String): Result<String> =
-        ShizukuSettingsGateway.exec(ShizukuConnection.service(), command)
+        ShizukuSettingsGateway.exec(activeService(), command)
 
     /** Lists all readable entries in one Android settings namespace. */
     fun listSettings(namespace: Namespace): Result<Map<String, String>> =
-        ShizukuSettingsGateway.listSettings(ShizukuConnection.service(), namespace)
+        ShizukuSettingsGateway.listSettings(activeService(), namespace)
 
     /** Reads one setting, returning null when the key does not exist. */
     fun getSetting(namespace: Namespace, key: String): Result<String?> =
-        ShizukuSettingsGateway.getSetting(ShizukuConnection.service(), namespace, key)
+        ShizukuSettingsGateway.getSetting(activeService(), namespace, key)
 
     /** Writes one setting without evaluating user data as shell syntax. */
     fun putSetting(namespace: Namespace, key: String, value: String): Result<Unit> =
-        ShizukuSettingsGateway.putSetting(ShizukuConnection.service(), namespace, key, value)
+        ShizukuSettingsGateway.putSetting(activeService(), namespace, key, value)
 
     /** Deletes one setting. */
     fun deleteSetting(namespace: Namespace, key: String): Result<Unit> =
-        ShizukuSettingsGateway.deleteSetting(ShizukuConnection.service(), namespace, key)
+        ShizukuSettingsGateway.deleteSetting(activeService(), namespace, key)
 
     /**
      * Reads the current refresh rate from OEM-specific settings keys.
@@ -113,11 +123,11 @@ object ShizukuHelper {
      * Returns a human-readable summary; safe to call even when not bound.
      */
     fun killStaleRefreshServices(): Result<String> =
-        ShizukuProcessInspector.killStaleRefreshServices(ShizukuConnection.service())
+        ShizukuProcessInspector.killStaleRefreshServices(activeService())
 
     /** Runs an arbitrary shell command as `shell` (via Shizuku) when bound, else as app. */
     fun runShellCommand(command: String): Result<String> =
-        ShizukuProcessInspector.runShellCommand(ShizukuConnection.service(), command)
+        ShizukuProcessInspector.runShellCommand(activeService(), command)
 
     /** Lists all `akihz` PIDs with their PSS/RSS for debugging. */
     fun listAppProcesses(): Result<String> =
