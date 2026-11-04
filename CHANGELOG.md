@@ -10,6 +10,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 ### Added
 
 - Added root access as an alternative to Shizuku.
+- Added an access method selector in Settings.
 
 ## [0.0.54] - 2026-11-02
 

@@ -17,8 +17,13 @@ internal object RootCommandService : ICommandService.Stub() {
     /** Requests root on a worker thread and returns whether uid 0 was granted. */
     fun request(): Boolean {
         val granted = CommandProcess.execute(listOf("su", "-c", "id -u")) == "0"
-        preferences.edit().putBoolean("root_enabled", granted).apply()
+        if (granted) preferences.edit().putBoolean("root_enabled", true).apply()
         return granted
+    }
+
+    /** Selects Shizuku after the caller checks its permission. */
+    fun useShizuku() {
+        preferences.edit().putBoolean("root_enabled", false).apply()
     }
 
     /** Runs [command] with root and reports failures without retrying writes. */

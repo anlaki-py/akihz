@@ -53,6 +53,7 @@ fun SettingsScreen(
         label = "Settings",
         modifier = modifier
     ) {
+        AccessMethodSection()
         ThemeSection(
             themeMode = themeMode,
             onThemeModeChanged = onThemeModeChanged,
