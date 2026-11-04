@@ -38,7 +38,7 @@ android {
 
     defaultConfig {
         applicationId = "akihz.anlaki.dev"
-        minSdk = 29
+        minSdk = 30
         targetSdk = 36
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
         versionName = (findProperty("versionName") as? String) ?: baseVersion
