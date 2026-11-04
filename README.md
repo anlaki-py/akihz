@@ -214,7 +214,8 @@ app.
 
 ### Root access
 
-Rooted devices can use akiHz without Shizuku. Open the app with Shizuku stopped,
-choose **Use root**, and approve the root manager prompt. The app remembers this
-choice for settings, refresh rates, tiles, and FPS commands. Root access must stay
-granted in your root manager. Commands report an error if access is revoked.
+Rooted devices can use akiHz without Shizuku. Open **Settings > Access method**
+and choose **Root** or **Shizuku**, even when both are available. Approve the
+permission prompt to switch. If access is denied, the current method stays selected.
+The app saves your choice and reconnects the screen after switching.
+Root access must stay granted in your root manager.
