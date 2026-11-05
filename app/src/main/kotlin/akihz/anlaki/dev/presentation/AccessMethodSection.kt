@@ -9,6 +9,8 @@ import akihz.anlaki.dev.data.ShizukuConnection
 import akihz.anlaki.dev.presentation.components.PreferenceGroup
 import akihz.anlaki.dev.presentation.components.PreferenceTemplate
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,6 +62,7 @@ internal fun AccessMethodSection() {
         PreferenceTemplate(
             title = "Access method",
             description = if (rootSelected) "Root" else "Shizuku",
+            icon = Icons.Default.Key,
             onClick = { error = null; showSelector = true }
         )
     }
