@@ -120,7 +120,7 @@ object ShizukuHelper {
     /**
      * Kills stale `refresh_rate_service` shell processes left over from previous
      * app launches / version 2 daemon bug. Keeps the current service PID alive.
-     * Returns a human-readable summary; safe to call even when not bound.
+     * Returns a human-readable summary; skips cleanup when not bound.
      */
     fun killStaleRefreshServices(): Result<String> =
         ShizukuProcessInspector.killStaleRefreshServices(activeService())

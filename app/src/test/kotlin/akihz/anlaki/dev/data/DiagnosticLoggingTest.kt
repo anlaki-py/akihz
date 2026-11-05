@@ -61,6 +61,35 @@ class DiagnosticLoggingTest {
     }
 
     @Test
+    fun `repeated stale service cleanup after disconnect does not save errors`() {
+        repeat(100) {
+            val result = ShizukuProcessInspector.killStaleRefreshServices(null)
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrNull().orEmpty().contains("Skipped"))
+        }
+        assertTrue(store.getAll().isEmpty())
+    }
+
+    @Test
+    fun `settings commands without a service still save connection errors`() {
+        val result = ShizukuSettingsGateway.execSettings(null, listOf("list", "system"))
+
+        assertEquals(ErrorType.SERVICE_BINDING_FAILED, result.getErrorOrNull()?.errorType)
+        assertTrue(store.recentReport().contains("Service not bound"))
+    }
+
+    @Test
+    fun `stale cleanup with an unusable service still saves errors`() {
+        val service = mockk<ICommandService>()
+        every { service.getPid() } throws IllegalStateException("Disconnected")
+
+        val result = ShizukuProcessInspector.killStaleRefreshServices(service)
+
+        assertTrue(result.isError)
+        assertTrue(store.recentReport().contains("Service pid unavailable"))
+    }
+
+    @Test
     fun `theme events survive a new store and appear beside the crash`() {
         Timber.tag("Theme").i("Color mode: Dark -> Light")
         store.saveSync(Thread.currentThread(), IllegalStateException("Fatal failure"))

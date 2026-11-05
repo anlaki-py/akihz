@@ -15,6 +15,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 ### Changed
 
 - Moved the access method selector to the bottom of Settings, below About.
+- Skip background cleanup when disconnected to avoid repeated error logs.
 
 ## [0.0.54] - 2026-11-02
 

@@ -29,11 +29,13 @@ internal object ShizukuProcessInspector {
     /**
      * Kills stale `refresh_rate_service` shell processes left over from previous
      * app launches / version 2 daemon bug. Keeps the current service PID alive.
-     * Returns a human-readable summary; safe to call even when not bound.
+     * Returns a human-readable summary; skips cleanup when not bound.
      */
     internal fun killStaleRefreshServices(service: ICommandService?): Result<String> {
         if (service == null) {
-            return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service not bound")
+            // Delayed cleanup can outlive the last connection owner. Nothing needs
+            // cleaning through this connection once it has been released.
+            return Result.success("Skipped stale service cleanup: service not bound")
         }
         val myServicePid = runCatching { service.getPid() }.getOrNull()
             ?: return Result.error(ErrorType.SERVICE_BINDING_FAILED, "Service pid unavailable")
