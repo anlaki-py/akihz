@@ -1,5 +1,9 @@
 package akihz.anlaki.dev.presentation
 
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.Manifest
 import android.content.ComponentName
 import android.content.pm.PackageManager
@@ -75,6 +79,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val binderDeadListener = Shizuku.OnBinderDeadListener {
+        if (ShizukuHelper.isUserServiceBound()) return@OnBinderDeadListener
         isServiceBound = false
         if (hasAcceptedWelcomeNotice) {
             showError("Shizuku service died. Please restart Shizuku.")
@@ -332,7 +337,18 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showShizukuNotInstalledDialog() {
-        showDialog("Shizuku Required", "This app requires Shizuku to function.\n\n1. Install Shizuku\n2. Open Shizuku and follow setup\n3. Return to this app", false)
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Privileged access")
+            .setMessage("Start Shizuku and return to the app, or grant root access on a rooted device.")
+            .setPositiveButton("Use root") { _, _ ->
+                lifecycleScope.launch {
+                    val granted = withContext(Dispatchers.IO) { ShizukuHelper.requestRoot() }
+                    if (granted) bindUserServiceAndLoad()
+                    else showError("Root access was denied or unavailable. Start Shizuku or try again.")
+                }
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun showError(message: String) {

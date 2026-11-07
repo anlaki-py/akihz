@@ -211,3 +211,11 @@ To the fullest extent permitted by law, I accept no responsibility or liability
 for any damage, data loss, device problems, security issues, or other
 consequences resulting from installing, using, modifying, or relying on this
 app.
+
+### Root access
+
+Rooted devices can use akiHz without Shizuku. Open **Settings > Access method**
+and choose **Root** or **Shizuku**, even when both are available. Approve the
+permission prompt to switch. If access is denied, the current method stays selected.
+The app saves your choice and reconnects the screen after switching.
+Root access must stay granted in your root manager.

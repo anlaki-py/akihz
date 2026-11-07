@@ -107,6 +107,7 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
+            it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
             // Robolectric's Android runtime needs these modules open on CI's JDK 21.
             it.jvmArgs(
                 "--add-opens=java.base/java.lang=ALL-UNNAMED",
