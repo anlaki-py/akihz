@@ -7,6 +7,8 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ## [Unreleased]
 
+## [0.0.55] - 2026-11-07
+
 ### Added
 
 - Added root access as an alternative to Shizuku.
@@ -634,7 +636,8 @@ The changelog entry for version `0.0.38` was intentionally skipped.
 
 - Added the initial Android application, Shizuku integration, CI, and tests.
 
-[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.51...HEAD
+[Unreleased]: https://github.com/anlaki-py/akihz/compare/v0.0.55...HEAD
+[0.0.55]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.55
 [0.0.51]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.51
 [0.0.33]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.33
 [0.0.32]: https://github.com/anlaki-py/akihz/releases/tag/v0.0.32
