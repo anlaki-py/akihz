@@ -14,6 +14,7 @@ Versions before `0.0.31` are reconstructed from the Git history.
 
 ### Changed
 
+- FPS monitoring reconnects automatically after losing its Shizuku connection.
 - Moved the access method selector to the bottom of Settings, below About.
 - Added a key icon to the access method option.
 - Skip background cleanup when disconnected to avoid repeated error logs.

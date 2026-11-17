@@ -80,25 +80,7 @@ class FpsMonitorService : Service() {
         overlay = FpsOverlayController(this).also { it.attach() }
         _isRunning.value = true
 
-        ShizukuHelper.acquireUserService(
-            owner = serviceOwner,
-            onConnected = {
-                overlay?.setStatus("Collecting data…")
-                serviceScope.launch {
-                    timeStatsMutex.withLock {
-                        if (started) {
-                            runShell("dumpsys SurfaceFlinger --timestats -clear -enable")
-                            logger?.append("TimeStats enabled; beginning 500 ms sampling")
-                        }
-                    }
-                    if (started) startSampling()
-                }
-            },
-            onFailed = { _, message ->
-                overlay?.setStatus(message)
-                logger?.append("ERROR Shizuku bind failed: $message")
-            }
-        )
+        startSampling()
     }
 
     /** Routes start, stop, style, layer, and logging actions. */
@@ -164,8 +146,28 @@ class FpsMonitorService : Service() {
     private fun startSampling() {
         if (samplingJob != null) return
         samplingJob = serviceScope.launch {
-            // initial enable already done
+            var timeStatsReady = false
             while (isActive && !stopping) {
+                if (!timeStatsReady || !ShizukuHelper.isUserServiceBound()) {
+                    withContext(Dispatchers.Main) { overlay?.setStatus("Reconnecting to Shizuku…") }
+                    logger?.append("Connecting FPS monitor to Shizuku")
+                    val connected = awaitFpsShizukuConnection(serviceOwner) { message ->
+                        logger?.append("ERROR Shizuku bind failed: $message")
+                    }
+                    if (!connected) {
+                        delay(2_000)
+                        continue
+                    }
+                    timeStatsReady = timeStatsMutex.withLock {
+                        !stopping && runShell("dumpsys SurfaceFlinger --timestats -clear -enable") != null
+                    }
+                    if (!timeStatsReady) {
+                        delay(2_000)
+                        continue
+                    }
+                    logger?.append("TimeStats enabled; beginning 500 ms sampling")
+                    withContext(Dispatchers.Main) { overlay?.setStatus("Collecting data…") }
+                }
                 delay(500)
                 sampleOnce()
             }
